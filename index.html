@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vua Nệm - Hệ Thống Quản Lý Voucher Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --primary-color: #1a2a6c;
@@ -83,6 +84,16 @@
             margin-top: 10px;
         }
         .btn-print:hover { transform: translateY(-2px); opacity: 0.9; box-shadow: 0 6px 15px rgba(26, 42, 108, 0.4); }
+
+        /* Style mới cho nút copy */
+        .btn-copy { 
+            background: #28a745; color: white; width: 100%; 
+            padding: 14px; border: none; border-radius: 8px; 
+            font-size: 16px; font-weight: bold; cursor: pointer; 
+            transition: all 0.3s; box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+            margin-top: 10px;
+        }
+        .btn-copy:hover { transform: translateY(-2px); opacity: 0.9; box-shadow: 0 6px 15px rgba(40, 167, 69, 0.4); }
 
         /* --- VOUCHER DESIGN --- */
         #voucher-to-print {
@@ -196,6 +207,7 @@
             </div>
             
             <button class="btn-print" onclick="window.print()">XUẤT FILE IN (CONTROL + P)</button>
+            <button class="btn-copy" id="btnCopy" onclick="copyVoucherImage()">SAO CHÉP ẢNH VOUCHER GỬI KHÁCH</button>
         </div>
 
         <div id="voucher-to-print">
@@ -299,6 +311,42 @@
             document.getElementById('outCode').innerText = document.getElementById('inCode').value;
             document.getElementById('outDesc').innerText = document.getElementById('inDesc').value;
             document.getElementById('outHsd').innerText = document.getElementById('inHsd').value;
+        }
+
+        // --- HÀM SAO CHÉP ẢNH MỚI THÊM VÀO ---
+        async function copyVoucherImage() {
+            const btn = document.getElementById('btnCopy');
+            const voucher = document.getElementById('voucher-to-print');
+            
+            btn.innerText = "⏳ ĐANG TẠO ẢNH...";
+            btn.disabled = true;
+
+            try {
+                const canvas = await html2canvas(voucher, {
+                    scale: 2, // Tăng chất lượng ảnh lên 2 lần
+                    useCORS: true,
+                    backgroundColor: null
+                });
+
+                canvas.toBlob(async (blob) => {
+                    try {
+                        const data = [new ClipboardItem({ [blob.type]: blob })];
+                        await navigator.clipboard.write(data);
+                        btn.innerText = "✅ ĐÃ SAO CHÉP! DÁN VÀO ZALO NHÉ";
+                        btn.style.background = "#007bff";
+                    } catch (err) {
+                        alert("Lỗi trình duyệt: Không hỗ trợ copy ảnh trực tiếp.");
+                    }
+                });
+            } catch (error) {
+                alert("Lỗi khi xử lý ảnh.");
+            } finally {
+                setTimeout(() => {
+                    btn.innerText = "SAO CHÉP ẢNH VOUCHER GỬI KHÁCH";
+                    btn.disabled = false;
+                    btn.style.background = "#28a745";
+                }, 3000);
+            }
         }
     </script>
 </body>
