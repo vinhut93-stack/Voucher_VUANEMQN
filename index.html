@@ -85,7 +85,6 @@
         }
         .btn-print:hover { transform: translateY(-2px); opacity: 0.9; box-shadow: 0 6px 15px rgba(26, 42, 108, 0.4); }
 
-        /* Style mới cho nút copy */
         .btn-copy { 
             background: #28a745; color: white; width: 100%; 
             padding: 14px; border: none; border-radius: 8px; 
@@ -206,7 +205,7 @@
                 <input type="text" id="inHsd" oninput="update()">
             </div>
             
-            <button class="btn-print" onclick="window.print()">XUẤT FILE IN (CONTROL + P)</button>
+            <button class="btn-print" onclick="logToSheet('In Voucher'); window.print();">XUẤT FILE IN (CONTROL + P)</button>
             <button class="btn-copy" id="btnCopy" onclick="copyVoucherImage()">SAO CHÉP ẢNH VOUCHER GỬI KHÁCH</button>
         </div>
 
@@ -271,14 +270,41 @@
     </footer>
 
     <script>
-        // Disable Right Click & Inspect for Pro feeling
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhS9I6_GchZ7uA4GzUEcg2-Ac5ux-o0hSTEx0CJSgEuXjaFg9GpIi6qnkhPHT2dSMcUQ/exec";
+
+        // Ghi log lên Google Sheet với đầy đủ nội dung ưu đãi và HSD
+        async function logToSheet(action) {
+            const select = document.getElementById('hotlineSelect');
+            const custom = document.getElementById('inHotlineCustom').value;
+            const staffName = (select.value === 'custom') ? custom : select.value;
+
+            const data = {
+                staff: staffName,
+                customer: document.getElementById('inName').value || "Khách Hàng",
+                phone: document.getElementById('inPhone').value || "Không có",
+                code: document.getElementById('inCode').value,
+                description: document.getElementById('inDesc').value, // Thêm Nội dung ưu đãi
+                hsd: document.getElementById('inHsd').value,        // Thêm HSD
+                action: action
+            };
+
+            try {
+                fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+            } catch (e) { console.error("Lỗi lưu log", e); }
+        }
+
+        // Chặn chuột phải & Inspect
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) { 
             if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73)) return false; 
         }
 
         window.onload = function() {
-            // Auto set HSD to 14 days later
             let hsdDate = new Date();
             hsdDate.setDate(hsdDate.getDate() + 14);
             document.getElementById('inHsd').value = String(hsdDate.getDate()).padStart(2, '0') + '.' + String(hsdDate.getMonth() + 1).padStart(2, '0') + '.' + hsdDate.getFullYear();
@@ -287,33 +313,26 @@
 
         function toggleHotlineInput() {
             const select = document.getElementById('hotlineSelect');
-            const customInput = document.getElementById('inHotlineCustom');
-            customInput.style.display = (select.value === 'custom') ? 'block' : 'none';
+            document.getElementById('inHotlineCustom').style.display = (select.value === 'custom') ? 'block' : 'none';
             update();
         }
 
         function update() {
-            // Customer Info
             const name = document.getElementById('inName').value;
             const phone = document.getElementById('inPhone').value;
             document.getElementById('outName').innerText = name || "Khách Hàng";
             document.getElementById('outPhone').innerText = phone;
-
-            // Phone warning
             document.getElementById('phoneWarning').style.display = (phone.length === 10) ? 'none' : 'block';
 
-            // Hotline logic
             const select = document.getElementById('hotlineSelect');
             const customHotline = document.getElementById('inHotlineCustom').value;
             document.getElementById('outHotline').innerText = (select.value === 'custom') ? (customHotline || "SĐT - Tên nhân viên") : select.value;
 
-            // Other fields
             document.getElementById('outCode').innerText = document.getElementById('inCode').value;
             document.getElementById('outDesc').innerText = document.getElementById('inDesc').value;
             document.getElementById('outHsd').innerText = document.getElementById('inHsd').value;
         }
 
-        // --- HÀM SAO CHÉP ẢNH MỚI THÊM VÀO ---
         async function copyVoucherImage() {
             const btn = document.getElementById('btnCopy');
             const voucher = document.getElementById('voucher-to-print');
@@ -321,9 +340,12 @@
             btn.innerText = "⏳ ĐANG TẠO ẢNH...";
             btn.disabled = true;
 
+            // Lưu log hành động copy với đầy đủ thông tin
+            logToSheet('Sao chép ảnh');
+
             try {
                 const canvas = await html2canvas(voucher, {
-                    scale: 2, // Tăng chất lượng ảnh lên 2 lần
+                    scale: 2,
                     useCORS: true,
                     backgroundColor: null
                 });
