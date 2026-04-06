@@ -51,7 +51,7 @@
             border-radius: 15px; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
             width: 480px; 
-            max-width: 100%; /* Tương thích mobile */
+            max-width: 100%; 
             margin-bottom: 40px;
             border: 1px solid #e1e8ed;
             box-sizing: border-box;
@@ -78,7 +78,6 @@
         
         .phone-warning { color: #e63946; font-size: 11px; margin-top: 5px; display: block; font-weight: bold; }
         
-        /* Cấu hình ẩn nút mặc định cho yêu cầu 1 */
         #action-group {
             display: none;
         }
@@ -101,12 +100,21 @@
         }
         .btn-copy:hover { transform: translateY(-2px); opacity: 0.9; }
 
-        /* --- VOUCHER DESIGN (GIỮ NGUYÊN) --- */
+        /* Nút Tải ảnh mới */
+        .btn-download {
+            background: #ff7e5f; color: white; width: 100%; 
+            padding: 14px; border: none; border-radius: 8px; 
+            font-size: 16px; font-weight: bold; cursor: pointer; 
+            transition: all 0.3s; box-shadow: 0 4px 10px rgba(255, 126, 95, 0.3);
+            margin-top: 10px;
+        }
+        .btn-download:hover { transform: translateY(-2px); opacity: 0.9; }
+
         #voucher-to-print {
             width: 750px; height: 320px; background: white; border-radius: 15px;
             display: flex; box-shadow: 0 15px 45px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #eee;
             margin-bottom: 50px;
-            flex-shrink: 0; /* Không để voucher bị méo trên mobile */
+            flex-shrink: 0;
         }
         .v-left {
             width: 250px; background: var(--accent-color); display: flex; justify-content: center; align-items: center; position: relative;
@@ -143,12 +151,11 @@
         .info-item { display: flex; align-items: center; margin-bottom: 2px; }
         .icon-svg { width: 13px; height: 13px; margin-right: 6px; fill: var(--primary-color); }
 
-        /* --- TƯƠNG THÍCH MOBILE (YÊU CẦU 2) --- */
         @media screen and (max-width: 768px) {
             #voucher-to-print {
-                transform: scale(0.45); /* Thu nhỏ voucher để vừa màn hình điện thoại mà không vỡ layout */
+                transform: scale(0.45);
                 transform-origin: top center;
-                margin-bottom: -150px; /* Bù trừ khoảng trống do scale */
+                margin-bottom: -150px;
             }
             .admin-panel { width: 95%; padding: 15px; }
             header h1 { font-size: 18px; }
@@ -165,7 +172,7 @@
             #voucher-to-print { 
                 box-shadow: none; border: 1px solid #ddd; 
                 margin: 0; position: absolute; top: 0; left: 0;
-                transform: scale(1) !important; /* Khi in phải giữ đúng kích thước thật */
+                transform: scale(1) !important;
                 -webkit-print-color-adjust: exact; 
             }
         }
@@ -218,7 +225,8 @@
             
             <div id="action-group">
                 <button class="btn-print" onclick="logToSheet('In Voucher'); window.print();">XUẤT FILE IN (CONTROL + P)</button>
-                <button class="btn-copy" id="btnCopy" onclick="copyVoucherImage()">SAO CHÉP ẢNH VOUCHER GỬI KHÁCH</button>
+                <button class="btn-copy" id="btnCopy" onclick="copyVoucherImage()">SAO CHÉP ẢNH (GỬI ZALO)</button>
+                <button class="btn-download" id="btnDownload" onclick="downloadVoucherImage()">TẢI ẢNH VỀ ĐIỆN THOẠI</button>
             </div>
         </div>
 
@@ -313,14 +321,12 @@
         }
 
         function update() {
-            // Lấy dữ liệu
             const name = document.getElementById('inName').value;
             const phone = document.getElementById('inPhone').value;
             const desc = document.getElementById('inDesc').value;
             const code = document.getElementById('inCode').value;
             const hsd = document.getElementById('inHsd').value;
 
-            // Cập nhật hiển thị voucher
             document.getElementById('outName').innerText = name || "Khách Hàng";
             document.getElementById('outPhone').innerText = phone;
             document.getElementById('phoneWarning').style.display = (phone.length === 10) ? 'none' : 'block';
@@ -333,7 +339,6 @@
             document.getElementById('outDesc').innerText = desc;
             document.getElementById('outHsd').innerText = hsd;
 
-            // YÊU CẦU 1: Kiểm tra đủ thông tin để hiện nút
             const actionGroup = document.getElementById('action-group');
             if (name.trim() !== "" && phone.trim().length === 10 && desc.trim() !== "" && code.trim() !== "") {
                 actionGroup.style.display = "block";
@@ -350,7 +355,6 @@
             logToSheet('Sao chép ảnh');
 
             try {
-                // Xử lý scale=2 để ảnh nét khi gửi Zalo
                 const canvas = await html2canvas(voucher, { scale: 2, useCORS: true, backgroundColor: null });
                 canvas.toBlob(async (blob) => {
                     try {
@@ -365,9 +369,45 @@
                 alert("Lỗi khi xử lý ảnh.");
             } finally {
                 setTimeout(() => {
-                    btn.innerText = "SAO CHÉP ẢNH VOUCHER GỬI KHÁCH";
+                    btn.innerText = "SAO CHÉP ẢNH (GỬI ZALO)";
                     btn.disabled = false;
                 }, 3000);
+            }
+        }
+
+        /* --- TÍNH NĂNG TẢI ẢNH MỚI --- */
+        async function downloadVoucherImage() {
+            const btn = document.getElementById('btnDownload');
+            const voucher = document.getElementById('voucher-to-print');
+            const customerName = document.getElementById('inName').value || "KhachHang";
+            
+            btn.innerText = "⏳ ĐANG TẢI...";
+            btn.disabled = true;
+            logToSheet('Tải ảnh về máy');
+
+            try {
+                // Sử dụng html2canvas để chụp lại voucher
+                const canvas = await html2canvas(voucher, { 
+                    scale: 3, // Tăng chất lượng ảnh khi tải về
+                    useCORS: true, 
+                    backgroundColor: "#ffffff" 
+                });
+                
+                // Tạo link giả lập để tải ảnh
+                const link = document.createElement('a');
+                link.download = `Voucher-VuaNem-${customerName.replace(/\s+/g, '-')}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+                
+                btn.innerText = "✅ TẢI THÀNH CÔNG";
+            } catch (error) {
+                console.error(error);
+                alert("Lỗi khi tải ảnh. Vui lòng thử lại.");
+            } finally {
+                setTimeout(() => {
+                    btn.innerText = "TẢI ẢNH VỀ ĐIỆN THOẠI";
+                    btn.disabled = false;
+                }, 2000);
             }
         }
     </script>
