@@ -9,13 +9,12 @@
         :root {
             --vuanem-blue: #002c77;
             --vuanem-orange: #f6891f;
-            --bg-light: #f4f7fa;
-            --text-dark: #1a202c;
+            --bg: #f8fafc;
         }
 
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-light);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
             margin: 0;
             display: flex;
             justify-content: center;
@@ -30,21 +29,17 @@
             text-align: center;
         }
 
-        .header {
-            margin-bottom: 40px;
-        }
-
         .header h1 {
             color: var(--vuanem-blue);
-            font-size: 28px;
+            font-size: 32px;
+            font-weight: 900;
+            margin-bottom: 10px;
             text-transform: uppercase;
-            margin-bottom: 5px;
-            font-weight: 800;
         }
 
         .header p {
-            color: #718096;
-            font-style: italic;
+            color: #64748b;
+            margin-bottom: 40px;
         }
 
         .dashboard-grid {
@@ -55,11 +50,11 @@
 
         .card {
             background: white;
-            border-radius: 24px;
+            border-radius: 20px;
             padding: 40px 20px;
             text-decoration: none;
             transition: all 0.3s ease;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 20px rgba(0, 44, 119, 0.05);
             border: 1px solid #e2e8f0;
             display: flex;
             flex-direction: column;
@@ -67,52 +62,47 @@
         }
 
         .card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+            transform: translateY(-8px);
             border-color: var(--vuanem-orange);
+            box-shadow: 0 15px 30px rgba(0, 44, 119, 0.15);
         }
 
-        .icon-circle {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
+        .icon-box {
+            width: 70px;
+            height: 70px;
+            border-radius: 15px;
             display: flex;
             justify-content: center;
             align-items: center;
             margin-bottom: 20px;
-            font-size: 32px;
+            font-size: 30px;
             color: white;
         }
 
-        .bg-blue { background-color: var(--vuanem-blue); }
-        .bg-orange { background-color: var(--vuanem-orange); }
+        .bg-blue { background: var(--vuanem-blue); }
+        .bg-orange { background: var(--vuanem-orange); }
 
         .card h2 {
-            margin: 10px 0;
-            color: var(--text-dark);
+            margin: 0 0 10px;
+            color: #1e293b;
             font-size: 20px;
             font-weight: 700;
         }
 
         .card p {
-            color: #4a5568;
+            color: #64748b;
             font-size: 14px;
-            line-height: 1.5;
             margin: 0;
         }
 
         .footer {
-            margin-top: 40px;
-            font-size: 12px;
-            color: #a0aec0;
+            margin-top: 50px;
+            font-size: 13px;
+            color: #94a3b8;
         }
 
-        /* Mobile Responsive */
         @media (max-width: 600px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-            .header h1 { font-size: 22px; }
+            .dashboard-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -121,29 +111,29 @@
     <div class="container">
         <div class="header">
             <h1>VUA NỆM QUY NHƠN</h1>
-            <p>Hệ thống công cụ hỗ trợ bán hàng nội bộ</p>
+            <p>Hệ thống hỗ trợ bán hàng chuyên nghiệp chi nhánh BDI01</p>
         </div>
 
         <div class="dashboard-grid">
             <a href="baogia.html" class="card">
-                <div class="icon-circle bg-blue">
+                <div class="icon-box bg-blue">
                     <i class="fa-solid fa-file-invoice-dollar"></i>
                 </div>
                 <h2>Lập Báo Giá Nhanh</h2>
-                <p>Công cụ in báo giá chuyên nghiệp cho khách hàng lẻ tại Quy Nhơn.</p>
+                <p>Công cụ in báo giá chuyên nghiệp cho khách hàng tại Quy Nhơn.</p>
             </a>
 
             <a href="voucher.html" class="card">
-                <div class="icon-circle bg-orange">
-                    <i class="fa-solid fa-tags"></i>
+                <div class="icon-box bg-orange">
+                    <i class="fa-solid fa-ticket"></i>
                 </div>
-                <h2>Voucher</h2>
-                <p>Áp dụng các chương trình khuyến mãi và voucher giảm giá mới nhất.</p>
+                <h2>Voucher Lũy Tiến</h2>
+                <p>Áp dụng các chương trình khuyến mãi và voucher mới nhất.</p>
             </a>
         </div>
 
         <div class="footer">
-            Bản quyền thuộc về Vi Nhựt (VN5022) • 2026
+            PHÁT TRIỂN BỞI VI NHỰT (VN5022) • VUA NỆM 2026
         </div>
     </div>
 
