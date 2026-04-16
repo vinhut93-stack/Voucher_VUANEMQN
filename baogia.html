@@ -18,7 +18,7 @@
         .brand-info p { margin: 2px 0 5px 0; opacity: 0.9; font-size: 11px; }
         .badge-row { display: flex; gap: 4px; flex-wrap: wrap; }
         .badge { background: rgba(255,255,255,0.15); padding: 1px 6px; border-radius: 4px; font-size: 9px; white-space: nowrap; }
-        .so-number { font-size: 20px; color: var(--accent); font-weight: 800; }
+        .so-number { font-size: 18px; color: var(--accent); font-weight: 800; }
         
         .content-body { padding: 15px; }
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
@@ -42,7 +42,16 @@
         
         .summary-table { background: #f1f5f9; padding: 15px; border-radius: 8px; border: 1px dashed var(--primary); }
         .summary-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; }
-        .summary-row.grand-total { margin-top: 10px; padding-top: 10px; border-top: 2px solid var(--primary); font-weight: 600; font-size: 20px; color: var(--primary); }
+        
+        /* CHỈNH DÒNG CÒN LẠI GIỐNG TỔNG TIỀN HÀNG */
+        .summary-row.grand-total { 
+            margin-top: 10px; 
+            padding-top: 10px; 
+            border-top: 2px solid var(--primary); 
+            font-weight: 700; 
+            font-size: 18px; 
+            color: var(--primary); 
+        }
         
         .signature-section { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; text-align: center; padding-top: 20px; }
         .sig-box p { font-weight: 700; margin-bottom: 60px; font-size: 12px; }
@@ -53,13 +62,24 @@
         .btn-print { background: var(--primary); color: white; box-shadow: 0 4px 0 #001f54; }
         .btn-add { background: white; border: 1px dashed var(--primary); color: var(--primary); padding: 8px; width: auto; font-size: 12px; margin-top: 8px; cursor: pointer; border-radius: 4px; }
 
-        .exporting .no-print, .exporting .btn, .exporting .btn-add, .exporting .hide-on-export, .exporting select, .exporting button { display: none !important; }
+        /* FIX HIỂN THỊ SELECT KHI IN/XUẤT */
+        .exporting #staffSelect { 
+            border: none !important; 
+            appearance: none !important; 
+            -webkit-appearance: none !important; 
+            background: transparent !important; 
+            padding: 0 !important; 
+            font-weight: 600 !important; 
+            color: var(--text) !important;
+            font-size: 13px !important;
+            width: auto !important;
+        }
         .exporting input, .exporting textarea { border: none !important; padding: 0 !important; background: transparent !important; pointer-events: none; resize: none; overflow: hidden; }
 
         @media print {
             body { padding: 0; background: white; }
             .container { box-shadow: none; border: none; width: 100%; }
-            .no-print, .btn, .btn-add, .hide-on-export, button, select { display: none !important; }
+            .no-print, .btn, .btn-add, .hide-on-export, button { display: none !important; }
             input, textarea { border: none !important; padding: 0 !important; background: transparent !important; font-size: 13px !important; }
         }
     </style>
@@ -72,9 +92,9 @@
             <h1>HỆ THỐNG VUA NỆM - QUY NHƠN</h1>
             <p>Ngủ ngon - Sống trọn cùng Vua Nệm</p>
             <div class="badge-row">
-                <span class="badge">🚚 Free Ship</span>
+                <span class="badge">🚚 Miễn phí giao hàng</span>
                 <span class="badge">💳 Trả góp 0%</span>
-                <span class="badge">🔄 Ngủ thử 120 đêm</span>
+                <span class="badge">🔄 Ngủ thử đến 120 đêm</span>
             </div>
         </div>
         <div class="quote-id-box">
@@ -104,12 +124,12 @@
             <div class="card">
                 <div class="card-title">Nhân viên tư vấn</div>
                 <div class="input-group">
-                    <label>Người thực hiện</label>
+                    <label>Nhân viên hỗ trợ</label>
                     <select id="staffSelect" onchange="updateStaff()">
                         <option value="Em Hoà|0969233949">Văn Hoà</option>
                         <option value="Em Trinh|0908852960">Kiều Trinh</option>
                         <option value="Em Quyên|0325575531">Kiều Quyên</option>
-                        <option value="VI NHỰT|0358969752" selected>VI NHỰT</option>
+                        <option value="Vi Nhựt|0358969752" selected>Vi Nhựt</option>
                         <option value="khac">Khác...</option>
                     </select>
                 </div>
@@ -159,7 +179,7 @@
                 <textarea id="orderNote" rows="2" style="margin-bottom:10px" placeholder="Nhập ghi chú đơn hàng..."></textarea>
                 <div class="hide-on-export">
                     <div id="voucherList"></div>
-                    <button class="btn btn-add" onclick="addVoucher()">+ Thêm giảm giá (Lũy tiến)</button>
+                    <button class="btn btn-add" onclick="addVoucher()">+ Thêm giảm giá</button>
                     <div id="paymentList"></div>
                     <button class="btn btn-add" onclick="addPayment()">+ Thêm khoản đã cọc</button>
                 </div>
@@ -173,7 +193,7 @@
         </div>
 
         <div class="signature-section">
-            <div class="sig-box"><p>Khách hàng ký tên</p></div>
+            <div class="sig-box"><p>Khách hàng</p></div>
             <div class="sig-box"><p>Nhân viên tư vấn</p></div>
         </div>
     </div>
@@ -196,7 +216,6 @@
     }
     updateTime();
 
-    // Logic xử lý Tư vấn viên
     function updateStaff() {
         const select = document.getElementById('staffSelect');
         const customBox = document.getElementById('customStaffBox');
@@ -262,30 +281,22 @@
         calculateTotal();
     }
 
-    // --- LOGIC LŨY TIẾN ---
     function calculateTotal() {
         let subTotal = 0;
         document.querySelectorAll('.p-total').forEach(cell => subTotal += parseFloat(cell.innerText.replace(/\./g, '')) || 0);
-        
         let totalDiscount = 0;
         let currentRemaining = subTotal; 
-
         document.querySelectorAll('.voucher-item').forEach(v => {
             const type = v.querySelector('.v-type').value;
             const val = parseFloat(v.querySelector('.v-value').value.replace(/\./g, '')) || 0;
             let discountAmount = 0;
-            if (type === 'amount') {
-                discountAmount = val;
-            } else {
-                discountAmount = currentRemaining * (val / 100);
-            }
+            if (type === 'amount') discountAmount = val;
+            else discountAmount = currentRemaining * (val / 100);
             totalDiscount += discountAmount;
             currentRemaining -= discountAmount; 
         });
-
         let paidTotal = 0;
         document.querySelectorAll('.pay-amount').forEach(p => paidTotal += parseFloat(p.value.replace(/\./g, '')) || 0);
-
         document.getElementById('subTotal').innerText = subTotal.toLocaleString('vi-VN');
         document.getElementById('totalDiscount').innerText = "- " + Math.round(totalDiscount).toLocaleString('vi-VN');
         document.getElementById('paidTotal').innerText = paidTotal.toLocaleString('vi-VN');
@@ -335,24 +346,22 @@
         setTimeout(() => area.classList.remove('exporting'), 1000);
     }
 
-    // Hàm chuẩn bị nội dung hiển thị trước khi xuất ảnh/in
     function prepareForExport() {
         const select = document.getElementById('staffSelect');
         const customName = document.getElementById('customStaffName').value;
-        
-        // Nếu đang chọn "Khác", hiển thị tên đã nhập vào ô Select khi in
-        if(select.value === 'khac') {
-            const tempOption = document.createElement('option');
-            tempOption.value = 'khac';
-            tempOption.text = customName || "Nhân viên khác";
-            tempOption.selected = true;
-            // Xóa các option tạm cũ nếu có
-            if(select.options[select.options.length-1].getAttribute('data-temp')) {
-                select.remove(select.options.length-1);
-            }
+        let tempOption = select.querySelector('option[data-temp="true"]');
+        if(!tempOption) {
+            tempOption = document.createElement('option');
             tempOption.setAttribute('data-temp', 'true');
             select.add(tempOption);
         }
+        if(select.value === 'khac') {
+            tempOption.text = customName || "Nhân viên khác";
+        } else {
+            // Chỉ lấy tên hiển thị, bỏ giá trị ẩn chứa số điện thoại
+            tempOption.text = select.options[select.selectedIndex].text;
+        }
+        tempOption.selected = true;
     }
 </script>
 </body>
