@@ -8,7 +8,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        :root { --primary: #002c77; --accent: #f6891f; --text: #2c3e50; --light-bg: #f8fafc; --border: #e2e8f0; --danger: #ef4444; }
+        :root { 
+            --primary: #002c77; --accent: #f6891f; --text: #2c3e50; 
+            --light-bg: #f8fafc; --border: #0f1824; --danger: #ef4444; 
+        }
         
         body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; margin: 0; padding: 10px; background-color: #e5e7eb; color: var(--text); font-size: 13px; -webkit-tap-highlight-color: transparent; }
         .container { max-width: 850px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); overflow: hidden; }
@@ -28,12 +31,12 @@
         .card-title { font-size: 11px; font-weight: 800; color: var(--primary); margin-bottom: 8px; text-transform: uppercase; border-left: 3px solid var(--accent); padding-left: 8px; }
         
         .input-group { margin-bottom: 8px; }
-        label { display: block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 2px; }
+        label { display: block; font-size: 10px; font-weight: 700; color: #090621; margin-bottom: 2px; }
         input, select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; box-sizing: border-box; transition: border 0.2s; }
         
         .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; min-width: 500px; }
-        th { padding: 8px; font-size: 10px; border-bottom: 2px solid var(--primary); text-align: left; color: #64748b; }
+        th { padding: 8px; font-size: 10px; border-bottom: 2px solid var(--primary); text-align: left; color: #090621; }
         td { padding: 10px 8px; border-bottom: 1px solid var(--border); }
         .p-name-display { font-weight: 600; color: var(--primary); font-size: 12px; line-height: 1.3; }
         
@@ -42,16 +45,7 @@
         
         .summary-table { background: #f1f5f9; padding: 15px; border-radius: 8px; border: 1px dashed var(--primary); }
         .summary-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; }
-        
-        /* CHỈNH DÒNG CÒN LẠI GIỐNG TỔNG TIỀN HÀNG */
-        .summary-row.grand-total { 
-            margin-top: 10px; 
-            padding-top: 10px; 
-            border-top: 2px solid var(--primary); 
-            font-weight: 700; 
-            font-size: 18px; 
-            color: var(--primary); 
-        }
+        .summary-row.grand-total { margin-top: 10px; padding-top: 10px; border-top: 2px solid var(--primary); font-weight: 700; font-size: 18px; color: var(--primary); }
         
         .signature-section { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; text-align: center; padding-top: 20px; }
         .sig-box p { font-weight: 700; margin-bottom: 60px; font-size: 12px; }
@@ -62,25 +56,20 @@
         .btn-print { background: var(--primary); color: white; box-shadow: 0 4px 0 #001f54; }
         .btn-add { background: white; border: 1px dashed var(--primary); color: var(--primary); padding: 8px; width: auto; font-size: 12px; margin-top: 8px; cursor: pointer; border-radius: 4px; }
 
-        /* FIX HIỂN THỊ SELECT KHI IN/XUẤT */
-        .exporting #staffSelect { 
-            border: none !important; 
-            appearance: none !important; 
-            -webkit-appearance: none !important; 
-            background: transparent !important; 
-            padding: 0 !important; 
-            font-weight: 600 !important; 
-            color: var(--text) !important;
-            font-size: 13px !important;
-            width: auto !important;
+        /* FIX MẤT CHỮ VÀ DỌN DẸP KHI XUẤT ẢNH */
+        .exporting .no-print, .exporting .btn, .exporting .btn-add, .exporting .hide-on-export, .exporting button { display: none !important; }
+        .exporting input, .exporting textarea, .exporting select { 
+            border: none !important; background: transparent !important; padding: 0 !important; 
+            appearance: none !important; -webkit-appearance: none !important; 
+            color: black !important; font-weight: 600 !important; height: auto !important;
         }
-        .exporting input, .exporting textarea { border: none !important; padding: 0 !important; background: transparent !important; pointer-events: none; resize: none; overflow: hidden; }
+        .exporting .card { box-shadow: none !important; border: 1px solid #eee !important; }
+        .exporting .container { box-shadow: none !important; border: none !important; }
 
         @media print {
             body { padding: 0; background: white; }
-            .container { box-shadow: none; border: none; width: 100%; }
             .no-print, .btn, .btn-add, .hide-on-export, button { display: none !important; }
-            input, textarea { border: none !important; padding: 0 !important; background: transparent !important; font-size: 13px !important; }
+            input, textarea, select { border: none !important; padding: 0 !important; background: transparent !important; font-size: 13px !important; appearance: none !important; }
         }
     </style>
 </head>
@@ -108,18 +97,9 @@
         <div class="info-grid">
             <div class="card">
                 <div class="card-title">Thông tin Khách hàng</div>
-                <div class="input-group">
-                    <label>Họ tên</label>
-                    <input type="text" id="custName" placeholder="Tên khách hàng...">
-                </div>
-                <div class="input-group">
-                    <label>Điện thoại</label>
-                    <input type="tel" id="custPhone" maxlength="10" placeholder="0xxxxxxxxx">
-                </div>
-                <div class="input-group">
-                    <label>Địa chỉ</label>
-                    <textarea id="custAddr" rows="1" placeholder="Địa chỉ giao hàng..."></textarea>
-                </div>
+                <div class="input-group"><label>Họ tên</label><input type="text" id="custName" placeholder="Tên khách hàng..."></div>
+                <div class="input-group"><label>Điện thoại</label><input type="tel" id="custPhone" maxlength="10" placeholder="0xxxxxxxxx"></div>
+                <div class="input-group"><label>Địa chỉ</label><textarea id="custAddr" rows="1" placeholder="Địa chỉ giao hàng..."></textarea></div>
             </div>
             <div class="card">
                 <div class="card-title">Nhân viên tư vấn</div>
@@ -134,15 +114,9 @@
                     </select>
                 </div>
                 <div id="customStaffBox" style="display: none;">
-                    <div class="input-group">
-                        <label>Tên nhân viên</label>
-                        <input type="text" id="customStaffName" placeholder="Nhập tên...">
-                    </div>
+                    <div class="input-group"><label>Tên nhân viên</label><input type="text" id="customStaffName" placeholder="Nhập tên..."></div>
                 </div>
-                <div class="input-group">
-                    <label>Số điện thoại liên hệ</label>
-                    <input type="text" id="staffPhone" value="0358969752">
-                </div>
+                <div class="input-group"><label>Số điện thoại liên hệ</label><input type="text" id="staffPhone" value="0358969752"></div>
             </div>
         </div>
 
@@ -151,7 +125,7 @@
             <table id="productTable">
                 <thead>
                     <tr>
-                        <th width="15%">Mã sản phẩm</th>
+                        <th width="15%">Mã SP</th>
                         <th width="45%">Tên sản phẩm</th>
                         <th width="10%" style="text-align: center;">SL</th>
                         <th width="15%" style="text-align: right;">Đơn giá</th>
@@ -176,7 +150,7 @@
         <div class="bottom-section">
             <div>
                 <div class="card-title">Ghi chú & Ưu đãi</div>
-                <textarea id="orderNote" rows="2" style="margin-bottom:10px" placeholder="Nhập ghi chú đơn hàng..."></textarea>
+                <textarea id="orderNote" rows="2" style="margin-bottom:10px" placeholder="Nhập ghi chú..."></textarea>
                 <div class="hide-on-export">
                     <div id="voucherList"></div>
                     <button class="btn btn-add" onclick="addVoucher()">+ Thêm giảm giá</button>
@@ -186,8 +160,8 @@
             </div>
             <div class="summary-table">
                 <div class="summary-row"><span>Tổng tiền hàng:</span><span id="subTotal">0</span></div>
-                <div class="summary-row" style="color: var(--danger); font-weight: 600;"><span>Tổng giảm giá:</span><span id="totalDiscount">- 0</span></div>
-                <div class="summary-row" style="color: #2563eb;"><span>Đã đặt cọc:</span><span id="paidTotal">0</span></div>
+                <div class="summary-row" style="color: #660606; font-weight: 600;"><span>Tổng giảm giá:</span><span id="totalDiscount">- 0</span></div>
+                <div class="summary-row" style="color: #120463;"><span>Đã đặt cọc:</span><span id="paidTotal">0</span></div>
                 <div class="summary-row grand-total"><span>CÒN LẠI:</span><span id="grandTotal">0 đ</span></div>
             </div>
         </div>
@@ -205,7 +179,8 @@
 </div>
 
 <script>
-    const firebaseConfig = { projectId: "vuanem-d66e5", authDomain: "vuanem-d66e5.firebaseapp.com" };
+    // NHỰT NHỚ THAY API KEY VÀO ĐÂY NHÉ
+    const firebaseConfig = { apiKey: "AIzaSy...", projectId: "vuanem-d66e5", authDomain: "vuanem-d66e5.firebaseapp.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     
@@ -218,14 +193,12 @@
 
     function updateStaff() {
         const select = document.getElementById('staffSelect');
-        const customBox = document.getElementById('customStaffBox');
         const phoneInput = document.getElementById('staffPhone');
-        
         if(select.value === 'khac') {
-            customBox.style.display = 'block';
+            document.getElementById('customStaffBox').style.display = 'block';
             phoneInput.value = "";
         } else {
-            customBox.style.display = 'none';
+            document.getElementById('customStaffBox').style.display = 'none';
             phoneInput.value = select.value.split('|')[1];
         }
     }
@@ -258,8 +231,8 @@
                     row.querySelector('.p-price').value = data.unit_price.toLocaleString('vi-VN');
                     calculateRow(input);
                 }
-            } else { displayDiv.innerText = "❌ Không thấy mã này"; }
-        } catch (e) { displayDiv.innerText = "⚠️ Lỗi mạng"; }
+            } else { displayDiv.innerText = "❌ Không thấy mã"; }
+        } catch (e) { displayDiv.innerText = "⚠️ Lỗi"; }
     }
 
     function addRow() {
@@ -289,9 +262,7 @@
         document.querySelectorAll('.voucher-item').forEach(v => {
             const type = v.querySelector('.v-type').value;
             const val = parseFloat(v.querySelector('.v-value').value.replace(/\./g, '')) || 0;
-            let discountAmount = 0;
-            if (type === 'amount') discountAmount = val;
-            else discountAmount = currentRemaining * (val / 100);
+            let discountAmount = (type === 'amount') ? val : currentRemaining * (val / 100);
             totalDiscount += discountAmount;
             currentRemaining -= discountAmount; 
         });
@@ -308,59 +279,45 @@
         const div = document.createElement('div');
         div.className = 'voucher-item';
         div.style = "display:flex; gap:5px; margin-bottom:8px;";
-        div.innerHTML = `<select class="v-type" style="flex: 1;" onchange="calculateTotal()"><option value="amount">Giảm tiền mặt</option><option value="percent">% Chiết khấu</option></select><input type="text" class="v-value" style="flex: 1;" value="0" oninput="formatCurrencyInput(this)"><button class="btn-add" style="margin:0; color:red" onclick="this.parentElement.remove(); calculateTotal();">✕</button>`;
+        div.innerHTML = `<select class="v-type" style="flex: 1;" onchange="calculateTotal()"><option value="amount">Tiền mặt</option><option value="percent">% CK</option></select><input type="text" class="v-value" style="flex: 1;" value="0" oninput="formatCurrencyInput(this)"><button class="btn-add" style="margin:0; color:red" onclick="this.parentElement.remove(); calculateTotal();">✕</button>`;
         document.getElementById('voucherList').appendChild(div);
     }
 
     function addPayment() {
         const div = document.createElement('div');
         div.style = "display:flex; gap:5px; margin-bottom:8px;";
-        div.innerHTML = `<select style="flex: 1;"><option>Chuyển khoản</option><option>Tiền mặt</option></select><input type="text" class="pay-amount" style="flex: 1;" value="0" oninput="formatCurrencyInput(this)"><button class="btn-add" style="margin:0; color:red" onclick="this.parentElement.remove(); calculateTotal();">✕</button>`;
+        div.innerHTML = `<select style="flex: 1;"><option>CK</option><option>Tiền mặt</option></select><input type="text" class="pay-amount" style="flex: 1;" value="0" oninput="formatCurrencyInput(this)"><button class="btn-add" style="margin:0; color:red" onclick="this.parentElement.remove(); calculateTotal();">✕</button>`;
         document.getElementById('paymentList').appendChild(div);
     }
 
     function saveImage() {
-        prepareForExport();
         const area = document.querySelector("#capture-area");
+        prepareForExport();
         area.classList.add('exporting');
-        const btn = document.querySelector('.btn-save');
-        const oldText = btn.innerHTML;
-        btn.innerHTML = "⏳ ĐANG TẠO ẢNH...";
         setTimeout(() => {
-            html2canvas(area, { scale: 3, useCORS: true, backgroundColor: "#ffffff", windowWidth: 850 }).then(canvas => {
+            html2canvas(area, { scale: 3, useCORS: true, backgroundColor: "#ffffff" }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = `VuaNem_${document.getElementById('qDate').innerText}.png`;
                 link.href = canvas.toDataURL("image/png");
                 link.click();
-                btn.innerHTML = oldText;
                 area.classList.remove('exporting');
             });
-        }, 300);
+        }, 100);
     }
 
     function triggerPrint() {
         prepareForExport();
-        const area = document.querySelector("#capture-area");
-        area.classList.add('exporting');
+        document.querySelector("#capture-area").classList.add('exporting');
         window.print();
-        setTimeout(() => area.classList.remove('exporting'), 1000);
+        setTimeout(() => document.querySelector("#capture-area").classList.remove('exporting'), 1000);
     }
 
     function prepareForExport() {
         const select = document.getElementById('staffSelect');
         const customName = document.getElementById('customStaffName').value;
-        let tempOption = select.querySelector('option[data-temp="true"]');
-        if(!tempOption) {
-            tempOption = document.createElement('option');
-            tempOption.setAttribute('data-temp', 'true');
-            select.add(tempOption);
-        }
-        if(select.value === 'khac') {
-            tempOption.text = customName || "Nhân viên khác";
-        } else {
-            // Chỉ lấy tên hiển thị, bỏ giá trị ẩn chứa số điện thoại
-            tempOption.text = select.options[select.selectedIndex].text;
-        }
+        let tempOption = select.querySelector('option[data-temp="true"]') || document.createElement('option');
+        if(!tempOption.parentNode) { tempOption.setAttribute('data-temp', 'true'); select.add(tempOption); }
+        tempOption.text = (select.value === 'khac') ? (customName || "Nhân viên") : select.options[select.selectedIndex].text;
         tempOption.selected = true;
     }
 </script>
