@@ -70,6 +70,8 @@
             body { padding: 0; background: white; }
             .no-print, .btn, .btn-add, .hide-on-export, button { display: none !important; }
             input, textarea, select { border: none !important; padding: 0 !important; background: transparent !important; font-size: 13px !important; appearance: none !important; }
+.exporting.container { width: 850px !important; min-width: 850px !important; max-width: 850px !important; 
+	}
         }
     </style>
 </head>
@@ -291,19 +293,27 @@
     }
 
     function saveImage() {
-        const area = document.querySelector("#capture-area");
-        prepareForExport();
-        area.classList.add('exporting');
-        setTimeout(() => {
-            html2canvas(area, { scale: 3, useCORS: true, backgroundColor: "#ffffff" }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `VuaNem_${document.getElementById('qDate').innerText}.png`;
-                link.href = canvas.toDataURL("image/png");
-                link.click();
-                area.classList.remove('exporting');
-            });
-        }, 100);
-    }
+    const area = document.querySelector("#capture-area");
+    prepareForExport();
+    area.classList.add('exporting');
+
+    // Chờ 1 chút để giao diện kịp chuyển sang chế độ exporting
+    setTimeout(() => {
+        html2canvas(area, { 
+            scale: 2, // Độ nét vừa đủ để gửi Zalo không quá nặng
+            useCORS: true, 
+            backgroundColor: "#ffffff",
+            width: 850, // Cố định chiều rộng vùng chụp
+            windowWidth: 850 // Giả lập màn hình rộng 850px dù đang ở trên điện thoại
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `VuaNem_${document.getElementById('qDate').innerText}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+            area.classList.remove('exporting');
+        });
+    }, 200);
+}
 
     function triggerPrint() {
         prepareForExport();
