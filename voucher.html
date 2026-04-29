@@ -1,11 +1,45 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+<meta name="referrer" content="strict-origin-when-cross-origin">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Vua Nệm - Hệ Thống Quản Lý Voucher Pro</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
+.floating-controls { 
+    position: fixed; 
+    bottom: 20px; 
+    right: 20px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+    z-index: 9999; /* Đảm bảo luôn nằm trên cùng */
+}
+
+.fab-btn { 
+    width: 50px; 
+    height: 50px; 
+    border-radius: 50%; 
+    border: none; 
+    background: white; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    transition: all 0.3s;
+}
+
+.fab-btn:hover { transform: scale(1.1); }
+
+/* Ẩn khi in ấn */
+@media print {
+    .floating-controls { display: none !important; }
+}
         :root {
             --primary-color: #1a2a6c;
             --accent-color: #fdbb2d;
@@ -68,7 +102,7 @@
         }
 
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 13px; color: #444; }
+        .form-group label { display: block; font-weight: 400; margin-bottom: 6px; font-size: 13px; color: #444; }
         .form-group input, .form-group select { 
             width: 100%; padding: 10px; border: 1px solid #ced4da; 
             border-radius: 8px; box-sizing: border-box; font-size: 14px; 
@@ -79,8 +113,16 @@
         .phone-warning { color: #e63946; font-size: 11px; margin-top: 5px; display: block; font-weight: bold; }
         
         #action-group {
-            display: none;
-        }
+    display: none;
+}
+
+body {
+    display: none;
+}
+
+body.auth-ready {
+    display: flex;
+}
 
         .btn-print { 
             background: var(--primary-color); color: white; width: 100%; 
@@ -182,7 +224,7 @@
 
     <header>
         <h1>VUA NỆM - QUY NHƠN</h1>
-        <p>Hệ thống khởi tạo và quản lý Voucher chăm sóc khách hàng do Vi Nhựt (VN5022) phát triển ver2.0</p>
+        <p>Hệ thống khởi tạo và quản lý Voucher chăm sóc khách hàng do Vi Nhựt (VN5022) phát triển v2.0</p>
     </header>
 
     <div class="container">
@@ -204,7 +246,9 @@
                     <option value="0325575531 (Em Quyên)">0325575531 (Em Quyên)</option>
                     <option value="0969233949 (Em Hoà)">0969233949 (Em Hoà)</option>
                     <option value="0908852960 (Em Trinh)">0908852960 (Em Trinh)</option>
-                    <option value="0358969752 (Em Nhựt)">0358969752 (Em Nhựt)</option>
+                    <option value="0379210201 (Em Trang)">0379210201
+
+ (Em Trang)</option>
                     <option value="custom">-- Nhập tay số khác --</option>
                 </select>
                 <input type="text" id="inHotlineCustom" placeholder="SĐT và Tên nhân viên..." style="display:none; margin-top:8px;" oninput="update()">
@@ -225,7 +269,7 @@
             
             <div id="action-group">
                 <button class="btn-print" onclick="logToSheet('In Voucher'); window.print();">XUẤT FILE IN (CONTROL + P)</button>
-                <button class="btn-copy" id="btnCopy" onclick="copyVoucherImage()">SAO CHÉP ẢNH (Áp dụng laptop)</button>
+                <button class="btn-copy" id="btnCopy" onclick="copyVoucherImage()">SAO CHÉP ẢNH (GỬI ZALO)</button>
                 <button class="btn-download" id="btnDownload" onclick="downloadVoucherImage()">TẢI ẢNH VỀ ĐIỆN THOẠI</button>
             </div>
         </div>
@@ -286,130 +330,197 @@
         <p>&copy; 2026 <b>Phan Đinh Vi Nhựt</b>. All rights reserved. Designed for Vua Nệm Quy Nhơn.</p>
     </footer>
 
-    <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhS9I6_GchZ7uA4GzUEcg2-Ac5ux-o0hSTEx0CJSgEuXjaFg9GpIi6qnkhPHT2dSMcUQ/exec";
+  <script>
+// --- 1. KHỞI TẠO FIREBASE ---
+const firebaseConfig = { 
+    apiKey: "AIzaSyCFPWPMIHdZUJwpNJ75o1FK9AamecKSRCI", 
+    authDomain: "vuanem-d66e5.firebaseapp.com",
+    projectId: "vuanem-d66e5"
+};
 
-        async function logToSheet(action) {
-            const select = document.getElementById('hotlineSelect');
-            const custom = document.getElementById('inHotlineCustom').value;
-            const staffName = (select.value === 'custom') ? custom : select.value;
-            const data = {
-                staff: staffName,
-                customer: document.getElementById('inName').value || "Khách Hàng",
-                phone: document.getElementById('inPhone').value || "Không có",
-                code: document.getElementById('inCode').value,
-                description: document.getElementById('inDesc').value,
-                hsd: document.getElementById('inHsd').value,
-                action: action
-            };
-            try {
-                fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-            } catch (e) { console.error("Lỗi lưu log", e); }
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Cấu hình phiên làm việc (2 giờ)
+const SESSION_TIMEOUT = 2 * 60 * 60 * 1000;
+
+// --- 2. KIỂM TRA TRẠNG THÁI ĐĂNG NHẬP ---
+auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+        window.location.href = "index.html";
+        return;
+    }
+
+    try {
+        const userRef = db.collection("users").doc(user.email.toLowerCase());
+        const userSnap = await userRef.get();
+
+        if (!userSnap.exists) {
+            alert("Tài khoản chưa được cấp quyền!");
+            await auth.signOut();
+            window.location.href = "index.html";
+            return;
         }
 
-        window.onload = function() {
-            let hsdDate = new Date();
-            hsdDate.setDate(hsdDate.getDate() + 14);
-            document.getElementById('inHsd').value = String(hsdDate.getDate()).padStart(2, '0') + '.' + String(hsdDate.getMonth() + 1).padStart(2, '0') + '.' + hsdDate.getFullYear();
-            update();
-        };
+        const userData = userSnap.data();
 
-        function toggleHotlineInput() {
-            const select = document.getElementById('hotlineSelect');
-            document.getElementById('inHotlineCustom').style.display = (select.value === 'custom') ? 'block' : 'none';
-            update();
+        // Kiểm tra timeout phiên
+        const now = Date.now();
+        let loginTime = localStorage.getItem("loginTime");
+        if (!loginTime) {
+            localStorage.setItem("loginTime", now);
+        } else if (now - loginTime > SESSION_TIMEOUT) {
+            alert("Phiên đăng nhập đã hết hạn!");
+            localStorage.clear();
+            await auth.signOut();
+            window.location.href = "index.html";
+            return;
         }
 
-        function update() {
-            const name = document.getElementById('inName').value;
-            const phone = document.getElementById('inPhone').value;
-            const desc = document.getElementById('inDesc').value;
-            const code = document.getElementById('inCode').value;
-            const hsd = document.getElementById('inHsd').value;
+        // ✅ HIỂN THỊ GIAO DIỆN
+        document.body.classList.add("auth-ready");
 
-            document.getElementById('outName').innerText = name || "Khách Hàng";
-            document.getElementById('outPhone').innerText = phone;
-            document.getElementById('phoneWarning').style.display = (phone.length === 10) ? 'none' : 'block';
+        // ✅ TỰ ĐỘNG CHỌN NHÂN VIÊN
+        autoFillStaff(userData);
 
-            const select = document.getElementById('hotlineSelect');
-            const customHotline = document.getElementById('inHotlineCustom').value;
-            document.getElementById('outHotline').innerText = (select.value === 'custom') ? (customHotline || "SĐT - Tên nhân viên") : select.value;
+        // ✅ KHỞI TẠO NGÀY HSD MẶC ĐỊNH & CẬP NHẬT GIAO DIỆN
+        let hsdDate = new Date();
+        hsdDate.setDate(hsdDate.getDate() + 14);
+        document.getElementById('inHsd').value = String(hsdDate.getDate()).padStart(2, '0') + '.' + String(hsdDate.getMonth() + 1).padStart(2, '0') + '.' + hsdDate.getFullYear();
+        
+        update(); // Gọi hàm update lần đầu
 
-            document.getElementById('outCode').innerText = code;
-            document.getElementById('outDesc').innerText = desc;
-            document.getElementById('outHsd').innerText = hsd;
+    } catch (err) {
+        console.error("Auth error:", err);
+        window.location.href = "index.html";
+    }
+});
 
-            const actionGroup = document.getElementById('action-group');
-            if (name.trim() !== "" && phone.trim().length === 10 && desc.trim() !== "" && code.trim() !== "") {
-                actionGroup.style.display = "block";
-            } else {
-                actionGroup.style.display = "none";
-            }
+// --- 3. CÁC HÀM XỬ LÝ LOGIC (GIỮ NGUYÊN TÍNH NĂNG) ---
+
+function autoFillStaff(userData) {
+    const select = document.getElementById("hotlineSelect");
+    if (!select || !userData) return;
+    const name = (userData.name || "").toLowerCase();
+    const phone = (userData.phone || "").trim();
+
+    for (let i = 0; i < select.options.length; i++) {
+        const text = select.options[i].text.toLowerCase();
+        if (text.includes(name) || text.includes(phone)) {
+            select.selectedIndex = i;
+            break;
         }
+    }
+}
 
-        async function copyVoucherImage() {
-            const btn = document.getElementById('btnCopy');
-            const voucher = document.getElementById('voucher-to-print');
-            btn.innerText = "⏳ ĐANG TẠO ẢNH...";
-            btn.disabled = true;
-            logToSheet('Sao chép ảnh');
+function toggleHotlineInput() {
+    const select = document.getElementById('hotlineSelect');
+    document.getElementById('inHotlineCustom').style.display = (select.value === 'custom') ? 'block' : 'none';
+    update();
+}
 
-            try {
-                const canvas = await html2canvas(voucher, { scale: 2, useCORS: true, backgroundColor: null });
-                canvas.toBlob(async (blob) => {
-                    try {
-                        const data = [new ClipboardItem({ [blob.type]: blob })];
-                        await navigator.clipboard.write(data);
-                        btn.innerText = "✅ ĐÃ SAO CHÉP! DÁN VÀO ZALO NHÉ";
-                    } catch (err) {
-                        alert("Lỗi trình duyệt: Không hỗ trợ copy ảnh trực tiếp.");
-                    }
-                });
-            } catch (error) {
-                alert("Lỗi khi xử lý ảnh.");
-            } finally {
-                setTimeout(() => {
-                    btn.innerText = "SAO CHÉP ẢNH (GỬI ZALO)";
-                    btn.disabled = false;
-                }, 3000);
-            }
-        }
+function update() {
+    const name = document.getElementById('inName').value;
+    const phone = document.getElementById('inPhone').value;
+    const desc = document.getElementById('inDesc').value;
+    const code = document.getElementById('inCode').value;
+    const hsd = document.getElementById('inHsd').value;
 
-        /* --- TÍNH NĂNG TẢI ẢNH MỚI --- */
-        async function downloadVoucherImage() {
-            const btn = document.getElementById('btnDownload');
-            const voucher = document.getElementById('voucher-to-print');
-            const customerName = document.getElementById('inName').value || "KhachHang";
-            
-            btn.innerText = "⏳ ĐANG TẢI...";
-            btn.disabled = true;
-            logToSheet('Tải ảnh về máy');
+    document.getElementById('outName').innerText = name || "Khách Hàng";
+    document.getElementById('outPhone').innerText = phone;
+    document.getElementById('phoneWarning').style.display = (phone.length === 10) ? 'none' : 'block';
 
-            try {
-                // Sử dụng html2canvas để chụp lại voucher
-                const canvas = await html2canvas(voucher, { 
-                    scale: 3, // Tăng chất lượng ảnh khi tải về
-                    useCORS: true, 
-                    backgroundColor: "#ffffff" 
-                });
-                
-                // Tạo link giả lập để tải ảnh
-                const link = document.createElement('a');
-                link.download = `Voucher-VuaNem-${customerName.replace(/\s+/g, '-')}.png`;
-                link.href = canvas.toDataURL("image/png");
-                link.click();
-                
-                btn.innerText = "✅ TẢI THÀNH CÔNG";
-            } catch (error) {
-                console.error(error);
-                alert("Lỗi khi tải ảnh. Vui lòng thử lại.");
-            } finally {
-                setTimeout(() => {
-                    btn.innerText = "TẢI ẢNH VỀ ĐIỆN THOẠI";
-                    btn.disabled = false;
-                }, 2000);
-            }
-        }
-    </script>
+    const select = document.getElementById('hotlineSelect');
+    const customHotline = document.getElementById('inHotlineCustom').value;
+    document.getElementById('outHotline').innerText = (select.value === 'custom') ? (customHotline || "SĐT - Tên nhân viên") : select.value;
+
+    document.getElementById('outCode').innerText = code;
+    document.getElementById('outDesc').innerText = desc;
+    document.getElementById('outHsd').innerText = hsd;
+
+    const actionGroup = document.getElementById('action-group');
+    // Hiển thị nút bấm khi nhập đủ thông tin
+    if (name.trim() !== "" && phone.trim().length === 10 && code.trim() !== "") {
+        actionGroup.style.display = "block";
+    } else {
+        actionGroup.style.display = "none";
+    }
+}
+
+async function copyVoucherImage() {
+    const btn = document.getElementById('btnCopy');
+    const voucher = document.getElementById('voucher-to-print');
+    btn.innerText = "⏳ ĐANG TẠO ẢNH...";
+    btn.disabled = true;
+    logToSheet('Sao chép ảnh');
+
+    try {
+        const canvas = await html2canvas(voucher, { scale: 2, useCORS: true });
+        canvas.toBlob(async (blob) => {
+            const data = [new ClipboardItem({ [blob.type]: blob })];
+            await navigator.clipboard.write(data);
+            btn.innerText = "✅ ĐÃ SAO CHÉP!";
+        });
+    } catch (err) {
+        alert("Lỗi trình duyệt: Vui lòng dùng Chrome hoặc Safari.");
+    } finally {
+        setTimeout(() => {
+            btn.innerText = "SAO CHÉP ẢNH (GỬI ZALO)";
+            btn.disabled = false;
+        }, 2000);
+    }
+}
+
+async function downloadVoucherImage() {
+    const voucher = document.getElementById('voucher-to-print');
+    const customerName = document.getElementById('inName').value || "KhachHang";
+    logToSheet('Tải ảnh về máy');
+
+    const canvas = await html2canvas(voucher, { scale: 3, useCORS: true });
+    const link = document.createElement('a');
+    link.download = `Voucher-VuaNem-${customerName}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+}
+
+function logoutSystem() {
+    auth.signOut().then(() => {
+        localStorage.clear();
+        window.location.href = "index.html";
+    });
+}
+
+async function logToSheet(action) {
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhS9I6_GchZ7uA4GzUEcg2-Ac5ux-o0hSTEx0CJSgEuXjaFg9GpIi6qnkhPHT2dSMcUQ/exec";
+    const data = {
+        staff: document.getElementById('hotlineSelect').value,
+        customer: document.getElementById('inName').value,
+        phone: document.getElementById('inPhone').value,
+        action: action
+    };
+    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+}
+</script>
 </body>
+<div class="floating-controls no-print">
+        <button class="fab-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Lên đầu trang">
+            <svg viewBox="0 0 24 24" style="width:24px; height:24px; fill:none; stroke:#333; stroke-width:2;"><path d="M18 15l-6-6-6 6"/></svg>
+        </button>
+        
+        <button class="fab-btn" onclick="window.location.href='index.html'" title="Về trang chủ" style="background: #1e293b;">
+            <svg viewBox="0 0 24 24" style="width:24px; height:24px; fill:none; stroke:white; stroke-width:2;">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+        </button>
+
+        <button class="fab-btn" onclick="logoutSystem()" title="Đăng xuất" style="background: #ef4444;">
+            <svg viewBox="0 0 24 24" style="width:24px; height:24px; fill:none; stroke:white; stroke-width:2;">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+        </button>
+</div>
 </html>
