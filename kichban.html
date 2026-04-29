@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KỊCH BẢN XỬ LÝ TỪ CHỐI - Vua Nệm QUY NHƠN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+.floating-controls { 
+    position: fixed; 
+    bottom: 20px; 
+    right: 20px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+    z-index: 9999; /* Đảm bảo luôn nằm trên cùng */
+}
+
+.fab-btn { 
+    width: 50px; 
+    height: 50px; 
+    border-radius: 50%; 
+    border: none; 
+    background: white; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    transition: all 0.3s;
+}
+
+.fab-btn:hover { transform: scale(1.1); }        
+:root {
+            --primary: #27ae60;
+            --primary-dark: #1e8449;
+            --zalo-color: #0068ff;
+            --copy-color: #34495e;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .home-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            text-decoration: none;
+            color: #34495e;
+            font-weight: 600;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: 0.3s;
+        }
+
+        .home-link:hover { color: var(--primary); }
+
+        #secure-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 550px;
+            width: 100%;
+            background: var(--glass-bg);
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h2 { color: #2c3e50; margin: 0; font-size: 1.8em; font-weight: 700; }
+        .header p { color: #7f8c8d; font-size: 0.9em; margin-top: 5px; }
+
+        .input-group { margin-bottom: 20px; text-align: left; }
+        label { font-weight: 600; display: block; margin-bottom: 8px; color: #34495e; font-size: 0.85em; text-transform: uppercase; }
+
+        input, select {
+            width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #edf2f7;
+            background: #f8fafc; font-size: 1em; transition: all 0.3s; box-sizing: border-box;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary); outline: none; background: #fff;
+            box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.1);
+        }
+
+        .grid-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        .btn-main {
+            background: var(--primary); color: white; padding: 16px; border: none;
+            border-radius: 14px; font-weight: 700; font-size: 1.1em; cursor: pointer;
+            width: 100%; margin-top: 10px; transition: all 0.3s;
+            box-shadow: 0 8px 15px rgba(39, 174, 96, 0.2);
+        }
+
+        .script-card {
+            background: white; border: 1px solid #e2e8f0; border-radius: 16px;
+            padding: 20px; margin-top: 25px; text-align: left; animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .script-content { font-size: 1.05em; color: #2d3436; line-height: 1.6; margin-bottom: 20px; white-space: pre-wrap; }
+        .card-actions { display: flex; gap: 10px; }
+        .btn-action { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-copy { background: #f1f2f6; color: var(--copy-color); }
+        .btn-zalo { background: var(--zalo-color); color: white; }
+
+        .footer-tools { margin-top: 40px; text-align: center; border-top: 1px dashed #cbd5e0; padding-top: 20px; }
+        .btn-refresh { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 0.85em; font-weight: 600; }
+        #status-msg { font-size: 0.75em; color: #94a3b8; margin-top: 8px; }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<div id="secure-overlay">
+    <div style="text-align: center;">
+        <i class="fa-solid fa-shield-halved fa-spin fa-3x" style="color: var(--primary);"></i>
+        <p style="margin-top: 15px; font-weight: 600; color: #2c3e50;">Đang xác thực quyền truy cập...</p>
+    </div>
+</div>
+
+<div class="container">
+    <a href="index.html" class="home-link">
+        <i class="fa-solid fa-house"></i> HOME
+    </a>
+    
+    <div class="header">
+        <h2><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary);"></i> KỊCH BẢN XỬ LÝ TỪ CHỐI</h2>
+        <p>Vua Nệm - Quy Nhơn</p>
+    </div>
+
+    <div class="input-group">
+        <label><i class="fa-solid fa-user"></i> Tên khách hàng</label>
+        <input id="name" placeholder="Ví dụ: Anh Nhựt, Chị Quyên...">
+    </div>
+
+    <div class="input-group">
+        <label><i class="fa-solid fa-ticket"></i> Voucher / Quà tặng</label>
+        <input id="voucher" placeholder="Ví dụ: GIAM500K, Gối cao su...">
+    </div>
+
+    <div class="grid-row">
+        <div class="input-group">
+            <label>Trạng thái</label>
+            <select id="status">
+                <option value="Tất cả">Tất cả</option>
+                <option value="Khách mới">Khách mới</option>
+                <option value="Khách tiềm năng">Khách tiềm năng</option>
+                <option value="Đã báo giá">Đã báo giá</option>
+                <option value="Khách đã mua">Khách đã mua</option>
+                <option value="Khách cũ">Khách cũ</option>
+                <option value="Khách ngưng tương tác">Khách ngưng tương tác</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>Mục tiêu</label>
+            <select id="goal">
+                <option value="Tất cả">Tất cả</option>
+                <option value="Gợi nhu cầu">Gợi nhu cầu</option>
+                <option value="Mời đến cửa hàng">Mời đến cửa hàng</option>
+                <option value="Chăm sóc">Chăm sóc</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label>Thời điểm gửi</label>
+        <select id="time">
+            <option value="Tất cả">Tất cả</option>
+            <option value="Trong tuần">Trong tuần</option>
+            <option value="Cuối tuần">Cuối tuần</option>
+            <option value="Buổi tối">Buổi tối</option>
+        </select>
+    </div>
+
+    <button class="btn-main" onclick="generate()">🎯 TẠO KỊCH BẢN NGAY</button>
+    <div id="status-msg"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang đồng bộ dữ liệu...</div>
+    
+    <div id="scripts-container"></div>
+
+    <div class="footer-tools">
+        <button class="btn-refresh" onclick="refreshData()">
+            <i class="fa-solid fa-arrows-rotate"></i> Làm mới cơ sở dữ liệu
+        </button>
+    </div>
+</div>
+
+<script>
+    // Cấu hình Firebase thực tế của Nhựt
+    const firebaseConfig = {
+        apiKey: "AIzaSyCFPWPMIHdZUJwpNJ75o1FK9AamecKSRCI",
+        authDomain: "vuanem-d66e5.firebaseapp.com",
+        projectId: "vuanem-d66e5",
+        storageBucket: "vuanem-d66e5.firebasestorage.app",
+        messagingSenderId: "430491577223",
+        appId: "1:430491577223:web:92be899aa6eae7c0950122"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxiyZxaApzeJ5GNBtiDwgbln_BZonALfICWaMqVVfE-SAgO87knZ4cedZRvHTska-jk/exec";
+    let scriptsData = [];
+
+    // KIỂM TRA BẢO MẬT
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            try {
+                const userDoc = await db.collection("users").doc(user.email.toLowerCase()).get();
+                if (!userDoc.exists) {
+                    alert("Tài khoản chưa được phân quyền!");
+                    auth.signOut().then(() => window.location.href = "index.html");
+                    return;
+                }
+                // Nếu hợp lệ, tắt overlay và tải dữ liệu kịch bản
+                document.getElementById("secure-overlay").style.display = "none";
+                loadScripts();
+            } catch (e) {
+                console.error(e);
+                window.location.href = "index.html";
+            }
+        } else {
+            window.location.href = "index.html";
+        }
+    });
+
+    function loadScripts() {
+        let cache = localStorage.getItem("scriptsData");
+        if (cache) { 
+            scriptsData = JSON.parse(cache); 
+            document.getElementById("status-msg").innerHTML = "<i class='fa-solid fa-check-double'></i> Sẵn sàng!"; 
+        }
+        const script = document.createElement("script");
+        script.src = `${SCRIPT_URL}?callback=handleData`;
+        document.body.appendChild(script);
+    }
+
+    function handleData(data) {
+        scriptsData = data;
+        localStorage.setItem("scriptsData", JSON.stringify(data));
+        document.getElementById("status-msg").innerHTML = "<i class='fa-solid fa-cloud-check'></i> Dữ liệu mới nhất!";
+    }
+
+    function generate() {
+        if (!scriptsData.length) { alert("Đang tải dữ liệu..."); return; }
+        const name = document.getElementById("name").value || "Anh/Chị";
+        const voucher = document.getElementById("voucher").value || "ƯU ĐÃI ĐẶC BIỆT";
+        const status = document.getElementById("status").value;
+        const goal = document.getElementById("goal").value;
+        const time = document.getElementById("time").value;
+        const today = new Date().toLocaleDateString("vi-VN");
+
+        let matched = scriptsData.filter(s => 
+            (s.status === status || s.status === "Tất cả") &&
+            (s.goal === goal || s.goal === "Tất cả") &&
+            (s.time === time || s.time === "Tất cả")
+        );
+
+        if (matched.length === 0) {
+            document.getElementById("scripts-container").innerHTML = "<p style='color:red; margin-top:20px;'>Chưa có kịch bản phù hợp.</p>";
+            return;
+        }
+
+        matched = matched.sort(() => 0.5 - Math.random()).slice(0, 3);
+        let html = "";
+        matched.forEach((s, index) => {
+            let msg = s.content.replace(/{ten_khach}/g, name).replace(/{voucher}/g, voucher).replace(/{ngay}/g, today);
+            html += `
+                <div class="script-card">
+                    <div class="script-content" id="msg-${index}">${msg}</div>
+                    <div class="card-actions">
+                        <button class="btn-action btn-copy" onclick="copyText(${index})">Sao chép</button>
+                        <button class="btn-action btn-zalo" onclick="sendZalo(${index})">Gửi Zalo</button>
+                    </div>
+                </div>`;
+        });
+        document.getElementById("scripts-container").innerHTML = html;
+    }
+function logoutSystem() {
+    auth.signOut().then(() => {
+        localStorage.clear();
+        window.location.href = "index.html";
+    });
+}
+
+    function copyText(id) {
+        const text = document.getElementById(`msg-${id}`).innerText;
+        navigator.clipboard.writeText(text).then(() => alert("Đã chép!"));
+    }
+
+    function sendZalo(id) {
+        const text = document.getElementById(`msg-${id}`).innerText;
+        window.open(`https://zalo.me/?text=${encodeURIComponent(text)}`, "_blank");
+    }
+
+    function refreshData() {
+        localStorage.removeItem("scriptsData");
+        location.reload();
+    }
+</script>
+</body>
+<div class="floating-controls no-print">
+        <button class="fab-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Lên đầu trang">
+            <svg viewBox="0 0 24 24" style="width:24px; height:24px; fill:none; stroke:#333; stroke-width:2;"><path d="M18 15l-6-6-6 6"/></svg>
+        </button>
+        
+        <button class="fab-btn" onclick="window.location.href='index.html'" title="Về trang chủ" style="background: #1e293b;">
+            <svg viewBox="0 0 24 24" style="width:24px; height:24px; fill:none; stroke:white; stroke-width:2;">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+        </button>
+
+        <button class="fab-btn" onclick="logoutSystem()" title="Đăng xuất" style="background: #ef4444;">
+            <svg viewBox="0 0 24 24" style="width:24px; height:24px; fill:none; stroke:white; stroke-width:2;">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+        </button>
+</div>
+</html>
