@@ -5,9 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Chuỗi Vua Nệm Quy Nhơn</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
+.floating-controls { 
+    position: fixed; 
+    bottom: 20px; 
+    right: 20px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+    z-index: 9999; /* Đảm bảo luôn nằm trên cùng */
+}
+
+.fab-btn { 
+    width: 50px; 
+    height: 50px; 
+    border-radius: 50%; 
+    border: none; 
+    background: white; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    transition: all 0.3s;
+}
+
+.fab-btn:hover { transform: scale(1.1); }
+
         :root { 
             --primary: #002c77; --accent: #f6891f; --text: #2c3e50; 
             --light-bg: #f8fafc; --border: #0f1824; --danger: #ef4444; 
@@ -111,7 +138,7 @@
                         <option value="Em Hoà|0969233949">Văn Hoà</option>
                         <option value="Em Trinh|0908852960">Kiều Trinh</option>
                         <option value="Em Quyên|0325575531">Kiều Quyên</option>
-                        <option value="Vi Nhựt|0358969752" selected>Vi Nhựt</option>
+                        <option value="Em Trang|0379210201" selected>Thuỳ Trang</option>
                         <option value="khac">Khác...</option>
                     </select>
                 </div>
@@ -182,10 +209,95 @@
 
 <script>
     // NHỰT NHỚ THAY API KEY VÀO ĐÂY NHÉ
-    const firebaseConfig = { apiKey: "AIzaSyCFPWPMIHdZUJwpNJ75o1FK9AamecKSRCI", projectId: "vuanem-d66e5", authDomain: "vuanem-d66e5.firebaseapp.com" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const firebaseConfig = { 
+    apiKey: "AIzaSyCFPWPMIHdZUJwpNJ75o1FK9AamecKSRCI", 
+    authDomain: "vuanem-d66e5.firebaseapp.com",
+    projectId: "vuanem-d66e5"
+};
+
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Cấu hình phiên làm việc (2 giờ)
+const SESSION_TIMEOUT = 2 * 60 * 60 * 1000;
+
+// --- 2. KIỂM TRA TRẠNG THÁI ĐĂNG NHẬP ---
+let isAuthChecked = false;
+
+auth.onAuthStateChanged(async(user)=>{
+if(isAuthChecked) return;
+isAuthChecked=true;
+
+console.log("USER:",user);
+
+if(!user){
+setTimeout(()=>{
+window.location.href="index.html";
+},500);
+return;
+}
+
+    try {
+        const userRef = db.collection("users").doc(user.email.toLowerCase());
+        const userSnap = await userRef.get();
+
+        if (!userSnap.exists) {
+            alert("Tài khoản chưa được cấp quyền!");
+            await auth.signOut();
+            window.location.href = "index.html";
+            return;
+        }
+
+        const userData = userSnap.data();
+
+        // Kiểm tra timeout phiên
+        const now = Date.now();
+        let loginTime = localStorage.getItem("loginTime");
+        if (!loginTime) {
+            localStorage.setItem("loginTime", now);
+        } else if (now - loginTime > SESSION_TIMEOUT) {
+            alert("Phiên đăng nhập đã hết hạn!");
+            localStorage.clear();
+            await auth.signOut();
+            window.location.href = "index.html";
+            return;
+        }
+
+        // ✅ HIỂN THỊ GIAO DIỆN
+        document.body.classList.add("auth-ready");
+
+        // ✅ TỰ ĐỘNG CHỌN NHÂN VIÊN
+        autoFillStaff(userData);
+        
+        updateTime(); // Gọi hàm update lần đầu
+
+    } catch (err) {
+        console.error("Auth error:", err);
+        window.location.href = "index.html";
+    }
+});
+    function autoFillStaff(userData) {
+    const select = document.getElementById('staffSelect');
+    const phoneInput = document.getElementById('staffPhone');
     
+    // Giả sử userData có trường display_name hoặc name
+    const userName = userData.display_name || userData.name || "";
+    
+    if (userName.includes("Hoà")) select.value = "Em Hoà|0969233949";
+    else if (userName.includes("Trinh")) select.value = "Em Trinh|0908852960";
+    else if (userName.includes("Quyên")) select.value = "Em Quyên|0325575531";
+    else if (userName.includes("Nhựt")) select.value = "Vi Nhựt|0358969752";
+    
+    updateStaff(); // Cập nhật số điện thoại tương ứng
+}
+async function logoutSystem() {
+    if(confirm("Bạn muốn đăng xuất?")) {
+        localStorage.clear();
+        await auth.signOut();
+        window.location.href = "index.html";
+    }
+}
     function updateTime() {
         const now = new Date();
         document.getElementById('currentDate').innerText = `Ngày lập: ${now.toLocaleDateString('vi-VN')} | ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -331,5 +443,24 @@
         tempOption.selected = true;
     }
 </script>
-</body>
-</html>
+<div class="floating-controls no-print">
+        <button class="fab-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Lên đầu trang">
+            <svg viewBox="0 0 24 24" style="width:24px; height:24px; fill:none; stroke:#333; stroke-width:2;"><path d="M18 15l-6-6-6 6"/></svg>
+        </button>
+        
+        <button class="fab-btn" onclick="window.location.href='index.html'" title="Về trang chủ" style="background: #1e293b;">
+            <svg viewBox="0 0 24 24" style="width:24px; height:24px; fill:none; stroke:white; stroke-width:2;">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+        </button>
+
+        <button class="fab-btn" onclick="logoutSystem()" title="Đăng xuất" style="background: #ef4444;">
+            <svg viewBox="0 0 24 24" style="width:24px; height:24px; fill:none; stroke:white; stroke-width:2;">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+        </button>
+    </div></div>
+</body></html>
