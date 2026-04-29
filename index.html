@@ -3,139 +3,319 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ thống Vua Nệm Quy Nhơn</title>
+    <title>Hệ Thống Quản Trị - Vua Nệm Quy Nhơn</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
     <style>
         :root {
-            --vuanem-blue: #002c77;
-            --vuanem-orange: #f6891f;
-            --bg: #f8fafc;
+            --vuanem-blue: #00205B;
+            --vuanem-gold: #FFD700;
+            --vuanem-orange: #f59e0b;
+            --bg-light: #f4f7fa;
+            --glass: rgba(255, 255, 255, 0.95);
         }
 
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg);
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 800px;
+        body { 
+            font-family: 'Be Vietnam Pro', sans-serif; 
+            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
             padding: 20px;
+            color: #1e293b;
+        }
+
+        #login-section {
+            background: var(--glass);
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(0,32,91,0.1);
+            width: 100%;
+            max-width: 400px;
             text-align: center;
+            margin-top: 10vh;
         }
 
-        .header h1 {
-            color: var(--vuanem-blue);
-            font-size: 32px;
-            font-weight: 900;
-            margin-bottom: 10px;
-            text-transform: uppercase;
+        .login-input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1.5px solid #e2e8f0;
+            margin-top: 8px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            font-family: inherit;
         }
 
-        .header p {
-            color: #64748b;
-            margin-bottom: 40px;
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            background: var(--vuanem-blue);
+            color: white;
+            border: none;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
         }
 
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
+        .btn-login:hover { opacity: 0.9; transform: translateY(-2px); }
+
+        .header { text-align: center; margin-top: 30px; margin-bottom: 40px; }
+        .header h1 { color: var(--vuanem-blue); font-size: 32px; font-weight: 800; text-transform: uppercase; margin: 10px 0; }
+        
+        .status-badge {
+            display: inline-flex; align-items: center; background: #fff; color: #059669;
+            padding: 6px 16px; border-radius: 50px; font-size: 13px; font-weight: 600;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px;
+        }
+
+        .status-dot {
+            height: 8px; width: 8px; background-color: #10b981; border-radius: 50%;
+            display: inline-block; margin-right: 10px; animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .container { 
+            display: flex; gap: 25px; flex-wrap: wrap; justify-content: center;
+            max-width: 1100px; width: 100%;
         }
 
         .card {
-            background: white;
-            border-radius: 20px;
-            padding: 40px 20px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 20px rgba(0, 44, 119, 0.05);
-            border: 1px solid #e2e8f0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background: var(--glass); width: 280px; padding: 40px 20px;
+            border-radius: 30px; text-decoration: none; display: flex;
+            flex-direction: column; align-items: center; transition: all 0.4s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid rgba(255,255,255,0.8);
         }
 
-        .card:hover {
-            transform: translateY(-8px);
-            border-color: var(--vuanem-orange);
-            box-shadow: 0 15px 30px rgba(0, 44, 119, 0.15);
+        .card:hover { transform: translateY(-10px); box-shadow: 0 25px 50px rgba(0,32,91,0.12); }
+
+        .icon-wrapper {
+            width: 80px; height: 80px; border-radius: 24px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 32px; margin-bottom: 20px;
         }
 
-        .icon-box {
-            width: 70px;
-            height: 70px;
-            border-radius: 15px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 20px;
-            font-size: 30px;
-            color: white;
+        .baogia-theme .icon-wrapper { background: #e0e7ff; color: #4338ca; }
+        .voucher-theme .icon-wrapper { background: #dcfce7; color: #15803d; }
+        .kichban-theme .icon-wrapper { background: #fef3c7; color: #b45309; }
+        .tag-nem-theme .icon-wrapper { background: #dbeafe; color: #2563eb; }
+        .khongnguthu-theme .icon-wrapper { background: #fee2e2; color: #dc2626; }
+        .tag-cgpk-theme .icon-wrapper { background: #f0fdf4; color: #16a34a; }
+
+        .card h2 { margin: 0; font-size: 18px; color: #1e293b; font-weight: 700; text-align: center; }
+        .card p { font-size: 13px; color: #64748b; text-align: center; margin: 15px 0; flex-grow: 1; }
+
+        .go-btn {
+            width: 50px; height: 50px; border-radius: 50px;
+            background: var(--vuanem-blue); color: white;
+            display: flex; align-items: center; justify-content: center; transition: 0.3s;
+        }
+        .card:hover .go-btn { width: 140px; }
+        .card:hover .go-btn::after { content: "TRUY CẬP"; margin-left: 10px; font-size: 12px; font-weight: 600; }
+
+        #admin-panel {
+            background: #1e293b; color: white; padding: 20px;
+            border-radius: 20px; margin-bottom: 30px; width: 100%; max-width: 600px;
+            display: none;
         }
 
-        .bg-blue { background: var(--vuanem-blue); }
-        .bg-orange { background: var(--vuanem-orange); }
-
-        .card h2 {
-            margin: 0 0 10px;
-            color: #1e293b;
-            font-size: 20px;
-            font-weight: 700;
+        .logout-link {
+            margin-top: 30px; color: #ef4444; cursor: pointer;
+            font-weight: 600; text-decoration: underline; font-size: 14px;
         }
 
-        .card p {
-            color: #64748b;
-            font-size: 14px;
-            margin: 0;
-        }
-
-        .footer {
-            margin-top: 50px;
-            font-size: 13px;
-            color: #94a3b8;
-        }
-
-        @media (max-width: 600px) {
-            .dashboard-grid { grid-template-columns: 1fr; }
-        }
+        .footer { margin-top: 50px; text-align: center; color: #64748b; font-size: 12px; padding-bottom: 40px; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="header">
-            <h1>VUA NỆM QUY NHƠN</h1>
-            <p>Hệ thống hỗ trợ bán hàng chuyên nghiệp</p>
+    <div id="login-section">
+        <img src="logo_vuanem.png" alt="Logo" style="width: 140px; margin-bottom: 20px;">
+        <h2 style="color: var(--vuanem-blue); margin-bottom: 5px;">Hệ Thống Nội Bộ</h2>
+        <p style="font-size: 14px; color: #64748b; margin-bottom: 25px;">Khu vực dành riêng cho nhân viên Quy Nhơn</p>
+        
+        <div style="text-align: left;">
+            <label style="font-size: 12px; font-weight: 700; color: #475569; margin-left: 5px;">EMAIL CÔNG TY</label>
+            <input type="email" id="email" class="login-input" placeholder="vinhut93@gmail.com">
+            
+            <label style="font-size: 12px; font-weight: 700; color: #475569; margin-left: 5px;">MẬT KHẨU</label>
+            <div style="position: relative;">
+                <input type="password" id="password" class="login-input" placeholder="••••••••" style="padding-right: 45px;">
+                <i class="fas fa-eye" id="togglePassword" 
+                   style="position: absolute; right: 15px; top: 22px; cursor: pointer; color: #64748b; font-size: 18px;"></i>
+            </div>
         </div>
 
-        <div class="dashboard-grid">
-            <a href="baogia.html" class="card">
-                <div class="icon-box bg-blue">
-                    <i class="fa-solid fa-file-invoice-dollar"></i>
-                </div>
-                <h2>Lập Báo Giá Nhanh</h2>
-                <p>Công cụ in báo giá chuyên nghiệp cho khách hàng tại Vua Nệm Quy Nhơn.</p>
-            </a>
-
-            <a href="voucher.html" class="card">
-                <div class="icon-box bg-orange">
-                    <i class="fa-solid fa-ticket"></i>
-                </div>
-                <h2>Voucher</h2>
-                <p>Áp dụng các chương trình khuyến mãi và voucher mới nhất.</p>
-            </a>
-        </div>
-
-        <div class="footer">
-            PHÁT TRIỂN BỞI VI NHỰT (VN5022) • VUA NỆM 2026
-        </div>
+        <button class="btn-login" onclick="login()">ĐĂNG NHẬP</button>
+        <p id="loading-text" style="display:none; color: var(--vuanem-blue); font-size: 13px; margin-top:15px;"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...</p>
     </div>
 
+    <div id="main-tool" style="display: none; width: 100%; max-width: 1100px;">
+        <div class="header">
+            <div class="status-badge">
+                <span class="status-dot"></span>Xin chào, <span id="user-display" style="margin-left:5px; color: var(--vuanem-blue);">...</span>
+            </div>
+            <h1>QUẢN TRỊ HỆ THỐNG</h1>
+            <p>Công cụ hỗ trợ vận hành Vua Nệm Quy Nhơn 2026</p>
+        </div>
+
+        <center>
+            <div id="admin-panel">
+                <div style="margin-bottom: 15px; font-size: 12px; font-weight: 800; color: var(--vuanem-gold);">
+                    <i class="fas fa-crown"></i> QUYỀN HẠN: QUẢN TRỊ VIÊN
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button style="background: #334155; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer;"><i class="fas fa-users"></i> Nhân sự</button>
+                    <button style="background: #059669; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer;"><i class="fas fa-chart-pie"></i> Báo cáo</button>
+                </div>
+            </div>
+        </center>
+
+        <div class="container">
+            <a href="baogia.html" class="card baogia-theme">
+                <div class="icon-wrapper"><i class="fas fa-file-invoice-dollar"></i></div>
+                <h2>LẬP BÁO GIÁ</h2>
+                <p>Tạo bảng báo giá chuyên nghiệp.</p>
+                <div class="go-btn"><i class="fas fa-chevron-right"></i></div>
+            </a>
+
+            <a href="voucher.html" class="card voucher-theme">
+                <div class="icon-wrapper"><i class="fas fa-ticket-alt"></i></div>
+                <h2>KHO VOUCHER</h2>
+                <p>Quản lý danh sách voucher.</p>
+                <div class="go-btn"><i class="fas fa-chevron-right"></i></div>
+            </a>
+
+            <a href="kichban.html" class="card kichban-theme">
+                <div class="icon-wrapper"><i class="fas fa-comments"></i></div>
+                <h2>KỊCH BẢN BÁN HÀNG</h2>
+                <p>Thư viện mẫu câu chốt sale và xử lý từ chối (Pro).</p>
+                <div class="go-btn"><i class="fas fa-chevron-right"></i></div>
+            </a>
+
+            <a href="tag-nem.html" class="card tag-nem-theme">
+                <div class="icon-wrapper"><i class="fas fa-bed"></i></div>
+                <h2>TAG ĐỆM (NGỦ THỬ)</h2>
+                <p>In tag giá cho các dòng đệm Caosu, Lò xo, Foarm, Bông ép có chính sách ngủ thử 120 đêm.</p>
+                <div class="go-btn"><i class="fas fa-chevron-right"></i></div>
+            </a>
+
+            <a href="Khongnguthu.html" class="card khongnguthu-theme">
+                <div class="icon-wrapper"><i class="fas fa-exclamation-circle"></i></div>
+                <h2>TAG ĐỆM (KHÔNG NGỦ THỬ)</h2>
+                <p>Dành cho dòng đệm, topper không áp dụng đổi trả.</p>
+                <div class="go-btn"><i class="fas fa-chevron-right"></i></div>
+            </a>
+
+            <a href="tag-cgpk.html" class="card tag-cgpk-theme">
+                <div class="icon-wrapper"><i class="fas fa-tags"></i></div>
+                <h2>TAG PHỤ KIỆN CGPK</h2>
+                <p>In tag giá cho Chăn, Ga, Gối và các phụ kiện đi kèm khác.</p>
+                <div class="go-btn"><i class="fas fa-chevron-right"></i></div>
+            </a>
+        </div>
+
+        <center>
+            <div class="logout-link" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Thoát hệ thống
+            </div>
+        </center>
+    </div>
+
+    <div class="footer">
+        <p>© 2026 Vua Nệm Quy Nhơn - Phát triển bởi Vi Nhựt (VN5022)</p>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCFPWPMIHdZUJwpNJ75o1FK9AamecKSRCI",
+            authDomain: "vuanem-d66e5.firebaseapp.com",
+            projectId: "vuanem-d66e5",
+            storageBucket: "vuanem-d66e5.firebasestorage.app",
+            messagingSenderId: "430491577223",
+            appId: "1:430491577223:web:92be899aa6eae7c0950122"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Logic ẩn hiện mật khẩu
+        document.addEventListener('DOMContentLoaded', function() {
+            const togglePassword = document.querySelector('#togglePassword');
+            const password = document.querySelector('#password');
+
+            if(togglePassword) {
+                togglePassword.addEventListener('click', function (e) {
+                    const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                    password.setAttribute('type', type);
+                    this.classList.toggle('fa-eye-slash');
+                    this.classList.toggle('fa-eye');
+                });
+            }
+        });
+
+        function login() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            if(!email || !password) return alert("Vui lòng nhập đủ Email và Mật khẩu!");
+
+            document.getElementById('loading-text').style.display = 'block';
+            
+            auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).then(() => {
+                return auth.signInWithEmailAndPassword(email, password);
+            }).catch(err => {
+                alert("Lỗi đăng nhập: " + err.message);
+                document.getElementById('loading-text').style.display = 'none';
+            });
+        }
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                db.collection("users").doc(user.email.toLowerCase()).get().then(doc => {
+                    if (doc.exists) {
+                        const userData = doc.data();
+                        document.getElementById('login-section').style.display = 'none';
+                        document.getElementById('main-tool').style.display = 'block';
+                        document.getElementById('user-display').innerText = userData.name || user.email;
+                        
+                        if (userData.role === 'admin') {
+                            document.getElementById('admin-panel').style.display = 'block';
+                        }
+                    } else {
+                        alert("Tài khoản chưa được phân quyền hệ thống!");
+                        logout();
+                    }
+                });
+            } else {
+                document.getElementById('login-section').style.display = 'block';
+                document.getElementById('main-tool').style.display = 'none';
+                document.getElementById('loading-text').style.display = 'none';
+            }
+        });
+
+        function logout() { 
+            auth.signOut().then(() => {
+                sessionStorage.clear();
+                location.reload(); 
+            });
+        }
+    </script>
 </body>
 </html>
