@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>In Thẻ PCCC Trắng Đen - Bố cục dọc</title>
+    
+    <!-- PHẦN BỔ SUNG: FIREBASE SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        /* PHẦN BỔ SUNG: CSS CHO ĐĂNG NHẬP */
+        #auth-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; z-index: 10000; display: flex;
+            align-items: center; justify-content: center; font-family: Arial, sans-serif;
+            font-size: 18px; font-weight: bold; color: #00205B;
+        }
+        body:not(.auth-ready) .controls, 
+        body:not(.auth-ready) .preview-container { display: none !important; }
+
+        /* GIỮ NGUYÊN STYLE CỦA BẠN */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+        }
+
+        .controls {
+            width: 320px;
+            padding: 15px;
+            background: #f09f95;
+            height: 100vh;
+            position: fixed;
+            overflow-y: auto;
+            border-right: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 5px; }
+        .form-group input { width: 100%; padding: 8px; border: 1px solid #000; box-sizing: border-box; }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #000;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            text-transform: uppercase;
+        }
+
+        .preview-container {
+            margin-left: 320px;
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+        }
+
+        .a4-page {
+            width: 210mm;
+            height: 297mm;
+            background: white;
+            padding: 5mm;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 2mm;
+            box-sizing: border-box;
+        }
+
+        .card {
+            border: 2px solid #000;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            margin-bottom: 10px;
+        }
+
+        .header h2 {
+            margin: 0 0 8px 0;
+            font-size: 18px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .info-list {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .info-item {
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .info-item span.label {
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 4px 2px;
+            text-align: center;
+        }
+
+        th { 
+            background: #eee; 
+            font-weight: bold;
+        }
+
+        .footer-tag {
+            margin-top: auto;
+            font-size: 9px;
+            text-align: right;
+            font-style: italic;
+        }
+
+        @media print {
+            .controls { display: none; }
+            .preview-container { margin: 0; padding: 0; }
+            body { background: white; }
+            .a4-page { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MÀN HÌNH CHỜ ĐĂNG NHẬP -->
+    <div id="auth-overlay">Đang kiểm tra quyền truy cập...</div>
+
+    <div class="controls">
+        <h3 style="margin-top:0">Cấu hình thẻ PCCC</h3>
+        <div class="form-group">
+            <label>Tên phương tiện:</label>
+            <input type="text" id="inputName" value="BÌNH CHỮA CHÁY" oninput="updateCards()">
+        </div>
+        <div class="form-group">
+            <label>Ký mã hiệu:</label>
+            <input type="text" id="inputModel" value="MFZL4" oninput="updateCards()">
+        </div>
+        <div class="form-group">
+            <label>Tần suất kiểm tra:</label>
+            <input type="text" id="inputFreq" value="1 LẦN/THÁNG" oninput="updateCards()">
+        </div>
+        <div class="form-group">
+            <label>Ngày/Tháng/năm kiểm tra</label>
+            <input type="month" id="startMonth" value="2026-03" oninput="updateCards()">
+        </div>
+        <div class="form-group">
+            <label>Ngày đưa vào sử dụng:</label>
+            <input type="text" id="inputDateUsed" value="14/03/2025" oninput="updateCards()">
+        </div>
+        <button onclick="window.print()">In ngay (Khổ A4)</button>
+        <!-- Nút về trang chủ -->
+        <button onclick="window.location.href='index.html'" style="background: #334155; margin-top: 10px;">Về trang chủ</button>
+        
+        <p style="font-size: 12px; color: #555; margin-top: 15px;">
+            * Mỗi trang A4 gồm 4 thẻ.<br>
+            * Bố cục A4 dọc.
+        </p>
+    </div>
+
+    <div class="preview-container">
+        <div class="a4-page" id="printArea"></div>
+    </div>
+
+    <script>
+        // PHẦN BỔ SUNG: LOGIC ĐĂNG NHẬP FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyCFPWPMIHdZUJwpNJ75o1FK9AamecKSRCI",
+            authDomain: "vuanem-d66e5.firebaseapp.com",
+            projectId: "vuanem-d66e5",
+            storageBucket: "vuanem-d66e5.firebasestorage.app",
+            messagingSenderId: "430491577223",
+            appId: "1:430491577223:web:92be899aa6eae7c0950122"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                db.collection("users").doc(user.email.toLowerCase()).get().then(doc => {
+                    if (doc.exists) {
+                        document.body.classList.add("auth-ready");
+                        document.getElementById('auth-overlay').style.display = 'none';
+                        updateCards(); // Gọi hàm cập nhật thẻ sau khi đăng nhập thành công
+                    } else {
+                        alert("Tài khoản chưa được phân quyền!");
+                        window.location.href = 'index.html';
+                    }
+                });
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+
+        // GIỮ NGUYÊN LOGIC CỦA BẠN
+        function updateCards() {
+            const name = document.getElementById('inputName').value;
+            const model = document.getElementById('inputModel').value;
+            const freq = document.getElementById('inputFreq').value;
+            const dateUsed = document.getElementById('inputDateUsed').value;
+            const startMonthVal = document.getElementById('startMonth').value;
+
+            const printArea = document.getElementById('printArea');
+            if(!printArea) return;
+            printArea.innerHTML = '';
+
+            for (let i = 0; i < 4; i++) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                let tableRows = '';
+                let currentMonth = new Date(startMonthVal + "-01");
+
+                for (let j = 0; j < 12; j++) {
+                    const m = (currentMonth.getMonth() + 1).toString().padStart(2, '0');
+                    const y = currentMonth.getFullYear();
+                    tableRows += `<tr><td>... / ${m} / ${y}</td><td></td><td></td></tr>`;
+                    currentMonth.setMonth(currentMonth.getMonth() + 1);
+                }
+
+                card.innerHTML = `
+                    <div class="header">
+                        <h2>THẺ KIỂM TRA BÌNH CHỮA CHÁY</h2>
+                    </div>
+                    <div class="info-list">
+                        <div class="info-item"><span class="label">Tên Phương tiện:</span> ${name}</div>
+                        <div class="info-item"><span class="label">Ký mã hiệu:</span> ${model}</div>
+                        <div class="info-item"><span class="label">Tần suất kiểm:</span> ${freq}</div>
+                        <div class="info-item"><span class="label">Ngày/tháng/năm đưa vào sử dụng:</span> ${dateUsed}</div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th width="40%">Ngày/Tháng/năm kiểm tra</th>
+                                <th width="30%">Kết quả kiểm tra</th>
+                                <th width="30%">Người kiểm tra</th>
+                            </tr>
+                        </thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                    <div class="footer-tag">Ngày in: ${new Date().toLocaleDateString('vi-VN')}</div>
+                `;
+                printArea.appendChild(card);
+            }
+        }
+    </script>
+</body>
+</html>
