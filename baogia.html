@@ -150,30 +150,32 @@
         </div>
 
         <div class="card-title">Chi tiết đơn hàng</div>
-        <div class="table-wrapper">
-            <table id="productTable">
-                <thead>
-                    <tr>
-                        <th width="15%">Mã SP</th>
-                        <th width="45%">Tên sản phẩm</th>
-                        <th width="10%" style="text-align: center;">SL</th>
-                        <th width="15%" style="text-align: right;">Đơn giá</th>
-                        <th width="15%" style="text-align: right;">Tổng</th>
-                        <th width="5%" class="no-print"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><input type="text" class="p-code" placeholder="Mã..." oninput="debounceSearch(this)"></td>
-                        <td><div class="p-name-display">Chọn sản phẩm...</div></td>
-                        <td><input type="number" class="p-qty" value="1" min="1" oninput="calculateRow(this)" style="text-align: center;"></td>
-                        <td><input type="text" class="p-price" value="0" oninput="formatCurrencyInput(this)" style="text-align: right;"></td>
-                        <td class="p-total" style="text-align: right; font-weight: 700; color: var(--primary);">0</td>
-                        <td class="no-print" style="text-align: center;"><button class="btn-add" style="color:red; border-color:red" onclick="removeRow(this)">✕</button></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+<datalist id="productListOptions"></datalist> <!-- CHÈN DÒNG NÀY Ở ĐÂY -->
+<div class="table-wrapper">
+    <div class="table-wrapper">
+    <table id="productTable">
+        <thead> <!-- Thêm thẻ mở thead -->
+            <tr>
+                <th width="15%">Mã SP</th>
+                <th width="45%">Tên sản phẩm</th>
+                <th width="10%" style="text-align: center;">SL</th>
+                <th width="15%" style="text-align: right;">Đơn giá</th>
+                <th width="15%" style="text-align: right;">Tổng</th>
+                <th width="5%" class="no-print"></th>
+            </tr>
+        </thead>
+        <tbody> <!-- Đây là nơi chứa các dòng sản phẩm -->
+            <tr>
+                <td><input type="text" class="p-code" list="productListOptions" placeholder="Mã..." oninput="debounceSearch(this)"></td>
+                <td><div class="p-name-display">Chọn sản phẩm...</div></td>
+                <td><input type="number" class="p-qty" value="1" min="1" oninput="calculateRow(this)" style="text-align: center;"></td>
+                <td><input type="text" class="p-price" value="0" oninput="formatCurrencyInput(this)" style="text-align: right;"></td>
+                <td class="p-total" style="text-align: right; font-weight: 700; color: var(--primary);">0</td>
+                <td class="no-print" style="text-align: center;"><button class="btn-add" style="color:red; border-color:red" onclick="removeRow(this)">✕</button></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
         <button class="btn btn-add no-print" onclick="addRow()">+ Thêm dòng sản phẩm</button>
 
         <div class="bottom-section">
@@ -232,6 +234,19 @@ isAuthChecked=true;
 console.log("USER:",user);
 
 if(!user){
+function addRow() {
+    const tbody = document.querySelector('#productTable tbody');
+    // Tham số -1 đảm bảo dòng mới luôn được thêm vào cuối cùng của tbody
+    const row = tbody.insertRow(-1); 
+    
+    row.innerHTML = `
+        <td><input type="text" class="p-code" list="productListOptions" placeholder="Mã/Tên..." oninput="debounceSearch(this)"></td>
+        <td><div class="p-name-display">...</div></td>
+        <td><input type="number" class="p-qty" value="1" min="1" oninput="calculateRow(this)" style="text-align: center;"></td>
+        <td><input type="text" class="p-price" value="0" oninput="formatCurrencyInput(this)" style="text-align: right;"></td>
+        <td class="p-total" style="text-align: right; font-weight: 700; color: var(--primary);">0</td>
+        <td class="no-print" style="text-align: center;"><button class="btn-add" style="color:red; border-color:red" onclick="removeRow(this)">✕</button></td>`;
+}
 setTimeout(()=>{
 window.location.href="index.html";
 },500);
@@ -350,10 +365,17 @@ async function logoutSystem() {
     }
 
     function addRow() {
-        const tbody = document.querySelector('#productTable tbody');
-        const row = tbody.insertRow();
-        row.innerHTML = `<td><input type="text" class="p-code" oninput="debounceSearch(this)"></td><td><div class="p-name-display">...</div></td><td><input type="number" class="p-qty" value="1" min="1" oninput="calculateRow(this)" style="text-align: center;"></td><td><input type="text" class="p-price" value="0" oninput="formatCurrencyInput(this)" style="text-align: right;"></td><td class="p-total" style="text-align: right; font-weight: 700; color: var(--primary);">0</td><td class="no-print" style="text-align: center;"><button class="btn-add" style="color:red; border-color:red" onclick="removeRow(this)">✕</button></td>`;
-    }
+    const tbody = document.querySelector('#productTable tbody');
+    const row = tbody.insertRow();
+    // Thêm list="productListOptions" để trình duyệt biết lấy gợi ý từ đâu
+    row.innerHTML = `
+        <td><input type="text" class="p-code" list="productListOptions" placeholder="Mã/Tên..." oninput="debounceSearch(this)"></td>
+        <td><div class="p-name-display">...</div></td>
+        <td><input type="number" class="p-qty" value="1" min="1" oninput="calculateRow(this)" style="text-align: center;"></td>
+        <td><input type="text" class="p-price" value="0" oninput="formatCurrencyInput(this)" style="text-align: right;"></td>
+        <td class="p-total" style="text-align: right; font-weight: 700; color: var(--primary);">0</td>
+        <td class="no-print" style="text-align: center;"><button class="btn-add" style="color:red; border-color:red" onclick="removeRow(this)">✕</button></td>`;
+}
 
     function removeRow(btn) {
         if(document.querySelectorAll('#productTable tbody tr').length > 1) btn.closest('tr').remove();
@@ -442,6 +464,34 @@ async function logoutSystem() {
         tempOption.text = (select.value === 'khac') ? (customName || "Nhân viên") : select.options[select.selectedIndex].text;
         tempOption.selected = true;
     }
+let allProducts = []; 
+
+async function loadProductSuggestions() {
+    const datalist = document.getElementById('productListOptions');
+    try {
+        const snapshot = await db.collection("products").get();
+        let optionsHtml = "";
+        allProducts = [];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            allProducts.push({ id: doc.id, name: data.item_name, price: data.unit_price });
+            // Hiển thị gợi ý: Mã - Tên
+            optionsHtml += `<option value="${doc.id}">${data.item_name}</option>`;
+        });
+        datalist.innerHTML = optionsHtml;
+        console.log("Đã tải xong danh sách sản phẩm.");
+    } catch (e) { console.error("Lỗi:", e); }
+}
+
+// Tìm hàm auth.onAuthStateChanged (dòng 180) và thêm dòng loadProductSuggestions() vào cuối:
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        // Các code xử lý login hiện tại của Nhựt...
+        
+        // Gọi hàm tải sản phẩm từ Firestore về danh sách gợi ý
+        loadProductSuggestions(); 
+    }
+});
 </script>
 <div class="floating-controls no-print">
         <button class="fab-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Lên đầu trang">
