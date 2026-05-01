@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Báo giá Vua Nệm - Quy Nhơn</title>
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
@@ -57,7 +57,30 @@
         .input-group { margin-bottom: 8px; display: flex; align-items: center; }
         label { width: 100px; font-size: 13px; font-weight: bold; }
         input, select, textarea { flex-grow: 1; border: 1px solid #ccc; padding: 6px; font-size: 14px; font-family: inherit; background: transparent; }
-
+/* Tối ưu hiển thị trên điện thoại */
+@media screen and (max-width: 768px) {
+    body { padding: 0; }
+    .container { 
+        width: 100% !important; 
+        min-height: auto !important; 
+        padding: 15px !important; 
+        border: none !important;
+    }
+    .info-grid { grid-template-columns: 1fr; gap: 10px; }
+    .bottom-section { grid-template-columns: 1fr; gap: 20px; }
+    .header-top { flex-direction: column; text-align: center; }
+    .quote-title { text-align: center; margin-top: 15px; }
+    
+    /* Cho phép bảng cuộn ngang trên mobile để không bị vỡ chữ */
+    #productTable { 
+        display: block; 
+        overflow-x: auto; 
+        white-space: nowrap; 
+    }
+    
+    /* Điều chỉnh các ô nhập liệu trên mobile cho dễ bấm */
+    input, select { font-size: 16px !important; } 
+}
         /* Dòng chào mừng nằm giữa info và table */
         .welcome-text { margin: 10px 0 15px 5px; font-style: italic; font-weight: bold; font-size: 15px; color: #000; }
 
@@ -67,6 +90,34 @@ table {
     border-collapse: collapse; 
     table-layout: auto; /* Chế độ tự động tính toán độ rộng */
     word-wrap: break-word;
+}
+/* Khi chụp ảnh, đảm bảo text trong input vẫn hiển thị đúng vị trí */
+input {
+    color: #333;
+    font-family: inherit;
+}
+
+/* Xóa dấu tăng giảm (spin buttons) của ô nhập số để ảnh đẹp hơn */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+/* Đảm bảo khi mất khung, chữ vẫn nằm đúng vị trí trong ô bảng */
+#productTable td input {
+    text-align: center; /* Căn giữa cho SL, Đơn giá, Chiết khấu */
+    width: 100%;
+}
+
+/* Riêng ô Mã SP và Size thường căn giữa */
+#productTable td:nth-child(1) input,
+#productTable td:nth-child(3) input {
+    text-align: center;
+}
+
+/* Ô Tên sản phẩm thường căn trái (nếu có input) */
+#productTable td:nth-child(2) input {
+    text-align: left;
 }
 
 /* Định dạng tiêu đề cột - Căn giữa toàn bộ */
@@ -520,7 +571,71 @@ function addRow() {
             window.location.href = "index.html";
         });
     }
-</script><div class="floating-controls no-print">
+function saveAsImage() {
+    const container = document.querySelector('.container');
+    const inputs = container.querySelectorAll('input, select, textarea');
+    const noPrintElements = document.querySelectorAll('.no-print');
+
+    // 1. Ẩn các nút điều khiển
+    noPrintElements.forEach(el => el.style.setProperty('display', 'none', 'important'));
+
+    // 2. Ép xóa sạch mọi dấu vết của ô nhập liệu
+    inputs.forEach(input => {
+        // Dùng !important trong JS để đè lên các CSS khác
+        input.style.setProperty('border', 'none', 'important');
+        input.style.setProperty('background', 'transparent', 'important');
+        input.style.setProperty('outline', 'none', 'important');
+        input.style.setProperty('box-shadow', 'none', 'important');
+        input.style.setProperty('-webkit-appearance', 'none', 'important');
+        input.style.setProperty('-moz-appearance', 'none', 'important');
+        
+        // Căn chỉnh lại padding để chữ không bị lệch khi mất khung
+        input.style.setProperty('padding', '0', 'important'); 
+    });
+
+    // 3. Tiến hành chụp ảnh
+    html2canvas(container, {
+        scale: 3, 
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        windowWidth: 1200,
+        width: 1200,
+    }).then(canvas => {
+        // 4. Trả lại trạng thái ban đầu cho các ô nhập liệu để Nhựt làm việc tiếp
+        inputs.forEach(input => {
+            input.style.border = '';
+            input.style.background = '';
+            input.style.outline = '';
+            input.style.boxShadow = '';
+            input.style.appearance = '';
+            input.style.padding = '';
+        });
+        noPrintElements.forEach(el => el.style.display = '');
+
+        // 5. Tải ảnh về
+        const link = document.createElement('a');
+        const customerName = document.querySelector('input[placeholder="Tên khách hàng..."]')?.value || "Khach_Hang";
+        const date = new Date().toLocaleDateString('vi-VN').replace(/\//g, '-');
+        
+        link.download = `Bao_Gia_${customerName}_${date}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    }).catch(err => {
+        console.error("Lỗi:", err);
+        inputs.forEach(input => input.style.border = '');
+        noPrintElements.forEach(el => el.style.display = '');
+    });
+}</script>
+<div class="floating-controls no-print">
+<!-- Nút Lưu Ảnh -->
+<button class="fab-btn" onclick="saveAsImage()" title="Lưu ảnh báo giá" style="background: #10b981;">
+    <svg viewBox="0 0 24 24" style="width:24px; height:24px; fill:none; stroke:white; stroke-width:2;">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+    </svg>
+</button>
         <button class="fab-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Lên đầu trang">
             <svg viewBox="0 0 24 24" style="width:24px; height:24px; fill:none; stroke:#333; stroke-width:2;"><path d="M18 15l-6-6-6 6"/></svg>
         </button>
