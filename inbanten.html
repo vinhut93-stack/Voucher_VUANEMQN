@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>In Bảng Tên - Tùy Chỉnh Kích Thước</title>
+    
+    <!-- FIREBASE SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        /* PHẦN XÁC THỰC */
+        #auth-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; z-index: 10000; display: flex;
+            align-items: center; justify-content: center; font-family: Arial, sans-serif;
+            font-size: 18px; font-weight: bold; color: #003580;
+        }
+        body:not(.auth-ready) .container { display: none !important; }
+
+        :root {
+            --primary-color: #003580;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h2 { color: var(--primary-color); text-align: center; margin-top: 0; }
+
+        .control-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .full-width { grid-column: span 2; }
+
+        label { font-size: 13px; font-weight: bold; color: #444; display: block; margin-bottom: 5px; }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button.secondary { background: #64748b; }
+
+        /* VÙNG PREVIEW BẢNG TÊN */
+        .preview-wrapper {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-top: 2px dashed #e2e8f0;
+            padding-top: 20px;
+        }
+
+        /* ĐÚNG KÍCH THƯỚC 7CM X 1CM */
+        #print-area {
+            width: 7cm;
+            height: 1cm;
+            border: 1px solid #000; /* Viền để cắt */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: white;
+            box-sizing: border-box;
+        }
+
+        #display-tag {
+            white-space: nowrap;
+            text-transform: uppercase;
+            line-height: 1;
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; height: auto; min-height: 0; display: block; }
+            .container { box-shadow: none; max-width: 100%; padding: 0; }
+            .preview-wrapper { border: none; padding: 0; margin: 0; }
+            #print-area { border: 1px solid #ccc; margin: 0; } /* Viền mờ để dễ cắt */
+        }
+    </style>
+</head>
+<body>
+
+    <div id="auth-overlay">Đang kiểm tra quyền truy cập...</div>
+
+    <div class="container">
+        <div class="no-print">
+            <h2>IN BẢNG TÊN NHÂN VIÊN</h2>
+            
+            <div class="control-panel">
+                <div class="full-width">
+                    <label>Họ và Tên:</label>
+                    <input type="text" id="employee-name" placeholder="Nhập tên..." oninput="updatePreview()">
+                </div>
+                <div>
+                    <label>Cỡ chữ (px):</label>
+                    <input type="number" id="font-size" value="18" oninput="updatePreview()">
+                </div>
+                <div>
+                    <label>Màu chữ:</label>
+                    <input type="color" id="font-color" value="#003580" oninput="updatePreview()">
+                </div>
+                <div class="full-width">
+                    <label>Kiểu chữ:</label>
+                    <select id="font-family" onchange="updatePreview()">
+                        <option value="'Segoe UI', sans-serif">Segoe UI (Mặc định)</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                        <option value="'Courier New', monospace">Courier New</option>
+                        <option value="Tahoma, sans-serif">Tahoma</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button onclick="window.print()">IN BẢNG TÊN</button>
+                <button class="secondary" onclick="window.location.href='index.html'">QUAY LẠI</button>
+            </div>
+        </div>
+
+        <div class="preview-wrapper">
+            <p class="no-print" style="font-size: 11px; color: #94a3b8;">Kích thước thực tế: 7cm x 1cm</p>
+            <div id="print-area">
+                <div id="display-tag">TÊN NHÂN VIÊN</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIG FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyCFPWPMIHdZUJwpNJ75o1FK9AamecKSRCI",
+            authDomain: "vuanem-d66e5.firebaseapp.com",
+            projectId: "vuanem-d66e5",
+            storageBucket: "vuanem-d66e5.firebasestorage.app",
+            messagingSenderId: "430491577223",
+            appId: "1:430491577223:web:92be899aa6eae7c0950122"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                db.collection("users").doc(user.email.toLowerCase()).get().then(doc => {
+                    if (doc.exists) {
+                        document.body.classList.add("auth-ready");
+                        document.getElementById('auth-overlay').style.display = 'none';
+                    } else {
+                        alert("Tài khoản chưa được phân quyền!");
+                        window.location.href = 'index.html';
+                    }
+                });
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+
+        // HÀM CẬP NHẬT GIAO DIỆN
+        function updatePreview() {
+            const name = document.getElementById('employee-name').value;
+            const size = document.getElementById('font-size').value;
+            const color = document.getElementById('font-color').value;
+            const family = document.getElementById('font-family').value;
+
+            const display = document.getElementById('display-tag');
+            
+            // Cập nhật nội dung
+            display.innerText = name.trim() !== "" ? name.toUpperCase() : "TÊN NHÂN VIÊN";
+            
+            // Cập nhật định dạng
+            display.style.fontSize = size + "px";
+            display.style.color = color;
+            display.style.fontFamily = family;
+            display.style.fontWeight = "bold";
+        }
+    </script>
+</body>
+</html>
