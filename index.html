@@ -35,6 +35,7 @@
             color: #1e293b;
         }
 
+        /* --- LOGIN SECTION --- */
         #login-section {
             background: var(--glass);
             padding: 40px;
@@ -71,8 +72,9 @@
 
         .btn-login:hover { opacity: 0.9; transform: translateY(-2px); }
 
-        .header { text-align: center; margin-top: 30px; margin-bottom: 40px; }
-        .header h1 { color: var(--vuanem-blue); font-size: 32px; font-weight: 800; text-transform: uppercase; margin: 10px 0; }
+        /* --- MAIN LAYOUT --- */
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: var(--vuanem-blue); font-size: 28px; font-weight: 800; text-transform: uppercase; margin: 10px 0; }
         
         .status-badge {
             display: inline-flex; align-items: center; background: #fff; color: #059669;
@@ -91,45 +93,67 @@
             100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
 
-        .container { 
-            display: flex; gap: 25px; flex-wrap: wrap; justify-content: center;
-            max-width: 1100px; width: 100%;
+        /* --- GROUPING STYLES --- */
+        .category-section {
+            width: 100%;
+            max-width: 1100px;
+            margin-bottom: 40px;
+        }
+
+        .category-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--vuanem-blue);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-left: 10px;
+            border-left: 5px solid var(--vuanem-blue);
+        }
+
+        .grid-container { 
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+            width: 100%;
         }
 
         .card {
-            background: var(--glass); width: 280px; padding: 40px 20px;
-            border-radius: 30px; text-decoration: none; display: flex;
-            flex-direction: column; align-items: center; transition: all 0.4s ease;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid rgba(255,255,255,0.8);
+            background: var(--glass);
+            padding: 25px 20px;
+            border-radius: 24px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+            border: 1px solid rgba(255,255,255,0.8);
+            gap: 15px;
         }
 
-        .card:hover { transform: translateY(-10px); box-shadow: 0 25px 50px rgba(0,32,91,0.12); }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,32,91,0.1); }
 
-        .icon-wrapper {
-            width: 80px; height: 80px; border-radius: 24px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 32px; margin-bottom: 20px;
+        .icon-box {
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
         }
 
-        .baogia-theme .icon-wrapper { background: #e0e7ff; color: #4338ca; }
-	.baogiadn-theme .icon-wrapper { background: #f5f3ff; color: #7c3aed; }
-        .voucher-theme .icon-wrapper { background: #dcfce7; color: #15803d; }
-        .kichban-theme .icon-wrapper { background: #fef3c7; color: #b45309; }
-        .tag-nem-theme .icon-wrapper { background: #dbeafe; color: #2563eb; }
-        .khongnguthu-theme .icon-wrapper { background: #fee2e2; color: #dc2626; }
-        .tag-cgpk-theme .icon-wrapper { background: #f0fdf4; color: #16a34a; }
-	.pccc-theme .icon-wrapper { background: #fee2e2; color: #ef4444; }
+        .card-info { flex-grow: 1; }
+        .card-info h2 { margin: 0; font-size: 15px; color: #1e293b; font-weight: 700; }
+        .card-info p { margin: 4px 0 0; font-size: 12px; color: #64748b; line-height: 1.4; }
 
-        .card h2 { margin: 0; font-size: 18px; color: #1e293b; font-weight: 700; text-align: center; }
-        .card p { font-size: 13px; color: #64748b; text-align: center; margin: 15px 0; flex-grow: 1; }
-
-        .go-btn {
-            width: 50px; height: 50px; border-radius: 50px;
-            background: var(--vuanem-blue); color: white;
-            display: flex; align-items: center; justify-content: center; transition: 0.3s;
-        }
-        .card:hover .go-btn { width: 140px; }
-        .card:hover .go-btn::after { content: "TRUY CẬP"; margin-left: 10px; font-size: 12px; font-weight: 600; }
+        /* Themes */
+        .theme-sale { background: #e0e7ff; color: #4338ca; }
+        .theme-print { background: #dbeafe; color: #2563eb; }
+        .theme-care { background: #fef3c7; color: #b45309; }
+        .theme-other { background: #fee2e2; color: #dc2626; }
 
         #admin-panel {
             background: #1e293b; color: white; padding: 20px;
@@ -138,15 +162,17 @@
         }
 
         .logout-link {
-            margin-top: 30px; color: #ef4444; cursor: pointer;
-            font-weight: 600; text-decoration: underline; font-size: 14px;
+            margin: 40px 0; color: #ef4444; cursor: pointer;
+            font-weight: 600; text-decoration: none; font-size: 14px;
+            display: inline-block;
         }
 
-        .footer { margin-top: 50px; text-align: center; color: #64748b; font-size: 12px; padding-bottom: 40px; }
+        .footer { margin-top: auto; text-align: center; color: #64748b; font-size: 12px; padding: 20px 0; }
     </style>
 </head>
 <body>
 
+    <!-- SECTION ĐĂNG NHẬP (GIỮ NGUYÊN) -->
     <div id="login-section">
         <img src="logo_vuanem.png" alt="Logo" style="width: 140px; margin-bottom: 20px;">
         <h2 style="color: var(--vuanem-blue); margin-bottom: 5px;">Hệ Thống Nội Bộ</h2>
@@ -168,13 +194,13 @@
         <p id="loading-text" style="display:none; color: var(--vuanem-blue); font-size: 13px; margin-top:15px;"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...</p>
     </div>
 
+    <!-- SECTION MAIN TOOL (CHIA LẠI LAYOUT) -->
     <div id="main-tool" style="display: none; width: 100%; max-width: 1100px;">
         <div class="header">
             <div class="status-badge">
                 <span class="status-dot"></span>Xin chào, <span id="user-display" style="margin-left:5px; color: var(--vuanem-blue);">...</span>
             </div>
             <h1>QUẢN TRỊ HỆ THỐNG</h1>
-            <p>Công cụ hỗ trợ vận hành Vua Nệm Quy Nhơn 2026</p>
         </div>
 
         <center>
@@ -189,59 +215,98 @@
             </div>
         </center>
 
-        <div class="container">
-            <a href="baogia.html" class="card baogia-theme">
-                <div class="icon-wrapper"><i class="fas fa-file-invoice-dollar"></i></div>
-                <h2>BÁO GIÁ KHÁCH LẺ</h2>
-                <p>Tạo bảng báo giá cho khách lẻ.</p>
-                <div class="go-btn"><i class="fas fa-chevron-right"></i></div>
-            </a>
-<a href="baogiadoanhnghiep.html" class="card baogiadn-theme">
-    <div class="icon-wrapper"><i class="fas fa-building"></i></div>
-    <h2>BÁO GIÁ DOANH NGHIỆP</h2>
-    <p>Tạo báo giá dự án, khách sạn, căn hộ số lượng lớn.</p>
-    <div class="go-btn"><i class="fas fa-chevron-right"></i></div>
-</a>
-            <a href="voucher.html" class="card voucher-theme">
-                <div class="icon-wrapper"><i class="fas fa-ticket-alt"></i></div>
-                <h2>KHO VOUCHER</h2>
-                <p>Quản lý danh sách voucher.</p>
-                <div class="go-btn"><i class="fas fa-chevron-right"></i></div>
-            </a>
+        <!-- NHÓM 1: BÁN HÀNG -->
+        <div class="category-section">
+            <div class="category-title"><i class="fas fa-shopping-cart"></i> BÁN HÀNG</div>
+            <div class="grid-container">
+                <a href="baogia.html" class="card">
+                    <div class="icon-box theme-sale"><i class="fas fa-file-invoice-dollar"></i></div>
+                    <div class="card-info">
+                        <h2>BÁO GIÁ KHÁCH LẺ</h2>
+                        <p>Tạo bảng báo giá nhanh cho khách tại cửa hàng.</p>
+                    </div>
+                </a>
+                <a href="baogiadoanhnghiep.html" class="card">
+                    <div class="icon-box theme-sale"><i class="fas fa-building"></i></div>
+                    <div class="card-info">
+                        <h2>BÁO GIÁ DOANH NGHIỆP</h2>
+                        <p>Báo giá dự án, khách sạn, doanh nghiệp.</p>
+                    </div>
+                </a>
+            </div>
+        </div>
 
-            <a href="kichban.html" class="card kichban-theme">
-                <div class="icon-wrapper"><i class="fas fa-comments"></i></div>
-                <h2>KỊCH BẢN BÁN HÀNG</h2>
-                <p>Thư viện mẫu câu chốt sale và xử lý từ chối (Pro).</p>
-                <div class="go-btn"><i class="fas fa-chevron-right"></i></div>
-            </a>
+        <!-- NHÓM 2: CÔNG CỤ IN GIÁ -->
+        <div class="category-section">
+            <div class="category-title"><i class="fas fa-print"></i> CÔNG CỤ IN GIÁ</div>
+            <div class="grid-container">
+                <a href="tag-nem.html" class="card">
+                    <div class="icon-box theme-print"><i class="fas fa-bed"></i></div>
+                    <div class="card-info">
+                        <h2>TAG ĐỆM (NGỦ THỬ)</h2>
+                        <p>In tag cho đệm có chính sách đến 120 đêm.</p>
+                    </div>
+                </a>
+                <a href="Khongnguthu.html" class="card">
+                    <div class="icon-box theme-print"><i class="fas fa-exclamation-circle"></i></div>
+                    <div class="card-info">
+                        <h2>TAG ĐỆM (KHÔNG ĐỔI TRẢ)</h2>
+                        <p>Dành cho đệm/topper không áp dụng ngủ thử.</p>
+                    </div>
+                </a>
+                <a href="tag-cgpk.html" class="card">
+                    <div class="icon-box theme-print"><i class="fas fa-tags"></i></div>
+                    <div class="card-info">
+                        <h2>TAG PHỤ KIỆN CGPK</h2>
+                        <p>In tag giá cho Chăn, Ga, Gối, Phụ kiện.</p>
+                    </div>
+                </a>
+            </div>
+        </div>
 
-            <a href="tag-nem.html" class="card tag-nem-theme">
-                <div class="icon-wrapper"><i class="fas fa-bed"></i></div>
-                <h2>TAG ĐỆM (NGỦ THỬ)</h2>
-                <p>In tag giá cho các dòng đệm Caosu, Lò xo, Foarm, Bông ép có chính sách ngủ thử 120 đêm.</p>
-                <div class="go-btn"><i class="fas fa-chevron-right"></i></div>
-            </a>
+        <!-- NHÓM 3: CHĂM SÓC KHÁCH HÀNG -->
+        <div class="category-section">
+            <div class="category-title"><i class="fas fa-heart"></i> CHĂM SÓC KHÁCH HÀNG</div>
+            <div class="grid-container">
+                <a href="voucher.html" class="card">
+                    <div class="icon-box theme-care"><i class="fas fa-ticket-alt"></i></div>
+                    <div class="card-info">
+                        <h2>KHO VOUCHER</h2>
+                        <p>Tạo voucher chuyên nghiệp gửi khách hàng.</p>
+                    </div>
+                </a>
+                <a href="kichban.html" class="card">
+                    <div class="icon-box theme-care"><i class="fas fa-comments"></i></div>
+                    <div class="card-info">
+                        <h2>KỊCH BẢN BÁN HÀNG</h2>
+                        <p>Mẫu câu chốt sale và xử lý từ chối chuyên nghiệp.</p>
+                    </div>
+                </a>
+            </div>
+        </div>
 
-            <a href="Khongnguthu.html" class="card khongnguthu-theme">
-                <div class="icon-wrapper"><i class="fas fa-exclamation-circle"></i></div>
-                <h2>TAG ĐỆM (KHÔNG NGỦ THỬ)</h2>
-                <p>Dành cho dòng đệm, topper không áp dụng đổi trả.</p>
-                <div class="go-btn"><i class="fas fa-chevron-right"></i></div>
-            </a>
+        <!-- NHÓM 4: KHÁC -->
+        <div class="category-section">
+            <div class="category-title"><i class="fas fa-toolbox"></i> KHÁC</div>
+            <div class="grid-container">
+                <!-- Công cụ PCCC hiện có -->
+                <a href="binhchuachay.html" class="card">
+                    <div class="icon-box theme-other"><i class="fas fa-fire-extinguisher"></i></div>
+                    <div class="card-info">
+                        <h2>KIỂM TRA PCCC</h2>
+                        <p>Phiếu kiểm tra PCCC định kì.</p>
+                    </div>
+                </a>
 
-            <a href="tag-cgpk.html" class="card tag-cgpk-theme">
-                <div class="icon-wrapper"><i class="fas fa-tags"></i></div>
-                <h2>TAG PHỤ KIỆN CGPK</h2>
-                <p>In tag giá cho Chăn, Ga, Gối và các phụ kiện đi kèm khác.</p>
-                <div class="go-btn"><i class="fas fa-chevron-right"></i></div>
-            </a>
-	    <a href="binhchuachay.html" class="card pccc-theme">
-    		<div class="icon-wrapper"><i class="fas fa-fire-extinguisher"></i></div>
-    		<h2>KIỂM TRA PCCC</h2>
-    		<p>Ghi nhận tình trạng và in biên bản kiểm tra bình chữa cháy định kỳ.</p>
-    		<div class="go-btn"><i class="fas fa-chevron-right"></i></div>
-</a>
+                <!-- CÔNG CỤ MỚI: IN BẢN TÊN -->
+                <a href="inbanten.html" class="card">
+                    <div class="icon-box theme-other"><i class="fas fa-id-badge"></i></div>
+                    <div class="card-info">
+                        <h2>IN BẢN TÊN</h2>
+                        <p>Tạo và in bản tên nhân viên.</p>
+                    </div>
+                </a>
+            </div>
         </div>
 
         <center>
@@ -256,6 +321,7 @@
     </div>
 
     <script>
+        // --- GIỮ NGUYÊN TOÀN BỘ LOGIC FIREBASE CỦA BẠN ---
         const firebaseConfig = {
             apiKey: "AIzaSyCFPWPMIHdZUJwpNJ75o1FK9AamecKSRCI",
             authDomain: "vuanem-d66e5.firebaseapp.com",
@@ -269,11 +335,9 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // Logic ẩn hiện mật khẩu
         document.addEventListener('DOMContentLoaded', function() {
             const togglePassword = document.querySelector('#togglePassword');
             const password = document.querySelector('#password');
-
             if(togglePassword) {
                 togglePassword.addEventListener('click', function (e) {
                     const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -299,29 +363,60 @@
             });
         }
 
+        // --- ĐOẠN CODE ĐÃ TỐI ƯU ĐỂ TIẾT KIỆM QUOTA ---
         auth.onAuthStateChanged(user => {
             if (user) {
-                db.collection("users").doc(user.email.toLowerCase()).get().then(doc => {
-                    if (doc.exists) {
-                        const userData = doc.data();
-                        document.getElementById('login-section').style.display = 'none';
-                        document.getElementById('main-tool').style.display = 'block';
-                        document.getElementById('user-display').innerText = userData.name || user.email;
-                        
-                        if (userData.role === 'admin') {
-                            document.getElementById('admin-panel').style.display = 'block';
+                // Kiểm tra xem đã lưu thông tin trong bộ nhớ trình duyệt chưa
+                const cachedName = sessionStorage.getItem('userName');
+                const cachedRole = sessionStorage.getItem('userRole');
+
+                if (cachedName) {
+                    // Nếu đã có dữ liệu tạm, hiển thị ngay không gọi Firebase (Tiết kiệm Read)
+                    showMainSystem(cachedName, cachedRole);
+                } else {
+                    // Nếu chưa có (lần đầu đăng nhập hoặc mới mở trình duyệt)
+                    db.collection("users").doc(user.email.toLowerCase()).get().then(doc => {
+                        if (doc.exists) {
+                            const userData = doc.data();
+                            // Lưu vào bộ nhớ tạm để dùng cho các lần chuyển trang/F5 sau
+                            sessionStorage.setItem('userName', userData.name || user.email);
+                            sessionStorage.setItem('userRole', userData.role);
+                            
+                            showMainSystem(userData.name || user.email, userData.role);
+                        } else {
+                            alert("Tài khoản chưa được phân quyền hệ thống!");
+                            logout();
                         }
-                    } else {
-                        alert("Tài khoản chưa được phân quyền hệ thống!");
-                        logout();
-                    }
-                });
+                    }).catch(error => {
+                        console.error("Lỗi truy xuất: ", error);
+                        if(error.message.includes("quota")) {
+                            alert("Hệ thống đang tạm nghỉ do hết hạn mức dữ liệu ngày hôm nay. Vui lòng quay lại sau!");
+                        }
+                    });
+                }
             } else {
-                document.getElementById('login-section').style.display = 'block';
-                document.getElementById('main-tool').style.display = 'none';
-                document.getElementById('loading-text').style.display = 'none';
+                showLoginSection();
             }
         });
+
+        // Hàm hỗ trợ hiển thị Giao diện chính
+        function showMainSystem(name, role) {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('main-tool').style.display = 'block';
+            document.getElementById('user-display').innerText = name;
+            
+            if (role === 'admin') {
+                document.getElementById('admin-panel').style.display = 'block';
+            }
+        }
+
+        // Hàm hỗ trợ hiển thị Giao diện đăng nhập
+        function showLoginSection() {
+            document.getElementById('login-section').style.display = 'block';
+            document.getElementById('main-tool').style.display = 'none';
+            document.getElementById('loading-text').style.display = 'none';
+            document.getElementById('admin-panel').style.display = 'none';
+        }
 
         function logout() { 
             auth.signOut().then(() => {
