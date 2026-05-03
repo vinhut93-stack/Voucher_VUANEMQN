@@ -43,7 +43,52 @@
             margin: 0 auto; background: white; padding: 40px; border: 1px solid #000; box-sizing: border-box;
             display: flex; flex-direction: column;
         }
+/* Khung chứa ảnh để định vị nút xóa */
+.image-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
+/* Nút X xóa ảnh */
+.btn-remove-img {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: rgba(255, 0, 0, 0.8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 10;
+}
+
+.btn-remove-img:hover {
+    background: red;
+}
+.image-drop-zone {
+    background-position: center;
+    background-repeat: no-repeat !important; /* Chống lặp ảnh như trong image_09876d.png */
+    background-size: contain;
+    cursor: move;
+    user-select: none;
+    background-color: #f9f9f9;
+    transition: background-size 0.1s ease-out; /* Giúp thu phóng mượt hơn */
+    outline: none;
+}
+.image-drop-zone:active {
+    cursor: grabbing;
+}
         .header-top { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
         .brand-info h1 { margin: 0; font-size: 24px; font-weight: bold; text-transform: uppercase; }
         .quote-title { text-align: right; }
@@ -143,7 +188,7 @@ td {
 
 /* Ép các cột nhỏ không được quá rộng */
 .col-code { width: 80px; text-align: center; }
-.col-size { width: 90px; text-align: center; }
+.col-size { width: 180px; text-align: center; }
 .col-qty  { width: 40px; text-align: center; }
 .col-price { width: 100px; text-align: right; }
 .col-disc  { width: 110px; text-align: center; }
@@ -211,7 +256,8 @@ td {
     .container { border: none !important; width: 100% !important; padding: 0 !important; }
     table { border: 1px solid #000 !important; }
     th, td { border: 1px solid #000 !important; }
-
+.image-drop-zone { border: none !important; }
+}
     /* Căn chỉnh lại văn bản sau khi mất khung nhập liệu */
     .p-qty, .p-code, .p-size { text-align: center !important; }
     .p-price, .p-disc-val, .p-total { text-align: right !important; }
@@ -288,7 +334,7 @@ td {
     <tr>
         <th class="col-code">Mã SP</th>
         <th class="col-name">Tên sản phẩm / Đặc điểm</th>
-        <th class="col-size">Size</th>
+        <th class="col-size">Hình ảnh</th>
         <th class="col-qty">SL</th>
         <th class="col-price">Đơn giá</th>
         <th class="col-disc">Chiết khấu</th>
@@ -435,9 +481,7 @@ td {
         addRow(); // Tạo dòng đầu tiên
     };
 
-    // --- 3. HÀM ADDROW (ĐÃ ĐƯA RA NGOÀI ĐỂ KHÔNG BỊ LỖI) ---
-    /* --- VỊ TRÍ 2: Thay thế toàn bộ hàm addRow cũ --- */
-function addRow() {
+   function addRow() {
     const row = `<tr>
         <td class="col-code"><input type="text" class="p-code" list="productListOptions" oninput="debounceSearch(this)" style="width:100%; text-align:center;"></td>
         <td class="col-name">
@@ -445,7 +489,15 @@ function addRow() {
             <ul class="spec-list" style="margin:5px 0; padding-left:15px; font-size:12px; font-style:italic;"></ul>
             <button class="btn-spec no-print" onclick="addSpec(this)">+ Đặc điểm</button>
         </td>
-        <td class="col-size"><input type="text" class="p-size" style="width:100%; text-align: center;"></td>
+        <!-- CỘT HÌNH ẢNH ĐÃ ĐƯỢC NỚI RỘNG -->
+        <td class="col-size" style="width: 180px; min-width: 180px; height: 150px; padding: 5px; vertical-align: middle;">
+            <div class="image-drop-zone" 
+                 contenteditable="true" 
+                 onpaste="handlePasteImage(event, this)"
+                 style="width: 100%; height: 100%; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 11px; color: #999; cursor: pointer; background: #fafafa;">
+                 Dán ảnh (Ctrl+V)
+            </div>
+        </td>
         <td class="col-qty"><input type="number" class="p-qty" value="1" oninput="calculateTotal()" style="text-align: center; width:100%;"></td>
         <td class="col-price"><input type="text" class="p-price" value="0" oninput="formatCurrency(this)" style="text-align: right; width:100%;"></td>
         <td class="col-disc">
@@ -458,6 +510,116 @@ function addRow() {
         <td class="no-print" style="text-align: center;"><button onclick="this.closest('tr').remove(); calculateTotal();" style="color:red; border:none; background:none; cursor:pointer">✕</button></td>
     </tr>`;
     document.querySelector('#productTable tbody').insertAdjacentHTML('beforeend', row);
+}
+function handlePasteImage(e, container) {
+    e.preventDefault();
+    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+    
+    for (let index in items) {
+        const item = items[index];
+        if (item.kind === 'file' && item.type.indexOf('image/') !== -1) {
+            const blob = item.getAsFile();
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                // Tạo cấu trúc mới: có nút X và vùng hiển thị ảnh
+                container.innerHTML = `
+                    <div class="image-container">
+                        <button class="btn-remove-img no-print" onclick="removeImage(this)">✕</button>
+                        <div class="img-display" style="
+                            width: 100%; 
+                            height: 140px; 
+                            background-image: url('${event.target.result}');
+                            background-size: contain;
+                            background-repeat: no-repeat;
+                            background-position: center;
+                        "></div>
+                    </div>
+                `;
+                
+                const displayArea = container.querySelector('.img-display');
+                container.style.border = "none";
+                container.style.background = "transparent";
+                
+                // Gán dữ liệu điều khiển vào vùng hiển thị ảnh
+                displayArea.dataset.zoom = 100;
+                displayArea.dataset.posX = 50;
+                displayArea.dataset.posY = 50;
+                
+                initImageControls(displayArea);
+            };
+            reader.readAsDataURL(blob);
+        }
+    }
+}
+// Hàm để xóa ảnh và hiện lại chữ "Dán ảnh"
+function removeImage(btn) {
+    const td = btn.closest('.col-size');
+    td.innerHTML = `
+        <div class="image-drop-zone" 
+             contenteditable="true" 
+             onpaste="handlePasteImage(event, this)"
+             style="width: 100%; height: 100%; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 11px; color: #999; cursor: pointer; background: #fafafa;">
+             Dán ảnh (Ctrl+V)
+        </div>
+    `;
+}
+
+function initImageControls(displayArea) {
+    // 1. Phóng to / Thu nhỏ có chốt chặn
+    displayArea.onwheel = function(e) {
+        e.preventDefault();
+        let zoom = parseFloat(this.dataset.zoom) || 100;
+        
+        // Tính toán mức zoom mới
+        // Cuộn lên (e.deltaY < 0) thì cộng thêm, cuộn xuống thì trừ đi
+        let zoomStep = 10; 
+        if (e.deltaY < 0) {
+            zoom += zoomStep;
+        } else {
+            zoom -= zoomStep;
+        }
+
+        // --- ĐOẠN CHỐT CHẶN Ở ĐÂY ---
+        if (zoom < 10) zoom = 10;    // Không cho nhỏ hơn 10% (tránh mất ảnh)
+        if (zoom > 500) zoom = 500;  // Không cho to quá 500% (tránh vỡ ảnh)
+        // ----------------------------
+
+        this.dataset.zoom = zoom;
+        this.style.backgroundSize = `${zoom}%`;
+    };
+
+    // 2. Xê dịch bằng cách kéo chuột (Giữ nguyên như cũ)
+    let isDragging = false;
+    let startX, startY;
+
+    displayArea.onmousedown = function(e) {
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        e.preventDefault();
+    };
+
+    window.onmousemove = function(e) {
+        if (!isDragging) return;
+        let currentX = parseFloat(displayArea.dataset.posX) || 50;
+        let currentY = parseFloat(displayArea.dataset.posY) || 50;
+        
+        let moveX = (e.clientX - startX) * 0.5;
+        let moveY = (e.clientY - startY) * 0.5;
+        
+        let newX = currentX + (moveX / displayArea.offsetWidth * 100);
+        let newY = currentY + (moveY / displayArea.offsetHeight * 100);
+        
+        displayArea.style.backgroundPosition = `${newX}% ${newY}%`;
+        displayArea.dataset.posX = newX;
+        displayArea.dataset.posY = newY;
+        
+        startX = e.clientX;
+        startY = e.clientY;
+    };
+
+    window.onmouseup = function() { isDragging = false; };
 }
     function debounceSearch(input) {
     clearTimeout(searchTimeout);
