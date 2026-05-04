@@ -347,7 +347,17 @@ function logoutSystem() {
             card.innerHTML = `
                 <button class="btn-del no-print" onclick="removeFromList(${idx})">✕</button>
                 <div class="left-panel">
-                    <div class="discount-container"><div class="discount-tag">-${item.discount_percentage || item.discount_pe || 0}%</div></div>
+                    <div class="discount-container"><div class="discount-tag">
+    -${(function() {
+        let val = item.discount_percentage || item.discount_pe || 0;
+        // Nếu giá trị nhỏ hơn 1 (ví dụ 0.1), ta nhân với 100 để ra số nguyên
+        if (val > 0 && val < 1) {
+            return Math.round(val * 100);
+        }
+        // Ngược lại nếu là số > 1 (ví dụ 10), giữ nguyên
+        return val;
+    })()}%
+</div></div>
                     <div class="mat-box"><span class="mat-label">CHẤT LIỆU</span><span class="mat-val">${(item.material || 'N/A').toUpperCase()}</span></div>
                     <div class="code-label">${item.itemcode || ''}</div>
                 </div>
