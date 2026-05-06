@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Quản Trị - Vua Nệm Quy Nhơn</title>
-    
+    <script src="https://cdn.jsdelivr.net/gh/tuanpht/amlich-hnd/amlich-hnd.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&display=swap" rel="stylesheet">
@@ -22,7 +22,67 @@
             --bg-light: #f4f7fa;
             --glass: rgba(255, 255, 255, 0.95);
         }
+/* Style mới cho thanh tiêu đề */
+.header-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
 
+.weather-widget {
+    background: var(--glass);
+    padding: 8px 15px;
+    border-radius: 50px;
+    font-size: 13px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--vuanem-blue);
+}
+
+.user-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-badge {
+    background: #fff;
+    color: #1e293b;
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+}
+
+.btn-mini-logout {
+    background: #fee2e2;
+    color: #ef4444;
+    border: none;
+    padding: 7px 12px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 800;
+    font-size: 11px;
+    transition: 0.3s;
+}
+
+.btn-mini-logout:hover { background: #fecaca; transform: scale(1.05); }
+
+/* Mobile cho nhỏ lại */
+@media (max-width: 600px) {
+    .header-top-bar { justify-content: center; }
+    .weather-widget { width: 100%; justify-content: center; order: 2; }
+    .user-controls { order: 1; }
+}
         body { 
             font-family: 'Be Vietnam Pro', sans-serif; 
             background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
@@ -75,13 +135,6 @@
         /* --- MAIN LAYOUT --- */
         .header { text-align: center; margin-bottom: 30px; }
         .header h1 { color: var(--vuanem-blue); font-size: 28px; font-weight: 800; text-transform: uppercase; margin: 10px 0; }
-        
-        .status-badge {
-            display: inline-flex; align-items: center; background: #fff; color: #059669;
-            padding: 6px 16px; border-radius: 50px; font-size: 13px; font-weight: 600;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px;
-        }
-
         .status-dot {
             height: 8px; width: 8px; background-color: #10b981; border-radius: 50%;
             display: inline-block; margin-right: 10px; animation: pulse 2s infinite;
@@ -196,12 +249,28 @@
 
     <!-- SECTION MAIN TOOL (CHIA LẠI LAYOUT) -->
     <div id="main-tool" style="display: none; width: 100%; max-width: 1100px;">
-        <div class="header">
-            <div class="status-badge">
-                <span class="status-dot"></span>Xin chào, <span id="user-display" style="margin-left:5px; color: var(--vuanem-blue);">...</span>
-            </div>
-            <h1>QUẢN TRỊ HỆ THỐNG</h1>
+        <!-- Thanh trạng thái mới: Thời tiết bên trái - Người dùng bên phải -->
+<div class="header-top-bar">
+    <div class="weather-widget">
+        <span id="date-time-display"><i class="fas fa-calendar-day"></i> Đang tải...</span>
+        <span style="color: #cbd5e1;">|</span>
+        <span id="weather-display"><i class="fas fa-sun"></i> Quy Nhơn: --°C</span>
+    </div>
+
+    <div class="user-controls">
+        <div class="status-badge">
+            <span class="status-dot"></span>
+            <span id="greeting-text">Xin chào</span>, 
+            <span id="user-display" style="margin-left:5px; color: var(--vuanem-blue); font-weight: 800;">...</span>
         </div>
+        <button class="btn-mini-logout" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> THOÁT
+        </button>
+    </div>
+</div>
+<div class="header">
+    <h1>QUẢN TRỊ HỆ THỐNG</h1>
+</div>
 
         <center>
             <div id="admin-panel">
@@ -308,19 +377,8 @@
                 </a>
             </div>
         </div>
-
-        <center>
-            <div class="logout-link" onclick="logout()">
-                <i class="fas fa-sign-out-alt"></i> Thoát hệ thống
-            </div>
-        </center>
     </div>
-
-    <div class="footer">
-        <p>© 2026 Vua Nệm Quy Nhơn - Phát triển bởi Vi Nhựt (VN5022)</p>
-    </div>
-
-    <script>
+<script>
         // --- GIỮ NGUYÊN TOÀN BỘ LOGIC FIREBASE CỦA BẠN ---
         const firebaseConfig = {
             apiKey: "AIzaSyCFPWPMIHdZUJwpNJ75o1FK9AamecKSRCI",
@@ -424,6 +482,81 @@
                 location.reload(); 
             });
         }
+// --- 1. HÀM CẬP NHẬT THỜI GIAN & LỊCH ÂM ---
+function updateInfo() {
+    const now = new Date();
+    
+    // Lấy các thành phần thời gian
+    const h = now.getHours();
+    const m = now.getMinutes().toString().padStart(2, '0');
+    const s = now.getSeconds().toString().padStart(2, '0');
+    const ngay = now.getDate();
+    const thang = now.getMonth() + 1;
+    const nam = now.getFullYear();
+    const thu = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"][now.getDay()];
+
+    // Cập nhật lời chào (Vi Nhựt - Store Manager)
+    let hello = (h < 12) ? "Chào Buổi Sáng" : (h < 18) ? "Chào Buổi Chiều" : "Chào Buổi Tối";
+    if(document.getElementById('greeting-text')) {
+        document.getElementById('greeting-text').innerText = hello;
+    }
+
+    // LẤY LỊCH ÂM: Đợi thư viện amlich-hnd.js tải xong
+    let amText = "";
+    if (typeof getLunarDate === 'function') {
+        try {
+            const am = getLunarDate(ngay, thang, nam); 
+            amText = `| Âm: ${am[0]}/${am[1]}`;
+        } catch (e) {
+            console.log("Lỗi tính lịch âm");
+        }
+    }
+    
+    // Hiển thị ra màn hình
+    const displayElem = document.getElementById('date-time-display');
+    if(displayElem) {
+        displayElem.innerHTML = `<i class="far fa-clock"></i> ${h}:${m}:${s} | ${thu}, ${ngay}/${thang} ${amText}`;
+    }
+}
+
+// --- 2. HÀM LẤY THỜI TIẾT (Xử lý cho file chạy trên máy tính) ---
+async function getWeather() {
+    const weatherDisplay = document.getElementById('weather-display');
+    const apiKey = "b7ea0438346b9a89666014457e5e32be";
+
+    // Mặc định hiện Quy Nhơn trước để tránh bị trống
+    weatherDisplay.innerHTML = `<i class="fas fa-sun"></i> Quy Nhơn: --°C`;
+
+    // Nếu bạn chạy file trên máy tính, trình duyệt thường chặn Geolocation
+    // Nên mình sẽ ưu tiên gọi thẳng API Quy Nhơn để luôn có dữ liệu
+    try {
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=Quy+Nhon&units=metric&appid=${apiKey}&lang=vi`);
+        const data = await res.json();
+        if(data.main) {
+            weatherDisplay.innerHTML = `<i class="fas fa-sun"></i> Quy Nhơn: ${Math.round(data.main.temp)}°C`;
+        }
+    } catch (e) {
+        console.log("Không lấy được thời tiết");
+    }
+}
+
+// --- 3. KÍCH HOẠT HỆ THỐNG ---
+// Khi file HTML vừa mở xong thì chạy ngay
+window.onload = function() {
+    updateInfo(); // Chạy lịch & giờ
+    getWeather(); // Chạy thời tiết
+    setInterval(updateInfo, 1000); // Bắt đồng hồ chạy từng giây
+};
     </script>
+ <div class="footer">
+        <p>© 2026 Toàn quyền bởi Vua Nệm - Quy Nhơn</p>
+        <p>Phát triển bởi <span class="dev-name">Vi Nhựt (VN5022) - 0358.96.97.52 </span></p>
+        <br>
+        <div class="copyright-notice">
+            <i class="fas fa-shield-halved copyright-icon"></i>
+            <strong>THÔNG BÁO PHÁP LÝ:</strong><br>
+            Sản phẩm đã được đăng ký bản quyền tại <strong>Cục Sở hữu trí tuệ</strong>.<br>
+            Nghiêm cấm mọi hành vi sao chép, chỉnh sửa hoặc phân phối lại mã nguồn dưới mọi hình thức khi chưa có sự đồng ý bằng văn bản của tác giả.
+        </div>
 </body>
 </html>
