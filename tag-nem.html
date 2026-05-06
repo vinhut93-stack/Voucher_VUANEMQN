@@ -376,27 +376,33 @@ body.auth-ready { display: block; }
     
     // KIỂM TRA BẢO MẬT (Giống hệt kichban.html)
     auth.onAuthStateChanged(async (user) => {
-        if (user) {
+    if (user) {
+        // Kiểm tra nhanh từ cache đã lưu ở trang index
+        const userRole = sessionStorage.getItem('userRole');
+        
+        if (userRole === 'admin' || userRole === 'editor') {
+            document.body.classList.add('auth-ready');
+            loadScripts();
+        } else {
+            // Nếu cache không có hoặc không quyền, mới phải check lại Firestore (phòng hờ)
             try {
-                // Kiểm tra email trong Firestore
                 const userDoc = await db.collection("users").doc(user.email.toLowerCase()).get();
-                if (!userDoc.exists) {
-                    alert("Tài khoản chưa được phân quyền!");
-                    auth.signOut().then(() => window.location.href = "index.html");
-                    return;
+                if (userDoc.exists) {
+                    sessionStorage.setItem('userRole', userDoc.data().role);
+                    document.body.classList.add('auth-ready');
+                    loadScripts();
+                } else {
+                    alert("Tài khoản không có quyền truy cập!");
+                    window.location.href = "index.html";
                 }
-                // Nếu ok thì hiện body (vì CSS dòng 18 đang để display: none)
-                document.body.classList.add('auth-ready');
-                // Tải thêm script từ Google Sheet nếu cần
-                loadScripts();
             } catch (e) {
-                console.error(e);
                 window.location.href = "index.html";
             }
-        } else {
-            window.location.href = "index.html";
         }
-    });
+    } else {
+        window.location.href = "index.html";
+    }
+});
 
     function loadScripts() {
         let cache = localStorage.getItem("scriptsData");
@@ -412,7 +418,6 @@ body.auth-ready { display: block; }
         localStorage.setItem("scriptsData", JSON.stringify(data));
     }
 
-    firebase.initializeApp(firebaseConfig);
 function logoutSystem() {
     if(confirm("Bạn muốn đăng xuất và khóa hệ thống?")) {
         firebase.auth().signOut().then(() => {
@@ -545,102 +550,139 @@ function logoutSystem() {
             return { main, sub, raw: num };
         }
 
-        function renderTags(rows, append = false) {
-            const area = document.getElementById('print-area');
-            if(!append) area.innerHTML = '';
-            if(rows.length === 0) return;
+function renderTags(rows, append = false) {
+    const area = document.getElementById('print-area');
+    if(!append) area.innerHTML = '';
+    if(rows.length === 0) return;
 
-            const grouped = rows.reduce((acc, row) => {
-                const key = row.name; if (!key) return acc;
-                if (!acc[key]) acc[key] = []; acc[key].push(row);
-                return acc;
-            }, {});
+    const grouped = rows.reduce((acc, row) => {
+        const key = row.name; if (!key) return acc;
+        if (!acc[key]) acc[key] = []; acc[key].push(row);
+        return acc;
+    }, {});
 
-            for (const name in grouped) {
-                const items = grouped[name];
-                const f = items[0];
-                const discountText = f.direct_discount_text || '';
-                
-                const section = document.createElement('section');
-                // SỬA: Bỏ padding-10mm của thư viện để dùng CSS tự định nghĩa ở trên
-                section.className = 'sheet sale-paper'; 
-                
-                const xIcon = `<svg viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1.5 1.5L13.5 13.5M13.5 1.5L1.5 13.5" stroke="currentColor"/></svg>`;
-
-                let html = `
-                    <button class="remove-page-btn no-print" onclick="removePage(this, '${name.replace(/'/g, "\\'")}')">${xIcon}</button>
-                    <div class="item-heading">SALE</div>
-                    <div class="policy-container">
-                        <div class="policy-item">MIỄN PHÍ<span>VẬN CHUYỂN</span></div>
-                        <div class="policy-item">NẰM THỬ<span>ĐẾN 120 ĐÊM</span></div>
-                        <div class="policy-item">TRẢ GÓP<span>0%</span></div>
-                    </div>
-                    <div class="content-container">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-right:40px;">
-                            <div class="product-name">${name}</div>
-                            <img src="https://trade.vuanem.vn/image/logo/${f.logo || 'comfy.png'}" style="max-height:50px" onerror="this.style.display='none'">
-                        </div>`;
-
-                items.forEach((item, i) => {
-                    const pOld = fmt(item.price);
-                    const pNew = fmt(item.price_sale);
-                    let isSamePrice = pOld.raw === pNew.raw;
-                    let disDisplay = isSamePrice ? "GIÁ TỐT" : "-" + Math.round(item.percent_discount < 1 ? item.percent_discount * 100 : item.percent_discount) + "%";
-
-                    if (i === 0) {
-                        html += `<div class="product-promotion">
-                            <div style="display: flex; flex-direction: column; justify-content: center;">
-                                <div class="size">Size ${item.size}</div>
-                                ${!isSamePrice ? `<div class="price-group"><span class="old-price-val">${pOld.main}</span><div class="unit-box"><span class="unit-top">${pOld.sub}</span><span class="unit-bottom">VNĐ</span></div></div>` : ''}
-                                <div class="price-group">
-                                    <span class="main-price-val">${pNew.main}</span>
-                                    <div class="unit-box" style="margin-bottom:10px"><span class="unit-top" style="font-size:35px">${pNew.sub}</span><span class="unit-bottom" style="font-size:40px">VNĐ</span></div>
-                                </div>
-                            </div>
-                            <div class="discount-block"><div class="discount-text">${disDisplay}</div></div>
-                        </div>`;
-                    } else {
-                        html += `<div class="product-promotion" style="min-height: 80px;">
-                            <div style="display: flex; flex-direction: column; justify-content: center;">
-                                <div class="size">Size ${item.size}</div>
-                                <div class="sub-sale-block">
-                                    ${!isSamePrice ? `<div class="sub-price-item"><span class="sub-old">${pOld.main}</span><div class="unit-box old-price-group"><span class="unit-top">${pOld.sub}</span><span class="unit-bottom">VNĐ</span></div></div><div class="arrow"></div>` : ''}
-                                    <div class="sub-price-item">
-                                        <span class="sub-new">${pNew.main}</span>
-                                        <div class="unit-box sub-unit-box"><span class="unit-top">${pNew.sub}</span><span class="unit-bottom">VNĐ</span></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="sub-discount-container">
-                                <div class="sub-discount-border"></div>
-                                <div class="sub-discount-inner"><div class="sub-discount-text">${disDisplay}</div></div>
-                            </div>
-                        </div>`;
-                    }
-                });
-
-                html += `</div>
-                    <div class="footer-container">
-                        <div class="sale-text-area"><div class="sale-text">${discountText}</div></div>
-                        <div class="qrcode-block">
-                            <div class="qrcode-text">QUÉT MÃ<br>THÔNG TIN<br>SẢN PHẨM</div>
-                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(f.product_url || 'https://vuanem.com')}" style="width:80px">
-                        </div>
-                    </div>`;
-                
-                section.innerHTML = html;
-                area.appendChild(section);
-                
-                const saleTextEl = section.querySelector('.sale-text');
-                if (saleTextEl) adjustFontSize(saleTextEl);
-            }
-        }
+    for (const name in grouped) {
+        const items = grouped[name];
+        const f = items[0];
+        const discountText = f.direct_discount_text || '';
         
-        document.addEventListener('click', function(e) {
-            if (!document.getElementById('searchProduct').contains(e.target)) {
-                document.getElementById('search-results').style.display = 'none';
+        const section = document.createElement('section');
+        section.className = 'sheet sale-paper'; 
+        
+        const xIcon = `<svg viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1.5 1.5L13.5 13.5M13.5 1.5L1.5 13.5" stroke="currentColor"/></svg>`;
+
+        let html = `
+            <button class="remove-page-btn no-print" onclick="removePage(this, '${name.replace(/'/g, "\\'")}')">${xIcon}</button>
+            <div class="item-heading">SALE</div>
+            <div class="policy-container">
+                <div class="policy-item">MIỄN PHÍ<span>VẬN CHUYỂN</span></div>
+                <div class="policy-item">NẰM THỬ<span>ĐẾN 120 ĐÊM</span></div>
+                <div class="policy-item">TRẢ GÓP<span>0%</span></div>
+            </div>
+            <div class="content-container">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-right:40px;">
+                    <div class="product-name">${name}</div>
+                    <img src="https://trade.vuanem.vn/image/logo/${f.logo || 'comfy.png'}" style="max-height:50px" onerror="this.style.display='none'">
+                </div>`;
+
+        items.forEach((item, i) => {
+            const pOld = fmt(item.price);
+            const pNew = fmt(item.price_sale);
+            let isSamePrice = pOld.raw === pNew.raw;
+            let percent = Math.round(item.percent_discount < 1 ? item.percent_discount * 100 : item.percent_discount);
+            let disDisplay = isSamePrice ? "GIÁ TỐT" : "-" + percent + "%";
+
+            if (i === 0) {
+                html += `<div class="product-promotion">
+                    <div style="display: flex; flex-direction: column; justify-content: center;">
+                        <div class="size">Size ${item.size}</div>
+                        ${!isSamePrice ? `
+                        <div class="price-group">
+                            <span class="old-price-val" contenteditable="true" onblur="updatePrice(this, 'price', ${item.price}, ${item.price_sale})">${pOld.main}</span>
+                            <div class="unit-box"><span class="unit-top">${pOld.sub}</span><span class="unit-bottom">VNĐ</span></div>
+                        </div>` : ''}
+                        <div class="price-group">
+                            <span class="main-price-val" contenteditable="true" onblur="updatePrice(this, 'sale', ${item.price}, ${item.price_sale})">${pNew.main}</span>
+                            <div class="unit-box" style="margin-bottom:10px"><span class="unit-top" style="font-size:35px">${pNew.sub}</span><span class="unit-bottom" style="font-size:40px">VNĐ</span></div>
+                        </div>
+                    </div>
+                    <div class="discount-block"><div class="discount-text">${disDisplay}</div></div>
+                </div>`;
+            } else {
+                html += `<div class="product-promotion" style="min-height: 80px;">
+                    <div style="display: flex; flex-direction: column; justify-content: center;">
+                        <div class="size">Size ${item.size}</div>
+                        <div class="sub-sale-block">
+                            ${!isSamePrice ? `
+                            <div class="sub-price-item">
+                                <span class="sub-old" contenteditable="true" onblur="updatePrice(this, 'price', ${item.price}, ${item.price_sale})">${pOld.main}</span>
+                                <div class="unit-box old-price-group"><span class="unit-top">${pOld.sub}</span><span class="unit-bottom">VNĐ</span></div>
+                            </div>
+                            <div class="arrow"></div>` : ''}
+                            <div class="sub-price-item">
+                                <span class="sub-new" contenteditable="true" onblur="updatePrice(this, 'sale', ${item.price}, ${item.price_sale})">${pNew.main}</span>
+                                <div class="unit-box sub-unit-box"><span class="unit-top">${pNew.sub}</span><span class="unit-bottom">VNĐ</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sub-discount-container">
+                        <div class="sub-discount-border"></div>
+                        <div class="sub-discount-inner"><div class="sub-discount-text">${disDisplay}</div></div>
+                    </div>
+                </div>`;
             }
         });
+
+        html += `</div>
+            <div class="footer-container">
+                <div class="sale-text-area"><div class="sale-text">${discountText}</div></div>
+                <div class="qrcode-block">
+                    <div class="qrcode-text">QUÉT MÃ<br>THÔNG TIN<br>SẢN PHẨM</div>
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(f.product_url || 'https://vuanem.com')}" style="width:80px">
+                </div>
+            </div>`;
+        
+        section.innerHTML = html;
+        area.appendChild(section);
+        
+        const saleTextEl = section.querySelector('.sale-text');
+        if (saleTextEl) adjustFontSize(saleTextEl);
+    }
+}
+
+function updatePrice(el, type, oldPrice, salePrice) {
+    let newVal = parseInt(el.innerText.replace(/\./g, '')) * 1000;
+    if (isNaN(newVal)) return;
+
+    let pGoc = (type === 'price') ? newVal : oldPrice;
+    let pSale = (type === 'sale') ? newVal : salePrice;
+
+    // Logic tính % và tiền giảm
+    let percent = Math.round((1 - (pSale / pGoc)) * 100);
+    
+    const parent = el.closest('.product-promotion');
+    const discountLabel = parent.querySelector('.discount-text, .sub-discount-text');
+    
+    if (discountLabel) {
+        discountLabel.innerText = pGoc === pSale ? "GIÁ TỐT" : "-" + percent + "%";
+    }
+
+    // Cập nhật lại tham số cho lần sửa tiếp theo
+    const allEditableInRow = parent.querySelectorAll('[contenteditable="true"]');
+    allEditableInRow.forEach(input => {
+        const isOldPrice = input.classList.contains('old-price-val') || input.classList.contains('sub-old');
+        input.setAttribute('onblur', `updatePrice(this, '${isOldPrice ? 'price' : 'sale'}', ${pGoc}, ${pSale})`);
+    });
+}
+
+// KHẮC PHỤC LỖI TẠI ĐÂY: Thêm lại dòng lắng nghe sự kiện Click
+document.addEventListener('click', function(e) {
+    const searchInput = document.getElementById('searchProduct');
+    const resultsDiv = document.getElementById('search-results');
+    if (searchInput && !searchInput.contains(e.target)) {
+        if (resultsDiv) resultsDiv.style.display = 'none';
+    }
+});
     </script>
 <div class="fixed-actions no-print">
     <button class="action-fab btn-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Lên đầu trang">
