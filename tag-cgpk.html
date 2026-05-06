@@ -344,47 +344,90 @@ function logoutSystem() {
         listSelected.forEach((item, idx) => {
             const card = document.createElement('div');
             card.className = 'tag-card';
+            
+            let pOld = Number(item.price || 0);
+            let pSale = Number(item.price_sale || 0);
+            let displayDiscount = 0;
+            if (pOld > 0) {
+                displayDiscount = Math.round((1 - (pSale / pOld)) * 100);
+            }
+
             card.innerHTML = `
                 <button class="btn-del no-print" onclick="removeFromList(${idx})">✕</button>
                 <div class="left-panel">
-                    <div class="discount-container"><div class="discount-tag">
-    -${(function() {
-        let val = item.discount_percentage || item.discount_pe || 0;
-        // Nếu giá trị nhỏ hơn 1 (ví dụ 0.1), ta nhân với 100 để ra số nguyên
-        if (val > 0 && val < 1) {
-            return Math.round(val * 100);
-        }
-        // Ngược lại nếu là số > 1 (ví dụ 10), giữ nguyên
-        return val;
-    })()}%
-</div></div>
-                    <div class="mat-box"><span class="mat-label">CHẤT LIỆU</span><span class="mat-val">${(item.material || 'N/A').toUpperCase()}</span></div>
-                    <div class="code-label">${item.itemcode || ''}</div>
+                    <div class="discount-container">
+                        <div class="discount-tag">-${displayDiscount}%</div>
+                    </div>
+                    <div class="mat-box">
+                        <span class="mat-label">CHẤT LIỆU</span>
+                        <!-- CHO PHÉP SỬA CHẤT LIỆU -->
+                        <span class="mat-val" contenteditable="true" onblur="listSelected[${idx}].material = this.innerText">${(item.material || 'N/A').toUpperCase()}</span>
+                    </div>
+                    <!-- CHO PHÉP SỬA ITEMCODE -->
+                    <div class="code-label" contenteditable="true" onblur="listSelected[${idx}].itemcode = this.innerText">${item.itemcode || ''}</div>
                 </div>
                 <div class="right-panel">
                     <div class="name-container">
-                        <div class="name-area">${item.name || ''}</div>
+                        <!-- CHO PHÉP SỬA TÊN SẢN PHẨM -->
+                        <div class="name-area" contenteditable="true" onblur="listSelected[${idx}].name = this.innerText">${item.name || ''}</div>
                     </div>
                     <div class="center-content-wrapper">
                         <div class="price-sale-container">
-                            <p class="p-sale">${Number(item.price_sale || 0).toLocaleString()} đ</p>
+                            <p class="p-sale" contenteditable="true" 
+                               oninput="recalcDiscount(this, ${idx}, 'sale')">${pSale.toLocaleString('en-US')} đ</p>
                         </div>
                         <div class="bonus-container">
-                            <p class="p-bonus">${item.bonus || ''}</p>
+                            <p class="p-bonus" contenteditable="true" onblur="listSelected[${idx}].bonus = this.innerText">${item.bonus || ''}</p>
                         </div>
                     </div>
-                    <div class="old-price-bar">GIÁ CŨ: <span class="p-old">${Number(item.price || 0).toLocaleString()} đ</span></div>
+                    <div class="old-price-bar">
+                        GIÁ CŨ: 
+                        <span class="p-old" contenteditable="true" 
+                              oninput="recalcDiscount(this, ${idx}, 'old')">${pOld.toLocaleString('en-US')} đ</span>
+                    </div>
                 </div>
             `;
             box.appendChild(card);
-
-            const bonusEl = card.querySelector('.p-bonus');
-            if (bonusEl.scrollHeight > bonusEl.clientHeight) {
-                bonusEl.style.fontSize = "11px";
-            }
         });
     }
 
+// HÀM CẬP NHẬT: Tự động tính lại % và định dạng dấu phẩy (,) phân tách hàng nghìn
+    function recalcDiscount(el, idx, type) {
+        const card = el.closest('.tag-card');
+        const saleEl = card.querySelector('.p-sale');
+        const oldEl = card.querySelector('.p-old');
+        const discountEl = card.querySelector('.discount-tag');
+
+        // 1. Lấy giá trị số thuần túy (loại bỏ mọi ký tự không phải số)
+        let rawValue = el.innerText.replace(/[^0-9]/g, '');
+        let numValue = Number(rawValue);
+
+        // 2. Cập nhật vào mảng dữ liệu gốc để lưu trạng thái
+        if(type === 'sale') listSelected[idx].price_sale = numValue;
+        if(type === 'old') listSelected[idx].price = numValue;
+
+        // 3. Lấy giá trị hiện tại của cả 2 ô để tính toán % giảm giá
+        let pSale = type === 'sale' ? numValue : Number(saleEl.innerText.replace(/[^0-9]/g, ''));
+        let pOld = type === 'old' ? numValue : Number(oldEl.innerText.replace(/[^0-9]/g, ''));
+
+        // 4. Tính toán % mới theo công thức 1 - (Sale / Old)
+        if (pOld > 0) {
+            let newDiscount = Math.round((1 - (pSale / pOld)) * 100);
+            discountEl.innerText = `-${newDiscount}%`;
+        } else {
+            discountEl.innerText = `0%`;
+        }
+
+        // 5. ĐỊNH DẠNG DẤU PHẨY (,) KHI RỜI CHUỘT (onblur)
+        el.onblur = function() {
+            if (numValue > 0) {
+                // Sử dụng 'en-US' để có định dạng dấu phẩy (ví dụ: 1,400,000)
+                this.innerText = numValue.toLocaleString('en-US') + ' đ';
+            } else {
+                this.innerText = '0 đ';
+            }
+        };
+    }
     function removeFromList(index) {
         listSelected.splice(index, 1);
         render();
