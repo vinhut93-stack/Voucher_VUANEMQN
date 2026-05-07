@@ -11,7 +11,16 @@
             --text-main: #1e293b;
             --text-sub: #64748b;
         }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: transparent; display: flex; justify-content: center; overflow-x: hidden; }
+        body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: transparent;
+    overflow-x: hidden;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
         .container { background: transparent; padding: 10px; width: 100%; max-width: 1000px; display: flex; align-items: center; gap: 15px; }
         
         .header { text-align: center; min-width: 180px; display: flex; flex-direction: column; align-items: center; }
@@ -38,7 +47,61 @@
         .todo-list { display: flex; gap: 4px; overflow: hidden; }
         .todo-item { background: rgba(255,255,255,0.7); padding: 1px 6px; border-radius: 10px; font-size: 10px; color: #475569; border: 1px solid rgba(225, 29, 72, 0.1); white-space: nowrap; }
         .good-hour { margin-top: 5px; font-size: 10px; color: #64748b; border-top: 1px dashed rgba(225, 29, 72, 0.2); padding-top: 3px; }
+/* RUNNING TEXT */
+.running-text-wrapper{
+    width:100%;
+    overflow:hidden;
+    background: transparent;
+    margin-top:5px;
+    padding:10px 0;
+    border-top: 1px dashed rgba(0, 32, 91, 0.2);
+}
+.running-text{
 
+    white-space:nowrap;
+
+    color:#ffffff;
+
+    font-size:15px;
+
+    font-weight:700;
+text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    display:inline-block;
+
+    padding-left:100%;
+
+    animation:runText 20s linear infinite;
+}
+.running-text-wrapper{
+    width:100%;
+    max-width:1000px;
+
+    overflow:hidden;
+
+    margin-top:8px;
+    padding:8px 0;
+
+    background:linear-gradient(
+        90deg,
+        #00205B,
+        #003b9a
+    );
+
+    border-radius:14px;
+
+    box-shadow:
+        0 4px 10px rgba(0,0,0,0.08);
+}
+@keyframes runText{
+
+    from{
+        transform:translateX(0);
+    }
+
+    to{
+        transform:translateX(-100%);
+    }
+}
         @media (max-width: 850px) { .container { flex-direction: column; align-items: stretch; } .grid-info { width: 100%; } .fortune-section { width: auto; } }
     </style>
 </head>
@@ -76,6 +139,11 @@
         <div class="good-hour"><i class="fa-regular fa-clock"></i> <b>Giờ tốt:</b> <span id="good-hour-display">--</span></div>
     </div>
 </div>
+<div class="running-text-wrapper">
+    <div class="running-text" id="running-text">
+        Chúc bạn một ngày bán hàng bùng nổ 🔥
+    </div>
+</div>
 
 <script src="amlich.js"></script>
 
@@ -94,9 +162,12 @@
         // 1. Cập nhật Đồng hồ & Lời chào
         const hours = now.getHours();
         let greeting = "CHÀO BUỔI TỐI";
-        if (hours < 12) greeting = "CHÚC BUỔI SÁNG TỐT LÀNH";
-        else if (hours < 14) greeting = "CHÚC BUỔI TRƯA VUI VẺ";
-        else if (hours < 18) greeting = "CHIỀU NĂNG LƯỢNG";
+if (hours >= 5 && hours < 9) greeting = "☕ KHỞI ĐẦU NGÀY MỚI RỰC RỠ";
+else if (hours >= 9 && hours < 11) greeting = "🚀 TẬP TRUNG CAO ĐỘ NHÉ";
+else if (hours >= 11 && hours < 14) greeting = "🍲 CHÚC BẠN ĂN TRƯA NGON MIỆNG";
+else if (hours >= 14 && hours < 17) greeting = "⚡ NĂNG LƯỢNG CHO BUỔI CHIỀU";
+else if (hours >= 17 && hours < 21) greeting = "🌙 BUỔI TỐI AN NHIÊN";
+else greeting = "😴 CHÚC NGỦ NGON & MƠ ĐẸP";
         
         document.getElementById('dynamic-greeting').innerText = greeting;
         document.getElementById('digital-clock').innerText = now.toLocaleTimeString('vi-VN', { hour12: false });
@@ -298,6 +369,70 @@ setInterval(updateAll, 1000);
 
 // Thời tiết cập nhật mỗi 10 phút
 setInterval(updateWeather, 600000);
+const timeBasedMessages = {
+    morning: [
+        "☕ Kiều Quyên & Văn Hoà ơi, sáng nay BDI01 bùng nổ đơn hàng nhé! 🔥",
+        "🌅 Thuỳ Trang & Kiều Trinh chuẩn bị năng lượng cho GLA02 rực rỡ nào! ✨",
+        "🎯 Mục tiêu hôm nay: Team BDI01 & GLA02 tư vấn là chốt, gặp khách là mê!",
+        "🍀 Chúc Kiều Quyên một ngày làm việc tràn đầy may mắn và niềm vui!",
+        "🚀 Văn Hoà ơi, khởi đầu ngày mới rực rỡ cùng Vua Nệm nhé!",
+        "🔥 Chúc team Vua Nệm Quy Nhơn hôm nay chốt thật nhiều đơn hàng!",
+	"🌟 Khách hàng hài lòng là thành công lớn nhất của chúng ta",
+        "🔥 Chốt thật nhiều đơn hàng cho buổi sáng rực rỡ nhé cả nhà!"
+    ],
+    afternoon: [
+        "💪 Kiều Trinh & Thuỳ Trang ơi, chiều nay GLA02 bứt phá doanh số nhé! 📈",
+        "⚡ Văn Hoà & Kiều Quyên hãy nạp năng lượng để chiều nay chốt đơn mỏi tay!",
+        "🚀 BDI01 cố lên! Mỗi khách hàng là một cơ hội để tỏa sáng đấy Văn Hoà ơi.",
+        "❤️ Luôn mỉm cười với khách hàng nhé!",
+ 	"🏆 Quy Nhơn cố gắng - doanh số bùng nổ",
+ 	"✨ Chúc bạn năng lượng tích cực cả ngày",
+        "🔥 Thuỳ Trang & Kiều Trinh: GLA02 hôm nay quyết tâm đạt mục tiêu doanh số!",
+        "🌟 Khách hàng hài lòng là thành công lớn nhất của chúng ta",
+        "📈 Tăng trưởng mỗi ngày - Team chúng ta là số 1!"
+    ],
+    evening: [
+        "💤 Kiều Quyên & Văn Hoà nghỉ ngơi thật tốt để ngày mai lại bùng nổ nhé BDI01! 🌙",
+        "🌟 Thuỳ Trang & Kiều Trinh đã làm rất tốt hôm nay, chúc hai bạn buổi tối an nhiên!",
+        "🏡 Kết thúc ngày làm việc tuyệt vời, BDI01 & GLA02 về nghỉ ngơi bên gia đình thôi.",
+        "❤️ Cảm ơn sự nỗ lực của Kiều Quyên, Văn Hoà, Thuỳ Trang và Kiều Trinh ngày hôm nay!",
+        "🌙 Ngủ ngon hơn mỗi ngày cùng Vua Nệm Quy Nhơn ",
+        "🏆 Team BDI01 & GLA02 cố gắng - Thành công nằm trong tầm tay các bạn!"
+    ]
+};
+
+// 2. Hàm xử lý hiển thị chữ chạy
+function randomRunningText(){
+    const now = new Date();
+    const hours = now.getHours();
+    let currentPool = [];
+
+    // Chọn danh sách dựa trên giờ thực tế
+    if (hours >= 5 && hours < 12) {
+        currentPool = timeBasedMessages.morning;
+    } else if (hours >= 12 && hours < 18) {
+        currentPool = timeBasedMessages.afternoon;
+    } else {
+        currentPool = timeBasedMessages.evening;
+    }
+
+    const text = currentPool[Math.floor(Math.random() * currentPool.length)];
+    const el = document.getElementById('running-text');
+
+    if (el) {
+        el.innerText = text;
+        // Reset animation để mỗi lần đổi câu chữ lại chạy từ phải sang
+        el.style.animation = 'none';
+        void el.offsetWidth; // Thủ thuật để trình duyệt nhận diện lại animation
+        el.style.animation = 'runText 25s linear infinite';
+    }
+}
+
+// chạy lần đầu
+randomRunningText();
+
+// đổi câu mỗi 20 giây
+setInterval(randomRunningText, 20000);
 </script>
 </body>
 </html>
