@@ -287,47 +287,46 @@ function logoutSystem() {
     const sug = document.getElementById('suggestions');
 
     function updateSuggestions() {
-        const key = inp.value.trim().toLowerCase();
-        sug.innerHTML = '';
-        if(!key || dataInventory.length === 0) { sug.style.display = 'none'; return; }
+    const key = inp.value.trim().toLowerCase();
+    sug.innerHTML = '';
+    if(!key || dataInventory.length === 0) { sug.style.display = 'none'; return; }
 
-        const filtered = dataInventory.filter(item => 
-            String(item.itemcode || '').includes(key) || 
-            String(item.name || '').toLowerCase().includes(key)
-        ).slice(0, 15);
+    const filtered = dataInventory.filter(item => 
+        String(item.itemcode || '').includes(key) || 
+        String(item.name || '').toLowerCase().includes(key)
+    ).slice(0, 15);
 
-        if(filtered.length > 0) {
-            filtered.forEach(item => {
-                // SO SÁNH CẢ MÃ VÀ GIÁ ĐỂ PHÂN BIỆT CÁC DÒNG CÙNG TÊN TRONG FILE NGUỒN
-                const alreadySelected = listSelected.some(s => 
-                    s.itemcode === item.itemcode && s.price_sale === item.price_sale
-                );
-                
-                const div = document.createElement('div');
-                div.className = 'sug-item' + (alreadySelected ? ' selected' : '');
-                
-                // Hiển thị: Mã - Tên - Giá Sale
-                const displayPrice = Number(item.price_sale || 0).toLocaleString() + ' đ';
-                div.innerHTML = `
-                    <span>🏷️ <b>${item.itemcode}</b> - ${item.name}</span>
-                    <span class="sug-price">${displayPrice}</span>
-                `;
-                
-                div.onclick = function(e) {
-                    e.stopPropagation();
-                    if(!alreadySelected) {
-                        listSelected.push(item);
-                        render();
-                        updateSuggestions(); 
-                    }
-                };
-                sug.appendChild(div);
-            });
-            sug.style.display = 'block';
-        } else {
-            sug.style.display = 'none';
-        }
+    if(filtered.length > 0) {
+        filtered.forEach(item => {
+            // Đếm số lần sản phẩm này đã xuất hiện trong listSelected
+            const count = listSelected.filter(s => s.itemcode === item.itemcode).length;
+            
+            const div = document.createElement('div');
+            div.className = 'sug-item';
+            
+            // Định dạng giá bằng vi-VN để có dấu chấm (.)
+            const displayPrice = Number(item.price_sale || 0).toLocaleString('vi-VN') + ' đ';
+            
+            div.innerHTML = `
+                <span>🏷️ <b>${item.itemcode}</b> - ${item.name}</span>
+                <span class="sug-price">${displayPrice}</span>
+                ${count > 0 ? `<span style="background:#0d47a1; color:white; padding:2px 8px; border-radius:10px; font-size:10px;">x${count}</span>` : ''}
+            `;
+            
+            div.onclick = function(e) {
+                e.stopPropagation();
+                // Cho phép push thoải mái, không cần check alreadySelected
+                listSelected.push({...item}); // Dùng {...item} để tạo bản sao độc lập
+                render();
+                updateSuggestions(); 
+            };
+            sug.appendChild(div);
+        });
+        sug.style.display = 'block';
+    } else {
+        sug.style.display = 'none';
     }
+}
 
     inp.addEventListener('input', updateSuggestions);
     inp.addEventListener('click', updateSuggestions);
@@ -374,7 +373,7 @@ function logoutSystem() {
                     <div class="center-content-wrapper">
                         <div class="price-sale-container">
                             <p class="p-sale" contenteditable="true" 
-                               oninput="recalcDiscount(this, ${idx}, 'sale')">${pSale.toLocaleString('en-US')} đ</p>
+                               oninput="recalcDiscount(this, ${idx}, 'sale')">${pSale.toLocaleString('vi-VN')} đ</p>
                         </div>
                         <div class="bonus-container">
                             <p class="p-bonus" contenteditable="true" onblur="listSelected[${idx}].bonus = this.innerText">${item.bonus || ''}</p>
@@ -383,7 +382,7 @@ function logoutSystem() {
                     <div class="old-price-bar">
                         GIÁ CŨ: 
                         <span class="p-old" contenteditable="true" 
-                              oninput="recalcDiscount(this, ${idx}, 'old')">${pOld.toLocaleString('en-US')} đ</span>
+                              oninput="recalcDiscount(this, ${idx}, 'old')">${pOld.toLocaleString('vi-VN')} đ</span>
                     </div>
                 </div>
             `;
@@ -422,7 +421,7 @@ function logoutSystem() {
         el.onblur = function() {
             if (numValue > 0) {
                 // Sử dụng 'en-US' để có định dạng dấu phẩy (ví dụ: 1,400,000)
-                this.innerText = numValue.toLocaleString('en-US') + ' đ';
+                this.innerText = numValue.toLocaleString('vi-VN') + ' đ';
             } else {
                 this.innerText = '0 đ';
             }
