@@ -7,243 +7,297 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-	    --bg-card: transparent;
             --vuanem-blue: #00205B;
-            --vuanem-gold: #FFD700;
             --text-main: #1e293b;
             --text-sub: #64748b;
-            --bg-card: rgba(255, 255, 255, 0.9);
         }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: transparent; display: flex; justify-content: center; overflow-x: hidden; }
+        .container { background: transparent; padding: 10px; width: 100%; max-width: 1000px; display: flex; align-items: center; gap: 15px; }
+        
+        .header { text-align: center; min-width: 180px; display: flex; flex-direction: column; align-items: center; }
+        .header h2 { font-size: 10px; color: var(--vuanem-blue); text-transform: uppercase; letter-spacing: 2px; margin: 0; font-weight: 800; opacity: 0.7; }
+        #digital-clock { font-size: 2.2em; font-weight: 800; color: var(--vuanem-blue); margin: 2px 0; font-family: 'Courier New', monospace; }
+        #solar-full-date { font-size: 12px; color: var(--text-sub); font-weight: 500; }
 
-        body { 
-        margin: 0; 
-    padding: 0; /* Bỏ padding để sát mép */
-    font-family: 'Segoe UI', sans-serif; 
-    background: transparent; /* Đảm bảo background trong suốt */
-    display: flex; 
-    justify-content: center;
-}
+        .grid-info { display: flex; gap: 8px; }
+        .mini-card { padding: 10px; border-radius: 16px; min-width: 135px; height: 60px; display: flex; flex-direction: column; justify-content: center;transition: all 0.4s ease; }
+        .calendar-box { background: #fffbeb; border: 1px solid #fde68a; }
+        .weather-box { background: #eff6ff; border: 1px solid #bfdbfe; }
 
-    .container { 
-    background: transparent; /* Bỏ màu nền trắng của container */
-    padding: 10px 20px; 
-    border-radius: 0; /* Bỏ bo góc của container bên trong */
-    box-shadow: none; /* Bỏ bóng đổ bên trong */
-    width: 100%;
-    max-width: 1000px;
-    display: flex; 
-    align-items: center;
-    gap: 25px;
-    border: none; /* Bỏ viền bên trong */
-    backdrop-filter: none;
-}
+        .label { font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px; }
+        .value { font-weight: 700; color: var(--text-main); font-size: 13px; white-space: nowrap; }
 
-    /* KHỐI THỜI GIAN: Canh giữa theo yêu cầu */
-    .header { 
-        text-align: center; 
-        min-width: 200px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-    .header h2 { 
-        font-size: 10px; color: var(--vuanem-blue); 
-        text-transform: uppercase; letter-spacing: 2px; 
-        margin: 0 0 5px 0; font-weight: 800; opacity: 0.7;
-    }
-    #digital-clock { 
-        font-size: 2.2em; font-weight: 800; 
-        color: var(--vuanem-blue); margin: 0; 
-        font-family: 'Courier New', monospace; letter-spacing: -1px;
-    }
-    #solar-full-date { font-size: 13px; color: var(--text-sub); font-weight: 500; white-space: nowrap; }
+        .fortune-section { 
+            background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%); 
+            padding: 10px 15px; border-radius: 18px; border: 1px solid #fecdd3; 
+            flex: 1; height: 80px; display: flex; flex-direction: column; justify-content: center;
+        }
+        .fortune-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+        .day-type { font-size: 11px; font-weight: 800; color: #e11d48; }
+        #fortune-desc { font-size: 11px; color: #b91c1c; line-height: 1.3; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .todo-list { display: flex; gap: 4px; overflow: hidden; }
+        .todo-item { background: rgba(255,255,255,0.7); padding: 1px 6px; border-radius: 10px; font-size: 10px; color: #475569; border: 1px solid rgba(225, 29, 72, 0.1); white-space: nowrap; }
+        .good-hour { margin-top: 5px; font-size: 10px; color: #64748b; border-top: 1px dashed rgba(225, 29, 72, 0.2); padding-top: 3px; }
 
-    /* KHỐI GIỮA: Âm lịch & Thời tiết */
-    .grid-info {
-        display: flex; /* Thay đổi từ grid sang flex để nằm ngang */
-        gap: 10px;
-    }
-
-    .mini-card {
-        padding: 12px;
-        border-radius: 16px;
-        min-width: 130px;
-        display: flex; flex-direction: column; justify-content: center;
-    }
-    .calendar-box { background: #fffbeb; border: 1px solid #fde68a; }
-    .weather-box { background: #eff6ff; border: 1px solid #bfdbfe; }
-
-    .label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px; }
-    .value { font-weight: 700; color: var(--text-main); font-size: 13px; }
-
-    /* KHỐI CUỐI: Fortune (Dàn ngang nội dung bên trong) */
-    .fortune-section {
-        background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
-        padding: 12px 18px;
-        border-radius: 18px;
-        border: 1px solid #fecdd3;
-        flex: 1;
-    }
-    
-    .fortune-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-    .day-type { font-size: 12px; font-weight: 800; color: #e11d48; }
-
-    #fortune-desc { font-size: 11px; color: #b91c1c; margin-bottom: 8px; line-height: 1.4; }
-
-    .todo-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 5px; }
-    .todo-item {
-        background: rgba(255,255,255,0.6); padding: 3px 8px;
-        border-radius: 20px; font-size: 11px; color: #475569;
-        border: 1px solid rgba(225, 29, 72, 0.1);
-    }
-
-    .good-hour {
-        margin-top: 8px; padding-top: 8px;
-        border-top: 1px dashed rgba(225, 29, 72, 0.2);
-        font-size: 11px; color: #64748b;
-    }
-
-    @media (max-width: 850px) {
-        .container { flex-direction: column; width: 100%; max-width: 360px; }
-        .grid-info { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
-    }
-</style>
+        @media (max-width: 850px) { .container { flex-direction: column; align-items: stretch; } .grid-info { width: 100%; } .fortune-section { width: auto; } }
+    </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h2 id="dynamic-greeting">XIN CHÀO!</h2>
-
-<script>
-    function updateClock() {
-        const now = new Date();
-        const hours = now.getHours();
-        let greeting = "";
-
-        // Tự động đổi câu chào theo giờ
-        if (hours < 12) greeting = "CHÚC BUỔI SÁNG TỐT LÀNH";
-        else if (hours < 14) greeting = "CHÚC BUỔI TRƯA VUI VẺ";
-        else if (hours < 18) greeting = "CHÀO BUỔI CHIỀU NĂNG LƯỢNG";
-        else greeting = "CHÀO BUỔI TỐI NHẸ NHÀNG";
-
-        document.getElementById('dynamic-greeting').innerText = greeting;
-        
-        // Phần logic đồng hồ cũ của bạn...
-        document.getElementById('digital-clock').innerText = now.toLocaleTimeString('vi-VN', { hour12: false });
-        const options = { weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit' };
-        document.getElementById('solar-full-date').innerText = now.toLocaleDateString('vi-VN', options);
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-</script>
+        <h2 id="dynamic-greeting">CHÀO BUỔI CHIỀU</h2>
         <div id="digital-clock">00:00:00</div>
-        <div id="solar-full-date">Đang cập nhật...</div>
+        <div id="solar-full-date">...</div>
     </div>
 
     <div class="grid-info">
-    <div class="mini-card calendar-box">
-        <span class="label"><i class="fa-regular fa-calendar-check"></i> Âm lịch</span>
-        <span class="value">15/04 (Giáp Thìn)</span>
-        <span style="font-size: 10px; color: #d97706; font-weight: 600;">Tiết Lập Hạ</span>
+        <div class="mini-card calendar-box">
+            <span class="label"><i class="fa-regular fa-calendar-check"></i> Âm lịch</span>
+            <span id="lunar-date" class="value">Đang tính...</span>
+            <span id="tiet-khi" style="font-size: 10px; color: #d97706; font-weight: 600;">--</span>
+        </div>
+        <div class="mini-card weather-box">
+            <span class="label"><i class="fa-solid fa-cloud-sun"></i> Thời tiết</span>
+            <span class="value"><span id="temp">--</span>°C, <span id="weather-desc">Cập nhật...</span></span>
+            <span id="location-name" style="font-size: 9px; color: #2563eb;">
+    Đang định vị...
+</span>
+        </div>
     </div>
-    <div class="mini-card weather-box">
-        <span class="label"><i class="fa-solid fa-cloud-sun"></i> Thời tiết</span>
-        <span class="value"><span id="temp">--</span>°C, Nắng đẹp</span>
-        <span id="location" style="font-size: 10px; color: #2563eb;">Quy Nhơn</span>
+
+    <div class="fortune-section">
+        <div class="fortune-header">
+            <span class="label" style="color: #e11d48;">THÔNG TIN NGÀY</span>
+            <span id="day-type-display" class="day-type">--</span>
+        </div>
+        <div id="fortune-desc"><i class="fa-solid fa-star"></i> <span>...</span></div>
+        <div id="todo-container" class="todo-list"></div>
+        <div class="good-hour"><i class="fa-regular fa-clock"></i> <b>Giờ tốt:</b> <span id="good-hour-display">--</span></div>
     </div>
 </div>
 
-<!-- CỘT 3: PHONG THỦY (GIỮ NGUYÊN MÔ TẢ) -->
-<div class="fortune-section">
-    <div class="fortune-header">
-        <span class="label" style="color: #e11d48;">Thông tin ngày</span>
-        <span id="day-type-display" class="day-type">Đang kiểm tra...</span>
-    </div>
-    
-    <div id="fortune-desc" style="min-height: 30px;">
-        <i class="fa-solid fa-star"></i> <span>Đang lấy lời khuyên cho bạn...</span>
-    </div>
-
-    <div id="todo-container" class="todo-list"></div>
-    
-    <div class="good-hour">
-        <i class="fa-regular fa-clock"></i> <b>Giờ tốt:</b> 
-        <span id="good-hour-display" style="color: #0f172a; font-weight: 600;">--:--</span>
-    </div>
-</div>
+<script src="amlich.js"></script>
 
 <script>
-// 1. "Từ điển" dữ liệu phong thủy
-const fortuneData = {
-    "Minh Đường": {
-        desc: "Ngày có sao tốt soi chiếu, vạn sự dễ thành, tinh thần minh mẫn, quyết định sáng suốt.",
-        todos: ["Cúng bái", "Họp mặt", "Khai trương", "Sửa nhà"],
-        hours: "Dần, Tỵ, Thân, Dậu"
-    },
-    "Thanh Long": {
-        desc: "Mọi việc như ý, kinh doanh phát đạt, rất tốt cho việc ký kết hợp đồng nệm dự án.",
-        todos: ["Ký kết", "Giao dịch", "Xuất kho", "Cưới hỏi"],
-        hours: "Tý, Dần, Thìn, Tỵ"
-    },
-    "Chu Tước": {
-        desc: "Dễ có tranh cãi, nên cẩn trọng trong lời nói với khách hàng và đồng nghiệp.",
-        todos: ["Làm việc nhóm", "Kiểm kho", "Dọn dẹp"],
-        hours: "Sửu, Tỵ, Mùi, Tuất"
-    },
-    "Kim Quỹ": {
-        desc: "Ngày cát tường, thích hợp để nhập hàng mới hoặc triển khai chương trình khuyến mãi.",
-        todos: ["Nhập hàng", "Khai trương", "Học tập"],
-        hours: "Mão, Ngọ, Thân, Dậu"
-    }
-    // Nhựt có thể thêm các loại ngày khác vào đây...
-};
-
-function updateFortune() {
-    // Trong thực tế, bạn sẽ lấy DayType từ thư viện amlich.js
-    // Ở đây mình giả lập logic tra cứu:
-    const currentDayType = "Minh Đường"; // Sau này Nhựt gán biến từ hàm lấy lịch âm vào đây
-    
-    const data = fortuneData[currentDayType] || {
-        desc: "Ngày bình thường, tập trung chăm sóc khách hàng và tối ưu doanh số.",
-        todos: ["Bán hàng", "Chăm sóc khách"],
-        hours: "Thìn, Ngọ, Mùi"
+    const fortuneData = {
+        "Minh Đường": { desc: "Sao tốt soi chiếu, vạn sự dễ thành.", todos: ["Họp mặt", "Khai trương"], hours: "Dần, Tỵ, Thân, Dậu" },
+        "Thanh Long": { desc: "Mọi việc như ý, kinh doanh phát đạt.", todos: ["Ký kết", "Giao dịch", "Xuất kho"], hours: "Tý, Dần, Thìn, Tỵ" },
+        "Chu Tước": { desc: "Dễ có tranh cãi, cẩn trọng lời nói.", todos: ["Kiểm kho", "Dọn dẹp"], hours: "Sửu, Tỵ, Mùi, Tuất" },
+        "Kim Quỹ": { desc: "Cát tường, thích hợp nhập hàng mới.", todos: ["Bán hàng", "Nhập hàng"], hours: "Mão, Ngọ, Thân, Dậu" }
     };
 
-    // Cập nhật giao diện
-    document.getElementById('day-type-display').innerText = currentDayType;
-    document.getElementById('fortune-desc').querySelector('span').innerText = data.desc;
-    document.getElementById('good-hour-display').innerText = data.hours;
+    function updateAll() {
+        const now = new Date();
+        const d = now.getDate(), m = now.getMonth() + 1, y = now.getFullYear();
 
-    // Tự động tạo các thẻ Tag
-    const todoContainer = document.getElementById('todo-container');
-    todoContainer.innerHTML = ""; // Xóa cũ
-    data.todos.forEach(item => {
-        const span = document.createElement('span');
-        span.className = 'todo-item';
-        span.innerText = item;
-        todoContainer.appendChild(span);
-    });
+        // 1. Cập nhật Đồng hồ & Lời chào
+        const hours = now.getHours();
+        let greeting = "CHÀO BUỔI TỐI";
+        if (hours < 12) greeting = "CHÚC BUỔI SÁNG TỐT LÀNH";
+        else if (hours < 14) greeting = "CHÚC BUỔI TRƯA VUI VẺ";
+        else if (hours < 18) greeting = "CHIỀU NĂNG LƯỢNG";
+        
+        document.getElementById('dynamic-greeting').innerText = greeting;
+        document.getElementById('digital-clock').innerText = now.toLocaleTimeString('vi-VN', { hour12: false });
+        document.getElementById('solar-full-date').innerText = now.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+
+        // 2. Gọi hàm từ file amlich.js của bạn
+        // Lưu ý: Kiểm tra object LunarUtils có tồn tại không
+        if (typeof LunarUtils !== "undefined") {
+            const lunarData = LunarUtils.getLunarDate(d, m, y);
+            
+            document.getElementById('lunar-date').innerText = `${lunarData.day}/${lunarData.month} (${lunarData.canChiYear})`;
+            document.getElementById('tiet-khi').innerText = lunarData.tietKhi;
+
+const canChi = lunarData.canChiDay;
+
+let currentType = "Minh Đường";
+
+if (
+    canChi.includes("Giáp") ||
+    canChi.includes("Bính")
+) {
+
+    currentType = "Thanh Long";
+
+} else if (
+    canChi.includes("Mậu") ||
+    canChi.includes("Kỷ")
+) {
+
+    currentType = "Kim Quỹ";
+
+} else if (
+    canChi.includes("Canh") ||
+    canChi.includes("Tân")
+) {
+
+    currentType = "Chu Tước";
 }
 
-// Gọi hàm chạy cùng với đồng hồ
-updateFortune();
-    function updateClock() {
-        const now = new Date();
-        document.getElementById('digital-clock').innerText = now.toLocaleTimeString('vi-VN', { hour12: false });
-        
-        const options = { weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit' };
-        document.getElementById('solar-full-date').innerText = now.toLocaleDateString('vi-VN', options);
+const data = fortuneData[currentType];
+     const fortuneSection =
+    document.querySelector('.fortune-section');
+
+if (currentType === "Thanh Long") {
+
+    fortuneSection.style.background =
+        'linear-gradient(135deg,#ecfeff,#cffafe)';
+
+} else if (currentType === "Kim Quỹ") {
+
+    fortuneSection.style.background =
+        'linear-gradient(135deg,#fefce8,#fef08a)';
+
+} else if (currentType === "Chu Tước") {
+
+    fortuneSection.style.background =
+        'linear-gradient(135deg,#fef2f2,#fecaca)';
+
+} else {
+
+    fortuneSection.style.background =
+        'linear-gradient(135deg,#fff1f2,#ffe4e6)';
+}       
+            document.getElementById('day-type-display').innerText = currentType;
+            document.getElementById('fortune-desc').querySelector('span').innerText = data.desc;
+            document.getElementById('good-hour-display').innerText = data.hours;
+            document.getElementById('todo-container').innerHTML = data.todos.map(t => `<span class="todo-item">${t}</span>`).join('');
+        }
     }
-    setInterval(updateClock, 1000);
-    updateClock();
 
-    // Giả lập lấy thời tiết Quy Nhơn
-    setTimeout(() => {
-        document.getElementById('temp').innerText = "29";
-    }, 1000);
+   async function updateWeather() {
+
+    if (!navigator.geolocation) {
+        fallbackWeather();
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+
+        async (position) => {
+
+            try {
+
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+try {
+
+    const geoRes = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+    );
+
+    const geoData = await geoRes.json();
+
+    const city =
+        geoData.address.city ||
+        geoData.address.town ||
+        geoData.address.state ||
+        "Việt Nam";
+
+    document.getElementById('location-name').innerText = city;
+
+} catch {
+    document.getElementById('location-name').innerText =
+        "Việt Nam";
+}
+                const res = await fetch(
+                    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`
+                );
+
+                const data = await res.json();
+
+                const temp = Math.round(data.current_weather.temperature);
+
+                document.getElementById('temp').innerText = temp;
+
+                const code = data.current_weather.weathercode;
+
+                let desc = "Nắng đẹp";
+                let icon = "☀️";
+
+                if (code >= 1 && code <= 2) {
+                    desc = "Ít mây";
+                    icon = "⛅";
+                }
+
+                else if (code >= 3 && code <= 48) {
+                    desc = "Nhiều mây";
+                    icon = "☁️";
+                }
+
+                else if (code >= 51 && code <= 67) {
+                    desc = "Mưa nhẹ";
+                    icon = "🌦️";
+                }
+
+                else if (code >= 80) {
+                    desc = "Mưa lớn";
+                    icon = "🌧️";
+                }
+
+                document.getElementById('weather-desc').innerText =
+                    `${icon} ${desc}`;
+
+                // Auto đổi màu box theo nhiệt độ
+
+                const weatherBox =
+                    document.querySelector('.weather-box');
+
+                if (temp >= 35) {
+
+                    weatherBox.style.background =
+                        '#fff7ed';
+
+                    weatherBox.style.borderColor =
+                        '#fdba74';
+
+                } else if (temp <= 24) {
+
+                    weatherBox.style.background =
+                        '#eff6ff';
+
+                    weatherBox.style.borderColor =
+                        '#93c5fd';
+
+                } else {
+
+                    weatherBox.style.background =
+                        '#f0fdf4';
+
+                    weatherBox.style.borderColor =
+                        '#86efac';
+                }
+
+            } catch (e) {
+
+                function fallbackWeather() {
+	}
+            }
+
+        },
+
+        fallbackWeather
+    );
+}
+
+function fallbackWeather() {
+
+    document.getElementById('temp').innerText = "33";
+
+    document.getElementById('weather-desc').innerText =
+        "☀️ Nắng đẹp";
+}
+// Chạy lần đầu
+updateAll();
+updateWeather();
+
+// Đồng hồ cập nhật mỗi giây
+setInterval(updateAll, 1000);
+
+// Thời tiết cập nhật mỗi 10 phút
+setInterval(updateWeather, 600000);
 </script>
-
 </body>
 </html>
