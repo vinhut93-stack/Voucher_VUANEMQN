@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+<script src="https://cdn.jsdelivr.net/gh/vanng822/amlich.js/amlich.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Quản Trị - Vua Nệm Quy Nhơn</title>
-    <script src="https://cdn.jsdelivr.net/gh/tuanpht/amlich-hnd/amlich-hnd.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&display=swap" rel="stylesheet">
@@ -35,20 +35,36 @@
 
 .weather-widget {
     background: var(--glass);
-    padding: 8px 15px;
-    border-radius: 50px;
+    padding: 12px 20px;
+    border-radius: 20px;
     font-size: 13px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
     display: flex;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column; 
+    gap: 5px;
+    color: #0f172a;
+    line-height: 1.5;
+    min-width: 250px;
+    height: auto; /* Thêm dòng này để tự động giãn chiều cao */
+}
+
+#date-time-display {
+    display: block; /* Đảm bảo nó chiếm hết chiều ngang hàng 1 */
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 5px;
+}
+
+#weather-display {
+    font-weight: 700;
     color: var(--vuanem-blue);
 }
 
 .user-controls {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px; /* Khoảng cách giữa lời chào và nút thoát */
+    width: 100%;
+    justify-content: flex-end; /* Đưa tất cả về bên phải */
 }
 
 .status-badge {
@@ -76,7 +92,61 @@
 }
 
 .btn-mini-logout:hover { background: #fecaca; transform: scale(1.05); }
+/* Thanh thông tin ngang hiện đại */
+.modern-info-bar {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    width: 100%;
+    margin: 0 auto 30px;
+}
 
+.info-item {
+    background: var(--glass);
+    padding: 10px 18px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center; /* Căn giữa nội dung theo chiều dọc */
+    justify-content: center; /* Căn giữa nội dung theo chiều ngang */
+    gap: 12px;
+    border: 1px solid rgba(255,255,255,0.6);
+    min-width: 180px;
+    transition: 0.3s;
+}
+
+/* Đảm bảo iframe bên trong không có lề thừa */
+.info-item iframe {
+    display: block;
+    margin: 0;
+}
+
+.info-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--vuanem-blue);
+}
+
+/* Ẩn cái widget iframe cũ */
+.sidebar-widget { display: none; }
+.util-box p { margin: 5px 0; font-size: 14px; }
+.util-box .label { font-weight: bold; color: #666; width: 85px; display: inline-block; }
+.util-box .value { font-weight: 600; color: #1e293b; }
+.util-box ul { margin: 5px 0 0 15px; padding: 0; font-size: 13px; color: #475569; }
 /* Mobile cho nhỏ lại */
 @media (max-width: 600px) {
     .header-top-bar { justify-content: center; }
@@ -221,6 +291,25 @@
         }
 
         .footer { margin-top: auto; text-align: center; color: #64748b; font-size: 12px; padding: 20px 0; }
+/* Style cho bảng tiện ích mới thêm vào */
+.utility-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+    width: 100%;
+    max-width: 1100px;
+    margin-bottom: 30px;
+}
+.util-box {
+    background: var(--glass);
+    padding: 15px;
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+}
+.util-box p { margin: 5px 0; font-size: 14px; }
+.util-box .label { font-weight: bold; color: #666; width: 85px; display: inline-block; }
+.util-box .value { font-weight: 600; color: #1e293b; }
+.util-box ul { margin: 5px 0 0 15px; padding: 0; font-size: 13px; color: #475569; }
     </style>
 </head>
 <body>
@@ -246,23 +335,17 @@
         <button class="btn-login" onclick="login()">ĐĂNG NHẬP</button>
         <p id="loading-text" style="display:none; color: var(--vuanem-blue); font-size: 13px; margin-top:15px;"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...</p>
     </div>
-
     <!-- SECTION MAIN TOOL (CHIA LẠI LAYOUT) -->
     <div id="main-tool" style="display: none; width: 100%; max-width: 1100px;">
         <!-- Thanh trạng thái mới: Thời tiết bên trái - Người dùng bên phải -->
 <div class="header-top-bar">
-    <div class="weather-widget">
-        <span id="date-time-display"><i class="fas fa-calendar-day"></i> Đang tải...</span>
-        <span style="color: #cbd5e1;">|</span>
-        <span id="weather-display"><i class="fas fa-sun"></i> Quy Nhơn: --°C</span>
-    </div>
-
     <div class="user-controls">
         <div class="status-badge">
             <span class="status-dot"></span>
-            <span id="greeting-text">Xin chào</span>, 
-            <span id="user-display" style="margin-left:5px; color: var(--vuanem-blue); font-weight: 800;">...</span>
+            <span id="greeting-text">Chào Buổi Chiều</span>, 
+            <span id="user-display" style="margin-left:5px; color: var(--vuanem-blue); font-weight: 800;">Vi Nhựt</span>
         </div>
+
         <button class="btn-mini-logout" onclick="logout()">
             <i class="fas fa-sign-out-alt"></i> THOÁT
         </button>
@@ -270,20 +353,34 @@
 </div>
 <div class="header">
     <h1>QUẢN TRỊ HỆ THỐNG</h1>
+<p>Công cụ hỗ trợ vận hành Vua Nệm Quy Nhơn 2026</p>
 </div>
-
-        <center>
-            <div id="admin-panel">
-                <div style="margin-bottom: 15px; font-size: 12px; font-weight: 800; color: var(--vuanem-gold);">
-                    <i class="fas fa-crown"></i> QUYỀN HẠN: QUẢN TRỊ VIÊN
-                </div>
-                <div style="display: flex; gap: 10px; justify-content: center;">
-                    <button style="background: #334155; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer;"><i class="fas fa-users"></i> Nhân sự</button>
-                    <button style="background: #059669; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer;"><i class="fas fa-chart-pie"></i> Báo cáo</button>
-                </div>
-            </div>
+<div style="width: 100%; display: flex; justify-content: center; margin: 10px 0 35px 0; padding: 0 20px;">
+    <div style="width: 100%; max-width: 1050px; 
+                background: #ffffff; 
+                border-radius: 35px; /* Bo tròn cực mịn */
+                overflow: hidden; 
+                /* Đổ bóng nhiều lớp tạo độ dày và nổi khối */
+                box-shadow: 
+                    0 10px 15px -3px rgba(0, 0, 0, 0.05), 
+                    0 25px 50px -12px rgba(0, 0, 0, 0.1); 
+                border: 1px solid rgba(0, 0, 0, 0.03); /* Viền mảnh sang trọng */">
+        <iframe src="licham.html" 
+                style="width: 100%; height: 165px; border: none; display: block; overflow: hidden;" 
+                scrolling="no">
+        </iframe>
+    </div>
+</div>   
+<div id="admin-panel" style="display: none; background: #1e293b; padding: 15px; border-radius: 20px; margin: 0 auto 30px; width: 100%; max-width: 600px; text-align: center;">
+    <div style="margin-bottom: 12px; font-size: 11px; font-weight: 800; color: var(--vuanem-gold); text-transform: uppercase; letter-spacing: 1px;">
+        <i class="fas fa-crown"></i> QUYỀN HẠN: QUẢN TRỊ VIÊN
+    </div>
+    <div style="display: flex; gap: 10px; justify-content: center;">
+        <button style="background: #334155; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;"><i class="fas fa-users"></i> Nhân sự</button>
+        <button style="background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;"><i class="fas fa-chart-pie"></i> Báo cáo</button>
+    </div>
+</div>
         </center>
-
         <!-- NHÓM 1: BÁN HÀNG -->
         <div class="category-section">
             <div class="category-title"><i class="fas fa-shopping-cart"></i> BÁN HÀNG</div>
@@ -379,175 +476,193 @@
         </div>
     </div>
 <script>
-        // --- GIỮ NGUYÊN TOÀN BỘ LOGIC FIREBASE CỦA BẠN ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyCFPWPMIHdZUJwpNJ75o1FK9AamecKSRCI",
-            authDomain: "vuanem-d66e5.firebaseapp.com",
-            projectId: "vuanem-d66e5",
-            storageBucket: "vuanem-d66e5.firebasestorage.app",
-            messagingSenderId: "430491577223",
-            appId: "1:430491577223:web:92be899aa6eae7c0950122"
-        };
+// --- 1. HÀM CƠ SỞ (LỊCH ÂM & CAN CHI) ---
+function getCanChiDay(d, m, y) {
+    const CAN = ["Giáp","Ất","Bính","Đinh","Mậu","Kỷ","Canh","Tân","Nhâm","Quý"];
+    const CHI = ["Tý","Sửu","Dần","Mão","Thìn","Tỵ","Ngọ","Mùi","Thân","Dậu","Tuất","Hợi"];
+    const dayIndex = (Math.floor((Date.UTC(y, m - 1, d) / 86400000) + 29) % 60);
+    return CAN[dayIndex % 10] + " " + CHI[dayIndex % 12];
+}
 
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+// --- 2. CẤU HÌNH FIREBASE ---
+const firebaseConfig = {
+    apiKey: "AIzaSyCFPWPMIHdZUJwpNJ75o1FK9AamecKSRCI",
+    authDomain: "vuanem-d66e5.firebaseapp.com",
+    projectId: "vuanem-d66e5",
+    storageBucket: "vuanem-d66e5.firebasestorage.app",
+    messagingSenderId: "430491577223",
+    appId: "1:430491577223:web:92be899aa6eae7c0950122"
+};
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const togglePassword = document.querySelector('#togglePassword');
-            const password = document.querySelector('#password');
-            if(togglePassword) {
-                togglePassword.addEventListener('click', function (e) {
-                    const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-                    password.setAttribute('type', type);
-                    this.classList.toggle('fa-eye-slash');
-                    this.classList.toggle('fa-eye');
-                });
-            }
-        });
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-        function login() {
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            if(!email || !password) return alert("Vui lòng nhập đủ Email và Mật khẩu!");
-
-            document.getElementById('loading-text').style.display = 'block';
-            
-            auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).then(() => {
-                return auth.signInWithEmailAndPassword(email, password);
-            }).catch(err => {
-                alert("Lỗi đăng nhập: " + err.message);
-                document.getElementById('loading-text').style.display = 'none';
-            });
-        }
-
-        // --- ĐOẠN CODE ĐÃ TỐI ƯU ĐỂ TIẾT KIỆM QUOTA ---
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                // Kiểm tra xem đã lưu thông tin trong bộ nhớ trình duyệt chưa
-                const cachedName = sessionStorage.getItem('userName');
-                const cachedRole = sessionStorage.getItem('userRole');
-
-                if (cachedName) {
-                    // Nếu đã có dữ liệu tạm, hiển thị ngay không gọi Firebase (Tiết kiệm Read)
-                    showMainSystem(cachedName, cachedRole);
-                } else {
-                    // Nếu chưa có (lần đầu đăng nhập hoặc mới mở trình duyệt)
-                    db.collection("users").doc(user.email.toLowerCase()).get().then(doc => {
-                        if (doc.exists) {
-                            const userData = doc.data();
-                            // Lưu vào bộ nhớ tạm để dùng cho các lần chuyển trang/F5 sau
-                            sessionStorage.setItem('userName', userData.name || user.email);
-                            sessionStorage.setItem('userRole', userData.role);
-                            
-                            showMainSystem(userData.name || user.email, userData.role);
-                        } else {
-                            alert("Tài khoản chưa được phân quyền hệ thống!");
-                            logout();
-                        }
-                    }).catch(error => {
-                        console.error("Lỗi truy xuất: ", error);
-                        if(error.message.includes("quota")) {
-                            alert("Hệ thống đang tạm nghỉ do hết hạn mức dữ liệu ngày hôm nay. Vui lòng quay lại sau!");
-                        }
-                    });
-                }
-            } else {
-                showLoginSection();
-            }
-        });
-
-        // Hàm hỗ trợ hiển thị Giao diện chính
-        function showMainSystem(name, role) {
-            document.getElementById('login-section').style.display = 'none';
-            document.getElementById('main-tool').style.display = 'block';
-            document.getElementById('user-display').innerText = name;
-            
-            if (role === 'admin') {
-                document.getElementById('admin-panel').style.display = 'block';
-            }
-        }
-
-        // Hàm hỗ trợ hiển thị Giao diện đăng nhập
-        function showLoginSection() {
-            document.getElementById('login-section').style.display = 'block';
-            document.getElementById('main-tool').style.display = 'none';
-            document.getElementById('loading-text').style.display = 'none';
-            document.getElementById('admin-panel').style.display = 'none';
-        }
-
-        function logout() { 
-            auth.signOut().then(() => {
-                sessionStorage.clear();
-                location.reload(); 
-            });
-        }
-// --- 1. HÀM CẬP NHẬT THỜI GIAN & LỊCH ÂM ---
+// --- 3. LOGIC CẬP NHẬT THỜI GIAN & LỊCH ÂM CHI TIẾT ---
 function updateInfo() {
     const now = new Date();
-    
-    // Lấy các thành phần thời gian
-    const h = now.getHours();
-    const m = now.getMinutes().toString().padStart(2, '0');
+    const h = now.getHours().toString().padStart(2, '0');
+    const min = now.getMinutes().toString().padStart(2, '0');
     const s = now.getSeconds().toString().padStart(2, '0');
     const ngay = now.getDate();
     const thang = now.getMonth() + 1;
     const nam = now.getFullYear();
-    const thu = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"][now.getDay()];
-
-    // Cập nhật lời chào (Vi Nhựt - Store Manager)
-    let hello = (h < 12) ? "Chào Buổi Sáng" : (h < 18) ? "Chào Buổi Chiều" : "Chào Buổi Tối";
-    if(document.getElementById('greeting-text')) {
-        document.getElementById('greeting-text').innerText = hello;
-    }
-
-    // LẤY LỊCH ÂM: Đợi thư viện amlich-hnd.js tải xong
-    let amText = "";
-    if (typeof getLunarDate === 'function') {
-        try {
-            const am = getLunarDate(ngay, thang, nam); 
-            amText = `| Âm: ${am[0]}/${am[1]}`;
-        } catch (e) {
-            console.log("Lỗi tính lịch âm");
-        }
-    }
+    const thuArr = ["Chủ Nhật","Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy"];
     
-    // Hiển thị ra màn hình
-    const displayElem = document.getElementById('date-time-display');
-    if(displayElem) {
-        displayElem.innerHTML = `<i class="far fa-clock"></i> ${h}:${m}:${s} | ${thu}, ${ngay}/${thang} ${amText}`;
+    const greeting = document.getElementById('greeting-text');
+    if(greeting) {
+        const hour = now.getHours();
+        if (hour < 12) greeting.innerText = "Chào Buổi Sáng";
+        else if (hour < 18) greeting.innerText = "Chào Buổi Chiều";
+        else greeting.innerText = "Chào Buổi Tối";
+    }
+
+    // Cập nhật Top Bar
+    document.getElementById('date-time-display').innerHTML = `<i class="fas fa-clock"></i> ${h}:${min}:${s} | ${thuArr[now.getDay()]} (Dương: ${ngay}/${thang})`;
+
+    // CẬP NHẬT VÀO BẢNG UTILITY (PHẦN BẠN ĐANG THIẾU)
+    if (typeof getLunarDate === 'function') {
+        const lunar = getLunarDate(ngay, thang, nam);
+        const canChi = getCanChiDay(ngay, thang, nam);
+        const lunarVal = document.getElementById('lunar-val');
+        if(lunarVal) {
+            lunarVal.innerText = `${lunar.day}/${lunar.month} (${canChi})`;
+        }
     }
 }
 
-// --- 2. HÀM LẤY THỜI TIẾT (Xử lý cho file chạy trên máy tính) ---
+// --- 4. HÀM LẤY THỜI TIẾT (GỘP CHUNG 1 HÀM DUY NHẤT) ---
 async function getWeather() {
+    const apiKey = "b7ea0438346b9a89666014457e5e32be";
     const weatherDisplay = document.getElementById('weather-display');
+    const tempVal = document.getElementById('temp-val');
+    const descVal = document.getElementById('desc-val');
+
+    try {
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=Quy+Nhon&units=metric&appid=${apiKey}&lang=vi`);
+        const data = await res.json();
+        
+        if(data.main) {
+            const t = Math.round(data.main.temp);
+            const d = data.weather[0].description;
+            const iconMain = data.weather[0].main;
+            
+            let iconEmoji = "🌤️";
+            if (iconMain.includes("Rain")) iconEmoji = "🌧️";
+            else if (iconMain.includes("Cloud")) iconEmoji = "☁️";
+            else if (iconMain.includes("Clear")) iconEmoji = "☀️";
+
+            // Hiển thị top bar
+            if(weatherDisplay) weatherDisplay.innerHTML = `${iconEmoji} Quy Nhơn: ${t}°C`;
+            
+            // Hiển thị vào bảng Utility
+            if(tempVal) tempVal.innerText = t;
+            if(descVal) descVal.innerText = d.charAt(0).toUpperCase() + d.slice(1);
+        }
+    } catch (e) { 
+        console.error("Lỗi thời tiết:", e);
+    }
+}
+
+// --- 5. QUẢN LÝ ĐĂNG NHẬP & KHỞI CHẠY ---
+auth.onAuthStateChanged(user => {
+    if (user) {
+        const cachedName = sessionStorage.getItem('userName');
+        const cachedRole = sessionStorage.getItem('userRole');
+        if (cachedName) {
+            showMainSystem(cachedName, cachedRole);
+        } else {
+            db.collection("users").doc(user.email.toLowerCase()).get().then(doc => {
+                if (doc.exists) {
+                    const userData = doc.data();
+                    sessionStorage.setItem('userName', userData.name || user.email);
+                    sessionStorage.setItem('userRole', userData.role);
+                    showMainSystem(userData.name || user.email, userData.role);
+                }
+            });
+        }
+        // Chạy cập nhật thông tin ngay khi đăng nhập
+        updateInfo();
+        getWeather();
+        setInterval(updateInfo, 1000);
+    } else {
+        showLoginSection();
+    }
+});
+
+function login() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    if(!email || !password) return alert("Vui lòng nhập đủ!");
+    document.getElementById('loading-text').style.display = 'block';
+    auth.signInWithEmailAndPassword(email, password).catch(err => {
+        alert("Lỗi: " + err.message);
+        document.getElementById('loading-text').style.display = 'none';
+    });
+}
+
+function showMainSystem(name, role) {
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('main-tool').style.display = 'block';
+    document.getElementById('user-display').innerText = name;
+    if (role === 'admin') document.getElementById('admin-panel').style.display = 'block';
+}
+
+function showLoginSection() {
+    document.getElementById('login-section').style.display = 'block';
+    document.getElementById('main-tool').style.display = 'none';
+}
+
+function logout() { 
+    auth.signOut().then(() => {
+        sessionStorage.clear();
+        location.reload(); 
+    });
+}
+
+// Xử lý ẩn hiện pass
+document.addEventListener('DOMContentLoaded', () => {
+    const toggle = document.querySelector('#togglePassword');
+    const passInput = document.querySelector('#password');
+    if(toggle) {
+        toggle.addEventListener('click', () => {
+            const type = passInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passInput.setAttribute('type', type);
+            toggle.classList.toggle('fa-eye-slash');
+        });
+    }
+});
+// Thêm đoạn này vào chỗ xử lý thời gian của bạn
+if (typeof getLunarDate === 'function') {
+    const d = new Date();
+    const am = getLunarDate(d.getDate(), d.getMonth() + 1, d.getFullYear());
+    document.getElementById('lunar-val').innerText = am[0] + "/" + am[1] + " (Giáp Thìn)";
+}
+
+// Cập nhật lại hàm getWeather() hiện tại của bạn để nó điền thêm vào bảng mới
+async function getWeather() {
+    const weatherDisplay = document.getElementById('weather-display'); // chỗ cũ trên top
+    const tempVal = document.getElementById('temp-val'); // chỗ mới trong bảng
+    const descVal = document.getElementById('desc-val'); // chỗ mới trong bảng
     const apiKey = "b7ea0438346b9a89666014457e5e32be";
 
-    // Mặc định hiện Quy Nhơn trước để tránh bị trống
-    weatherDisplay.innerHTML = `<i class="fas fa-sun"></i> Quy Nhơn: --°C`;
-
-    // Nếu bạn chạy file trên máy tính, trình duyệt thường chặn Geolocation
-    // Nên mình sẽ ưu tiên gọi thẳng API Quy Nhơn để luôn có dữ liệu
     try {
         const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=Quy+Nhon&units=metric&appid=${apiKey}&lang=vi`);
         const data = await res.json();
         if(data.main) {
-            weatherDisplay.innerHTML = `<i class="fas fa-sun"></i> Quy Nhơn: ${Math.round(data.main.temp)}°C`;
+            const t = Math.round(data.main.temp);
+            const d = data.weather[0].description;
+            
+            // Điền vào top bar cũ
+            weatherDisplay.innerHTML = `<i class="fas fa-sun"></i> Quy Nhơn: ${t}°C`;
+            
+            // Điền vào bảng tiện ích mới thêm
+            if(tempVal) tempVal.innerText = t;
+            if(descVal) descVal.innerText = d.charAt(0).toUpperCase() + d.slice(1);
         }
-    } catch (e) {
-        console.log("Không lấy được thời tiết");
-    }
+    } catch (e) { console.log(e); }
 }
-
-// --- 3. KÍCH HOẠT HỆ THỐNG ---
-// Khi file HTML vừa mở xong thì chạy ngay
-window.onload = function() {
-    updateInfo(); // Chạy lịch & giờ
-    getWeather(); // Chạy thời tiết
-    setInterval(updateInfo, 1000); // Bắt đồng hồ chạy từng giây
-};
-    </script>
+</script>
  <div class="footer">
         <p>© 2026 Toàn quyền bởi Vua Nệm - Quy Nhơn</p>
         <p>Phát triển bởi <span class="dev-name">Vi Nhựt (VN5022) - 0358.96.97.52 </span></p>
@@ -557,6 +672,6 @@ window.onload = function() {
             <strong>THÔNG BÁO PHÁP LÝ:</strong><br>
             Sản phẩm đã được đăng ký bản quyền tại <strong>Cục Sở hữu trí tuệ</strong>.<br>
             Nghiêm cấm mọi hành vi sao chép, chỉnh sửa hoặc phân phối lại mã nguồn dưới mọi hình thức khi chưa có sự đồng ý bằng văn bản của tác giả.
-        </div>
+        </div></div>
 </body>
 </html>
