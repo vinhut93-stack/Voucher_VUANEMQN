@@ -146,15 +146,8 @@ text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 </div>
 
 <script src="amlich.js"></script>
-
+<script src="fortune.js"></script>
 <script>
-    const fortuneData = {
-        "Minh Đường": { desc: "Sao tốt soi chiếu, vạn sự dễ thành.", todos: ["Họp mặt", "Khai trương"], hours: "Dần, Tỵ, Thân, Dậu" },
-        "Thanh Long": { desc: "Mọi việc như ý, kinh doanh phát đạt.", todos: ["Ký kết", "Giao dịch", "Xuất kho"], hours: "Tý, Dần, Thìn, Tỵ" },
-        "Chu Tước": { desc: "Dễ có tranh cãi, cẩn trọng lời nói.", todos: ["Kiểm kho", "Dọn dẹp"], hours: "Sửu, Tỵ, Mùi, Tuất" },
-        "Kim Quỹ": { desc: "Cát tường, thích hợp nhập hàng mới.", todos: ["Bán hàng", "Nhập hàng"], hours: "Mão, Ngọ, Thân, Dậu" }
-    };
-
     function updateAll() {
         const now = new Date();
         const d = now.getDate(), m = now.getMonth() + 1, y = now.getFullYear();
@@ -181,64 +174,57 @@ else greeting = "😴 CHÚC NGỦ NGON & MƠ ĐẸP";
             document.getElementById('lunar-date').innerText = `${lunarData.day}/${lunarData.month} (${lunarData.canChiYear})`;
             document.getElementById('tiet-khi').innerText = lunarData.tietKhi;
 
-const canChi = lunarData.canChiDay;
+let fortune = null;
 
-let currentType = "Minh Đường";
+try {
 
-if (
-    canChi.includes("Giáp") ||
-    canChi.includes("Bính")
-) {
+    fortune = getFortuneInfo(lunarData.canChiDay);
 
-    currentType = "Thanh Long";
+} catch (e) {
 
-} else if (
-    canChi.includes("Mậu") ||
-    canChi.includes("Kỷ")
-) {
+    console.log("fortune.js lỗi:", e);
 
-    currentType = "Kim Quỹ";
-
-} else if (
-    canChi.includes("Canh") ||
-    canChi.includes("Tân")
-) {
-
-    currentType = "Chu Tước";
+    fortune = {
+        name: "Bình Thường",
+        desc: "Chúc bạn một ngày thuận lợi",
+        hours: "Tý, Sửu, Thìn",
+        todos: ["Tư vấn", "Chốt đơn"],
+        theme: {
+            bg: "#fff1f2",
+            border: "#fecdd3"
+        }
+    };
 }
 
-const data = fortuneData[currentType];
-     const fortuneSection =
+const fortuneSection =
     document.querySelector('.fortune-section');
 
-if (currentType === "Thanh Long") {
+fortuneSection.style.background =
+    fortune.theme.bg;
 
-    fortuneSection.style.background =
-        'linear-gradient(135deg,#ecfeff,#cffafe)';
+fortuneSection.style.borderColor =
+    fortune.theme.border;
 
-} else if (currentType === "Kim Quỹ") {
+document.getElementById('day-type-display')
+    .innerText = fortune.name;
 
-    fortuneSection.style.background =
-        'linear-gradient(135deg,#fefce8,#fef08a)';
+document.getElementById('fortune-desc')
+    .querySelector('span')
+    .innerText = fortune.desc;
 
-} else if (currentType === "Chu Tước") {
+document.getElementById('good-hour-display')
+    .innerText = fortune.hours;
 
-    fortuneSection.style.background =
-        'linear-gradient(135deg,#fef2f2,#fecaca)';
-
-} else {
-
-    fortuneSection.style.background =
-        'linear-gradient(135deg,#fff1f2,#ffe4e6)';
-}       
-            document.getElementById('day-type-display').innerText = currentType;
-            document.getElementById('fortune-desc').querySelector('span').innerText = data.desc;
-            document.getElementById('good-hour-display').innerText = data.hours;
-            document.getElementById('todo-container').innerHTML = data.todos.map(t => `<span class="todo-item">${t}</span>`).join('');
-        }
+document.getElementById('todo-container')
+    .innerHTML = fortune.todos
+        .map(t =>
+            `<span class="todo-item">${t}</span>`
+        )
+        .join('');
     }
+} // ĐÓNG updateAll()
 
-   async function updateWeather() {
+async function updateWeather() {
 
     if (!navigator.geolocation) {
         fallbackWeather();
@@ -253,57 +239,65 @@ if (currentType === "Thanh Long") {
 
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
-try {
 
-    const geoRes = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
-    );
+                // Lấy tên địa phương
+                try {
 
-    const geoData = await geoRes.json();
+                    const geoRes = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+                    );
 
-    const city =
-        geoData.address.city ||
-        geoData.address.town ||
-        geoData.address.state ||
-        "Việt Nam";
+                    const geoData = await geoRes.json();
 
-    document.getElementById('location-name').innerText = city;
+                    const city =
+                        geoData.address.city ||
+                        geoData.address.town ||
+                        geoData.address.state ||
+                        "Việt Nam";
 
-} catch {
-    document.getElementById('location-name').innerText =
-        "Việt Nam";
-}
+                    document.getElementById('location-name').innerText = city;
+
+                } catch {
+
+                    document.getElementById('location-name').innerText =
+                        "Việt Nam";
+                }
+
+                // Lấy thời tiết
                 const res = await fetch(
                     `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`
                 );
 
                 const data = await res.json();
 
-                const temp = Math.round(data.current_weather.temperature);
+                const temp =
+                    Math.round(data.current_weather.temperature);
 
                 document.getElementById('temp').innerText = temp;
 
-                const code = data.current_weather.weathercode;
+                const code =
+                    data.current_weather.weathercode;
 
                 let desc = "Nắng đẹp";
                 let icon = "☀️";
 
                 if (code >= 1 && code <= 2) {
+
                     desc = "Ít mây";
                     icon = "⛅";
-                }
 
-                else if (code >= 3 && code <= 48) {
+                } else if (code >= 3 && code <= 48) {
+
                     desc = "Nhiều mây";
                     icon = "☁️";
-                }
 
-                else if (code >= 51 && code <= 67) {
+                } else if (code >= 51 && code <= 67) {
+
                     desc = "Mưa nhẹ";
                     icon = "🌦️";
-                }
 
-                else if (code >= 80) {
+                } else if (code >= 80) {
+
                     desc = "Mưa lớn";
                     icon = "🌧️";
                 }
@@ -311,7 +305,7 @@ try {
                 document.getElementById('weather-desc').innerText =
                     `${icon} ${desc}`;
 
-                // Auto đổi màu box theo nhiệt độ
+                // Auto đổi màu box
 
                 const weatherBox =
                     document.querySelector('.weather-box');
@@ -343,16 +337,13 @@ try {
 
             } catch (e) {
 
-                function fallbackWeather() {
-	}
+                fallbackWeather();
             }
-
         },
 
         fallbackWeather
     );
 }
-
 function fallbackWeather() {
 
     document.getElementById('temp').innerText = "33";
@@ -365,7 +356,18 @@ updateAll();
 updateWeather();
 
 // Đồng hồ cập nhật mỗi giây
-setInterval(updateAll, 1000);
+setInterval(() => {
+
+    // chỉ update clock
+    const now = new Date();
+
+    document.getElementById('digital-clock')
+        .innerText =
+        now.toLocaleTimeString('vi-VN', {
+            hour12: false
+        });
+
+}, 1000);
 
 // Thời tiết cập nhật mỗi 10 phút
 setInterval(updateWeather, 600000);
