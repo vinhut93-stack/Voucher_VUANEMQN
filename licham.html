@@ -21,8 +21,27 @@
     flex-direction:column;
     align-items:center;
 }
-        .container { background: transparent; padding: 10px; width: 100%; max-width: 1000px; display: flex; align-items: center; gap: 15px; }
-        
+        .container{
+    width:100%;
+    max-width:1200px;
+
+    display:flex;
+    flex-direction:column;
+
+    gap:10px;
+
+    padding:10px;
+    box-sizing:border-box;
+}
+        .top-row{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    gap:15px;
+
+    width:100%;
+}
         .header { text-align: center; min-width: 180px; display: flex; flex-direction: column; align-items: center; }
         .header h2 { font-size: 10px; color: var(--vuanem-blue); text-transform: uppercase; letter-spacing: 2px; margin: 0; font-weight: 800; opacity: 0.7; }
         #digital-clock { font-size: 2.2em; font-weight: 800; color: var(--vuanem-blue); margin: 2px 0; font-family: 'Courier New', monospace; }
@@ -36,50 +55,89 @@
         .label { font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px; }
         .value { font-weight: 700; color: var(--text-main); font-size: 13px; white-space: nowrap; }
 
-        .fortune-section { 
-            background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%); 
-            padding: 10px 15px; border-radius: 18px; border: 1px solid #fecdd3; 
-            flex: 1; height: 80px; display: flex; flex-direction: column; justify-content: center;
-        }
+        .fortune-section{
+
+    width:380px;
+
+    min-height:92px;
+
+    padding:10px 16px;
+
+    border-radius:20px;
+
+    border:1px solid #fecdd3;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+
+    box-sizing:border-box;
+
+    box-shadow:
+        0 4px 12px rgba(0,0,0,0.05);
+
+    transition:all .3s ease;
+}
+.todo-list{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+
+    margin-bottom:4px;
+}
         .fortune-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
         .day-type { font-size: 11px; font-weight: 800; color: #e11d48; }
         #fortune-desc { font-size: 11px; color: #b91c1c; line-height: 1.3; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .todo-list { display: flex; gap: 4px; overflow: hidden; }
         .todo-item { background: rgba(255,255,255,0.7); padding: 1px 6px; border-radius: 10px; font-size: 10px; color: #475569; border: 1px solid rgba(225, 29, 72, 0.1); white-space: nowrap; }
-        .good-hour { margin-top: 5px; font-size: 10px; color: #64748b; border-top: 1px dashed rgba(225, 29, 72, 0.2); padding-top: 3px; }
-/* RUNNING TEXT */
-.running-text-wrapper{
-    width:100%;
-    overflow:hidden;
-    background: transparent;
+        .good-hour{
     margin-top:5px;
-    padding:10px 0;
-    border-top: 1px dashed rgba(0, 32, 91, 0.2);
+    font-size:10px;
+    color:#475569;
+    border-top:1px dashed rgba(225,29,72,0.2);
+    padding-top:4px;
+
+    display:flex;
+    align-items:center;
+    gap:4px;
+
+    flex-wrap:wrap;
 }
+
 .running-text{
 
     white-space:nowrap;
 
     color:#ffffff;
 
-    font-size:15px;
+    font-size:16px;
 
     font-weight:700;
-text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+
+    text-shadow:
+        1px 1px 2px rgba(0,0,0,0.3);
+
     display:inline-block;
 
     padding-left:100%;
 
-    animation:runText 20s linear infinite;
+    animation:runText 25s linear infinite;
 }
 .running-text-wrapper{
+
     width:100%;
-    max-width:1000px;
+
+    max-width:1100px;
+
+    margin:10px auto 0 auto;
 
     overflow:hidden;
 
-    margin-top:8px;
-    padding:8px 0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    padding:10px 0;
 
     background:linear-gradient(
         90deg,
@@ -87,7 +145,7 @@ text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
         #003b9a
     );
 
-    border-radius:14px;
+    border-radius:18px;
 
     box-shadow:
         0 4px 10px rgba(0,0,0,0.08);
@@ -108,6 +166,7 @@ text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 <body>
 
 <div class="container">
+    <div class="top-row">
     <div class="header">
         <h2 id="dynamic-greeting">CHÀO BUỔI CHIỀU</h2>
         <div id="digital-clock">00:00:00</div>
@@ -130,15 +189,24 @@ text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
     </div>
 
     <div class="fortune-section">
-        <div class="fortune-header">
-            <span class="label" style="color: #e11d48;">THÔNG TIN NGÀY</span>
-            <span id="day-type-display" class="day-type">--</span>
-        </div>
-        <div id="fortune-desc"><i class="fa-solid fa-star"></i> <span>...</span></div>
-        <div id="todo-container" class="todo-list"></div>
-        <div class="good-hour"><i class="fa-regular fa-clock"></i> <b>Giờ tốt:</b> <span id="good-hour-display">--</span></div>
+    <div class="fortune-header">
+        <span class="label" style="color: #e11d48;">THÔNG TIN NGÀY</span>
+        <span id="day-type-display" class="day-type">--</span>
     </div>
+    <div id="fortune-desc"><i class="fa-solid fa-star"></i> <span>...</span></div>
+    <div id="todo-container" class="todo-list"></div>
+    
+    <div class="good-hour"><i class="fa-regular fa-clock"></i> <b>Giờ tốt:</b> <span id="good-hour-display">--</span></div>
+    <div class="good-hour" style="border-top:none; margin-top:0px;">
+    <i class="fa-solid fa-user-check"></i>
+    <b>Tuổi tốt:</b>
+    <span id="good-age-display">--</span>
 </div>
+
+</div> <!-- đóng fortune-section -->
+
+</div> <!-- đóng top-row -->
+
 <div class="running-text-wrapper">
     <div class="running-text" id="running-text">
         Chúc bạn một ngày bán hàng bùng nổ 🔥
@@ -214,7 +282,9 @@ document.getElementById('fortune-desc')
 
 document.getElementById('good-hour-display')
     .innerText = fortune.hours;
-
+document.getElementById('good-age-display')
+    .innerText =
+    fortune.goodAges.join(' • ');
 document.getElementById('todo-container')
     .innerHTML = fortune.todos
         .map(t =>
