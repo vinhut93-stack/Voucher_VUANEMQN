@@ -233,6 +233,43 @@ const fortuneData = {
 };
 
 // ======================================
+// TUỔI HỢP
+// ======================================
+
+const compatibleAges = {
+
+    "Thanh Long": {
+        goodAges: ["Tý", "Thìn", "Thân"],
+        badAges: ["Ngọ"]
+    },
+
+    "Minh Đường": {
+        goodAges: ["Sửu", "Tỵ", "Dậu"],
+        badAges: ["Mùi"]
+    },
+
+    "Kim Quỹ": {
+        goodAges: ["Thìn", "Tý", "Thân"],
+        badAges: ["Tuất"]
+    },
+
+    "Ngọc Đường": {
+        goodAges: ["Mão", "Mùi", "Hợi"],
+        badAges: ["Dậu"]
+    },
+
+    "Bảo Quang": {
+        goodAges: ["Tỵ", "Dậu", "Sửu"],
+        badAges: ["Hợi"]
+    },
+
+    "Bạch Hổ": {
+        goodAges: ["Dần"],
+        badAges: ["Thân", "Tỵ"]
+    }
+};
+
+// ======================================
 // ZODIAC TABLE
 // ======================================
 
@@ -295,6 +332,12 @@ function getFortuneInfo(canChiDay) {
             fortuneData[dayName] ||
             fortuneData["Minh Đường"];
 
+        const ageInfo =
+            compatibleAges[dayName] || {
+                goodAges: [],
+                badAges: []
+            };
+
         return {
 
             name: dayName,
@@ -326,6 +369,10 @@ function getFortuneInfo(canChiDay) {
             energy: data.energy,
 
             tip: data.tip,
+
+            goodAges: ageInfo.goodAges,
+
+            badAges: ageInfo.badAges,
 
             theme:
                 fortuneTheme[data.type]
@@ -367,6 +414,10 @@ function getFortuneInfo(canChiDay) {
 
             tip: "Nên tập trung khách cũ.",
 
+            goodAges: [],
+
+            badAges: [],
+
             theme: {
                 bg: "linear-gradient(135deg,#f8fafc,#e2e8f0)",
                 border: "#cbd5e1"
@@ -375,6 +426,8 @@ function getFortuneInfo(canChiDay) {
     }
 }
 
-// export global
+// ======================================
+// EXPORT GLOBAL
+// ======================================
 
 window.getFortuneInfo = getFortuneInfo;
