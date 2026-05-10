@@ -32,7 +32,8 @@
     flex-wrap: wrap;
     gap: 10px;
 }
-
+/* Thêm màu xanh lá nhạt cho kho vận để tạo cảm giác an tâm/đầy đủ */
+.theme-warehouse { background: #dcfce7; color: #166534; }
 .weather-widget {
     background: var(--glass);
     padding: 12px 20px;
@@ -401,8 +402,20 @@
                 </a>
             </div>
         </div>
-
-        <!-- NHÓM 2: CÔNG CỤ IN GIÁ -->
+<!-- NHÓM 5: KHO VẬN -->
+        <div class="category-section">
+            <div class="category-title"><i class="fas fa-boxes-stacked"></i> KHO VẬN</div>
+            <div class="grid-container">
+                <a href="hanghoa.html" class="card">
+                    <div class="icon-box theme-warehouse"><i class="fas fa-truck-ramp-box"></i></div>
+    <div class="card-info">
+                        <h2>HÀNG HÓA</h2>
+                        <p>Gợi ý đặt hàng và quản lý tồn kho cửa hàng.</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <!-- NHÓM 3: CÔNG CỤ IN GIÁ -->
         <div class="category-section">
             <div class="category-title"><i class="fas fa-print"></i> CÔNG CỤ IN GIÁ</div>
             <div class="grid-container">
@@ -430,7 +443,7 @@
             </div>
         </div>
 
-        <!-- NHÓM 3: CHĂM SÓC KHÁCH HÀNG -->
+        <!-- NHÓM 4: CHĂM SÓC KHÁCH HÀNG -->
         <div class="category-section">
             <div class="category-title"><i class="fas fa-heart"></i> CHĂM SÓC KHÁCH HÀNG</div>
             <div class="grid-container">
@@ -451,7 +464,7 @@
             </div>
         </div>
 
-        <!-- NHÓM 4: KHÁC -->
+        <!-- NHÓM 5: KHÁC -->
         <div class="category-section">
             <div class="category-title"><i class="fas fa-toolbox"></i> KHÁC</div>
             <div class="grid-container">
