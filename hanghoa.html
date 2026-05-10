@@ -16,12 +16,31 @@
             align-items: center; justify-content: center; font-family: Arial, sans-serif;
             font-size: 18px; font-weight: bold; color: #00205B;
         }
-        body:not(.auth-ready) .container,
-body:not(.auth-ready) {
-    overflow: hidden;
+        body{
+    overflow-x:hidden;
 }
-body:not(.auth-ready)
-    display: none !important;
+
+/* Ẩn nội dung trước khi auth */
+.container,
+.header,
+.floating-controls,
+#resultArea,
+#filterArea,
+#dashboard{
+    opacity:0;
+    pointer-events:none;
+    transition:0.3s;
+}
+
+/* Khi auth thành công */
+body.auth-ready .container,
+body.auth-ready .header,
+body.auth-ready .floating-controls,
+body.auth-ready #resultArea,
+body.auth-ready #filterArea,
+body.auth-ready #dashboard{
+    opacity:1;
+    pointer-events:auto;
 }
 .floating-controls {
     position: fixed !important;
@@ -51,6 +70,8 @@ body:not(.auth-ready)
     display:flex;
     align-items:center;
     justify-content:center;
+
+    transition:0.4s ease;
 }
 
 .loading-wrapper{
@@ -699,9 +720,30 @@ body:not(.auth-ready)
         <label>Trạng thái</label>
         <select id="fSug" class="num-input" onchange="applyFilters()">
             <option value="">-- Tất cả --</option>
-            <option value="SHOP_HAVE">Shops có hàng</option>
-	    <option value="REQUEST_HUB">Đề xuất xin HUB</option>
-	    <option value="OUT_CATEGORY">Ngoài danh mục</option>
+
+<option value="ENOUGH_STOCK">
+    ✅ Shops đủ hàng
+</option>
+
+<option value="LIGHT_REQUEST">
+    🟡 Xin bổ sung nhẹ
+</option>
+
+<option value="URGENT_REQUEST">
+    🔴 Ưu tiên xin HUB
+</option>
+
+<option value="REQUEST_HUB">
+    📦 Thiếu hàng cần xin HUB
+</option>
+
+<option value="HUB_OUT">
+    ⚠ HUB hết hàng
+</option>
+
+<option value="OUT_CATEGORY">
+    🚫 Ngoài danh mục
+</option>
         </select>
     </div>
 
@@ -940,53 +982,93 @@ const hQty =
 // CỘNG DỒN TỒN KHO STORE
 groupStats[subCat].totalQty += sQty;
 
-    return {
+// ===== PHÂN LOẠI GỢI Ý =====
 
-        sku,
+const normQty = parseInt(normInfo.minQty) || 0;
 
-        name: row["Item Name"] || "",
+let sugType = "REQUEST_HUB";
 
-        brand: String(row["Brand"] || "N/A"),
+// 1. NGOÀI DANH MỤC
+if(normQty === 0){
 
-        cat: String(row["Category"] || "N/A"),
+    sugType = "OUT_CATEGORY";
 
-        sub: subCat,
+}
 
-        class: String(
-            row["Class Name"] || "N/A"
-        ),
+// 2. ĐỦ HÀNG
+else if(sQty >= normQty){
 
-        size: `${row["Width"] || 0}x${row["Length"] || 0}x${row["Thickness"] || 0}`,
+    sugType = "ENOUGH_STOCK";
 
-        hubQty: hQty,
+}
 
-        storeQty: sQty,
+// 3. THIẾU NHẸ
+else if(
+    sQty > 0 &&
+    sQty >= Math.ceil(normQty * 0.5)
+){
 
-        norm: parseInt(normInfo.minQty) || 0,
+    sugType = "LIGHT_REQUEST";
 
-        giaKM: parseInt(normInfo.giaKM) || 0,
+}
 
-        unitVol,
+// 4. HẾT TẠI SHOP NHƯNG HUB CÒN
+else if(
+    sQty <= 0 &&
+    hQty > 0
+){
 
-        sugType:
+    sugType = "URGENT_REQUEST";
 
-            (sQty >= 1 &&
-             (parseInt(normInfo.minQty) || 0) !== 0)
+}
 
-                ? "SHOP_HAVE"
+// 5. HUB HẾT
+else if(
+    sQty <= 0 &&
+    hQty <= 0
+){
 
-            : (sQty < 1 &&
-               (parseInt(normInfo.minQty) || 0) >= 1)
+    sugType = "HUB_OUT";
 
-                ? "REQUEST_HUB"
+}
 
-            : (sQty < 1 &&
-               (parseInt(normInfo.minQty) || 0) === 0)
+// 6. THIẾU NẶNG
+else{
 
-                ? "OUT_CATEGORY"
+    sugType = "REQUEST_HUB";
 
-            : "OTHER"
-    };
+}
+
+return {
+
+    sku,
+
+    name: row["Item Name"] || "",
+
+    brand: String(row["Brand"] || "N/A"),
+
+    cat: String(row["Category"] || "N/A"),
+
+    sub: subCat,
+
+    class: String(
+        row["Class Name"] || "N/A"
+    ),
+
+    size: `${row["Width"] || 0}x${row["Length"] || 0}x${row["Thickness"] || 0}`,
+
+    hubQty: hQty,
+
+    storeQty: sQty,
+
+    norm: normQty,
+
+    giaKM: parseInt(normInfo.giaKM) || 0,
+
+    unitVol,
+
+    sugType
+};
 });
       volumeStats = groupStats;
 renderVolumeTable(volumeStats);// Hàm mới hiển thị bảng thể tích
@@ -1339,29 +1421,100 @@ function toggleAll(listId, checked, textId, callbackName = null) {
         let cls = "bg-green";
 let badge = "";
 let sugTxt = "";
+// ===== KIỂM TRA QUÁ TẢI KHO =====
 
-if(i.sugType === "SHOP_HAVE"){
+const groupData = volumeStats[i.sub];
+
+if(groupData){
+
+    const limit = parseFloat(groupData.limitVol) || 0;
+
+    const used = parseFloat(groupData.totalQty) || 0;
+
+    const percent = limit > 0
+        ? (used / limit) * 100
+        : 0;
+
+    if(percent > 120){
+
+        sugTxt += `
+            <div style="
+                margin-bottom:6px;
+                color:#7f1d1d;
+                font-weight:700;
+            ">
+                ⛔ Kho đang quá tải
+                <br>
+                Ngưng xin hàng nhóm này
+            </div>
+        `;
+    }
+
+if(i.giaKM >= 15000000){
+
+    sugTxt += `
+        <div style="
+            margin-bottom:6px;
+            color:#7c3aed;
+            font-weight:700;
+        ">
+            💎 SKU giá trị cao
+            <br>
+            Cần xác nhận quản lý
+        </div>
+    `;
+	}
+}
+if(i.sugType === "ENOUGH_STOCK"){
 
     cls = "bg-green";
 
-    badge = `<span class="badge badge-ok">OK</span>`;
+    badge = `<span class="badge badge-ok">ĐỦ HÀNG</span>`;
 
     sugTxt = `
         <b style="color:#15803d">
-            Shops có hàng
+            ✅ Shops đủ hàng
+        </b>
+        <br>
+        Không cần xin thêm
+    `;
+}
+
+else if(i.sugType === "LIGHT_REQUEST"){
+
+    cls = "bg-yellow";
+
+    badge = `<span class="badge badge-excess">XIN ÍT</span>`;
+
+    sugTxt = `
+        <b style="color:#ca8a04">
+            🟡 Xin bổ sung nhẹ từ HUB
         </b>
     `;
 }
 
-else if(i.sugType === "REQUEST_HUB"){
+else if(i.sugType === "URGENT_REQUEST"){
 
     cls = "bg-red";
 
-    badge = `<span class="badge badge-short">XIN HUB</span>`;
+    badge = `<span class="badge badge-short">ƯU TIÊN</span>`;
 
     sugTxt = `
-        <b style="color:var(--vn-red)">
-            Đề xuất xin hàng HUB
+        <b style="color:#dc2626">
+            🔴 Ưu tiên xin HUB ngay
+        </b>
+    `;
+}
+
+else if(i.sugType === "HUB_OUT"){
+
+    cls = "bg-red";
+
+    badge = `<span class="badge badge-short">HUB HẾT</span>`;
+
+    sugTxt = `
+        <b style="color:#991b1b">
+            ⚠ HUB đang hết hàng
         </b>
     `;
 }
@@ -1374,7 +1527,20 @@ else if(i.sugType === "OUT_CATEGORY"){
 
     sugTxt = `
         <b style="color:#b45309">
-            Hàng ngoài danh mục đề xuất
+            🚫 SKU ngoài danh mục đề xuất
+        </b>
+    `;
+}
+
+else{
+
+    cls = "bg-red";
+
+    badge = `<span class="badge badge-short">THIẾU</span>`;
+
+    sugTxt = `
+        <b style="color:#dc2626">
+            🔴 Thiếu hàng cần xin HUB
         </b>
     `;
 }
@@ -1464,7 +1630,15 @@ auth.onAuthStateChanged(user => {
 
                 document.body.classList.add("auth-ready");
 
-                document.getElementById('auth-overlay').style.display = 'none';
+setTimeout(() => {
+
+    document.getElementById('auth-overlay').style.opacity = '0';
+
+    setTimeout(() => {
+        document.getElementById('auth-overlay').style.display = 'none';
+    },300);
+
+},500);
 
 
 
