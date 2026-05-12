@@ -178,7 +178,59 @@ body.auth-ready #dashboard{
         transform:scaleX(1);
     }
 }
+/* Container chia cột tự động */
+.vol-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    padding: 10px;
+}
 
+/* Thẻ Card */
+.vol-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.vol-card:hover { transform: translateY(-3px); }
+
+.vol-card-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.vol-sub-name { font-size: 14px; color: #334155; }
+
+/* Thanh tiến độ */
+.vol-progress-bg {
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.vol-progress-bar { height: 100%; transition: width 0.4s ease-out; }
+
+.vol-details {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 10px;
+}
+
+.vol-status {
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    line-height: 1.4;
+}
 @keyframes bounce{
 
     from{
@@ -499,49 +551,7 @@ body.auth-ready #dashboard{
         <div class="input-field"><label>ADD TỒN KHO HUB (POS)</label><input type="file" id="hubFile" class="num-input"></div>
         <button class="btn-main" onclick="processAll()"><i class="fas fa-sync-alt"></i> TẢI DỮ LIỆU</button>
     </div>
-
-   <div id="dashboard" style="display:none;">
-
-    <!-- BÁO CÁO THỂ TÍCH -->
-    <div id="volumeReport"
-         class="table-wrap"
-         style="display:none; margin-bottom:25px; border-left:6px solid #10b981;">
-
-        <div style="padding:15px; background:#f8fafc; font-weight:800; color:var(--vn-blue); border-bottom:1px solid #e2e8f0;">
-            <i class="fas fa-warehouse"></i>
-            BÁO CÁO SỨC CHỨA KHO (THEO NHÓM)
-        </div>
-
-        <div id="volumeContent"></div>
-    </div>
-
-    <!-- DASHBOARD -->
-    <div class="stats-grid">
-
-        <div class="stat-item">
-            <div class="stat-label">SKU Hiển thị</div>
-            <div id="statTotal" class="stat-value">0</div>
-        </div>
-
-        <div class="stat-item" style="border-left-color: var(--vn-red);">
-            <div class="stat-label">SKU Thiếu hàng</div>
-            <div id="statShort" class="stat-value">0</div>
-        </div>
-
-        <div class="stat-item" style="border-left-color: #f59e0b;">
-            <div class="stat-label">SKU Dư hàng</div>
-            <div id="statExcess" class="stat-value">0</div>
-        </div>
-
-        <div class="stat-item" style="border-left-color: #10b981;">
-            <div class="stat-label">Tỷ lệ lấp đầy</div>
-            <div id="statRate" class="stat-value">0%</div>
-        </div>
-
-    </div>
-
-</div>
-    <div id="filterArea" class="filter-box" style="display:none;">
+ <div id="filterArea" class="filter-box" style="display:none;">
         <div class="filter-row">
             <div class="filter-group">
                 <label>1. Category</label>
@@ -757,6 +767,48 @@ body.auth-ready #dashboard{
     </div>
 
 </div>
+   <div id="dashboard" style="display:none;">
+
+    <!-- BÁO CÁO THỂ TÍCH -->
+    <div id="volumeReport"
+         class="table-wrap"
+         style="display:none; margin-bottom:25px; border-left:6px solid #10b981;">
+
+        <div style="padding:15px; background:#f8fafc; font-weight:800; color:var(--vn-blue); border-bottom:1px solid #e2e8f0;">
+            <i class="fas fa-warehouse"></i>
+            BÁO CÁO SỨC CHỨA KHO (THEO NHÓM)
+        </div>
+
+        <div id="volumeContent"></div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="stats-grid">
+
+        <div class="stat-item">
+            <div class="stat-label">SKU Hiển thị</div>
+            <div id="statTotal" class="stat-value">0</div>
+        </div>
+
+        <div class="stat-item" style="border-left-color: var(--vn-red);">
+            <div class="stat-label">SKU Thiếu hàng</div>
+            <div id="statShort" class="stat-value">0</div>
+        </div>
+
+        <div class="stat-item" style="border-left-color: #f59e0b;">
+            <div class="stat-label">SKU Dư hàng</div>
+            <div id="statExcess" class="stat-value">0</div>
+        </div>
+
+        <div class="stat-item" style="border-left-color: #10b981;">
+            <div class="stat-label">Tỷ lệ lấp đầy</div>
+            <div id="statRate" class="stat-value">0%</div>
+        </div>
+
+    </div>
+
+</div>
+   
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyzrn0yk7e5YZIpuZpBkOJtpMZePCJ3K79i4vmq0Ur6Cdvr_fiFV_uryUblIw1ZK38K/exec";
     let masterData = [];
@@ -1083,117 +1135,72 @@ renderVolumeTable(volumeStats);// Hàm mới hiển thị bảng thể tích
 }
 
 function renderVolumeTable(stats) {
-
-    let html = `
-    <table>
-        <thead>
-            <tr>
-                <th>Nhóm sản phẩm</th>
-                <th style="text-align:center">Sức chứa tối đa</th>
-                <th style="text-align:center">Tồn kho hiện tại</th>
-                <th style="text-align:center">Trạng thái diện tích</th>
-            </tr>
-        </thead>
-        <tbody>
-    `;
+    let html = `<div class="vol-grid">`;
 
     for (let sub in stats) {
-
         let limit = parseFloat(stats[sub].limitVol) || 0;
-
         let used = parseFloat(stats[sub].totalQty) || 0;
 
-        if(limit <= 0) continue;
+        if (limit <= 0) continue;
 
         let percent = (used / limit) * 100;
-
         let status = "";
-        let color = "#15803d";
+        let color = "";
+        let action = "";
 
-       if(percent < 70){
+        // Áp dụng bộ quy tắc phần trăm chuyên nghiệp của Nhựt
+        if (percent < 50) {
+            color = "#dc2626"; // Đỏ
+            status = "KHO TRỐNG: Thiếu hàng nghiêm trọng";
+            action = "Cần nhập hàng ngay!";
+        } else if (percent <= 90) {
+            color = "#f59e0b"; // Vàng
+            status = "Thiếu hàng cần xin thêm";
+            action = "Lên kế hoạch nhập thêm.";
+        } else if (percent <= 110) {
+            color = "#15803d"; // Xanh lá
+            status = "Hàng xin ít thôi nhé";
+            action = "Duy trì ổn định.";
+        } else if (percent <= 150) {
+            color = "#ea580c"; // Cam
+            status = "Cảnh báo: Không đủ vị trí lưu trữ";
+            action = "Hạn chế nhập, sắp xếp lại kho.";
+        } else if (percent <= 200) {
+            color = "#dc2626"; // Đỏ
+            status = "Vượt ngưỡng: Nên điều chuyển hàng";
+            action = "Dừng nhập, xem xét chuyển kho.";
+        } else {
+            color = "#7f1d1d"; // Đỏ đậm
+            status = "NGỪNG XIN HÀNG";
+            action = "Xử lý hàng tồn khẩn cấp!";
+        }
 
-    color = "#dc2626";
-
-    status = `
-        Thiếu hàng, báo ngay cho Quản lý
-        (${percent.toFixed(0)}%)
-    `;
-}
-
-else if(percent >= 70 && percent <= 90){
-
-    color = "#f59e0b";
-
-    status = `
-        Thiếu hàng nghiêm trọng
-        (${percent.toFixed(0)}%)
-    `;
-}
-
-else if(percent > 90 && percent <= 100){
-
-    color = "#15803d";
-
-    status = `
-        Hàng xin ít thôi nhé
-        (${percent.toFixed(0)}%)
-    `;
-}
-
-else if(percent > 100 && percent <= 120){
-
-    color = "#ea580c";
-
-    status = `
-        Cảnh báo, hàng hoá ko đủ vị trí lưu trữ
-        (${percent.toFixed(0)}%)
-    `;
-}
-
-else if(percent > 120 && percent <= 150){
-
-    color = "#dc2626";
-
-    status = `
-        Cảnh báo, vượt ngưỡng
-        (${percent.toFixed(0)}%)
-    `;
-}
-
-else{
-
-    color = "#7f1d1d";
-
-    status = `
-        Ngừng xin hàng
-        (${percent.toFixed(0)}%)
-    `;
-}
+        // Vẽ giao diện dạng Card
         html += `
-        <tr>
-            <td>
-                <b>${sub}</b>
-            </td>
+        <div class="vol-card" style="border-left: 5px solid ${color}">
+            <div class="vol-card-header">
+                <span class="vol-sub-name">${sub}</span>
+                <span class="vol-percent" style="color: ${color}">${percent.toFixed(0)}%</span>
+            </div>
+            
+            <div class="vol-progress-bg">
+                <div class="vol-progress-bar" style="width: ${Math.min(percent, 100)}%; background-color: ${color}"></div>
+            </div>
 
-            <td align="center">
-                ${limit.toLocaleString('vi-VN')}
-            </td>
-
-            <td align="center">
-                ${used.toLocaleString('vi-VN')}
-            </td>
-
-            <td align="center">
-                <b style="color:${color}">
-                    ${status}
-                </b>
-            </td>
-        </tr>
+            <div class="vol-details">
+                <span>Tồn: <b>${used.toLocaleString('vi-VN')}</b></span>
+                <span>Sức chứa: <b>${limit.toLocaleString('vi-VN')}</b></span>
+            </div>
+            
+            <div class="vol-status" style="background-color: ${color}10; color: ${color}">
+                <strong>${status}</strong><br>
+                <small>→ ${action}</small>
+            </div>
+        </div>
         `;
     }
 
-    html += `</tbody></table>`;
-
+    html += `</div>`;
     document.getElementById('volumeContent').innerHTML = html;
 }
 
