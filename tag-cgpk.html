@@ -232,8 +232,9 @@
     }
 
     function handleData(data) {
-        localStorage.setItem("scriptsData", JSON.stringify(data));
-    }
+    localStorage.setItem("scriptsData", JSON.stringify(data));
+}
+
 function logoutSystem() {
     if(confirm("Bạn muốn đăng xuất và khóa hệ thống?")) {
         firebase.auth().signOut().then(() => {
