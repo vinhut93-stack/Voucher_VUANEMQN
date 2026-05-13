@@ -196,7 +196,6 @@
     <div class="system-footer">
         © 2026 Vua Nệm - Version 3.5. Designed by Phan Đinh Vi Nhựt.
     </div>
-
     <script>
 
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxiyZxaApzeJ5GNBtiDwgbln_BZonALfICWaMqVVfE-SAgO87knZ4cedZRvHTska-jk/exec";
@@ -428,28 +427,14 @@ function logoutSystem() {
     </script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyCFPWPMIHdZUJwpNJ75o1FK9AamecKSRCI",
-        authDomain: "vuanem-d66e5.firebaseapp.com",
-        projectId: "vuanem-d66e5",
-        storageBucket: "vuanem-d66e5.firebasestorage.app",
-        messagingSenderId: "430491577223",
-        appId: "1:430491577223:web:92be899aa6eae7c0950122"
-    };
-    firebase.initializeApp(firebaseConfig);
-
-    // SỬA TẠI ĐÂY
-    firebase.auth().onAuthStateChanged(user => {
-        if (user) {
-            console.log("Đã xác thực:", user.email);
-            // Có thể thêm logic kiểm tra quyền quản lý tại đây nếu cần
-        } else {
-            // Chỉ chuyển hướng khi Firebase đã xác nhận chắc chắn KHÔNG có user
-            window.location.href = "index.html"; 
-        }
-    });
+auth.onAuthStateChanged(user => {
+    if (user) {
+        console.log("Đã xác thực:", user.email);
+    } else {
+        window.location.href = "index.html";
+    }
+});
 </script>
 </body>
 <div class="floating-controls no-print">
