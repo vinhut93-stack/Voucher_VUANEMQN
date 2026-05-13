@@ -13,7 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
+<script src="firebase-config.js"></script>
     <style>
         :root {
             --vuanem-blue: #00205B;
@@ -496,20 +496,6 @@ function getCanChiDay(d, m, y) {
     const dayIndex = (Math.floor((Date.UTC(y, m - 1, d) / 86400000) + 29) % 60);
     return CAN[dayIndex % 10] + " " + CHI[dayIndex % 12];
 }
-
-// --- 2. CẤU HÌNH FIREBASE ---
-const firebaseConfig = {
-    apiKey: "AIzaSyCFPWPMIHdZUJwpNJ75o1FK9AamecKSRCI",
-    authDomain: "vuanem-d66e5.firebaseapp.com",
-    projectId: "vuanem-d66e5",
-    storageBucket: "vuanem-d66e5.firebasestorage.app",
-    messagingSenderId: "430491577223",
-    appId: "1:430491577223:web:92be899aa6eae7c0950122"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
 
 // --- 3. LOGIC CẬP NHẬT THỜI GIAN & LỊCH ÂM CHI TIẾT ---
 function updateInfo() {
