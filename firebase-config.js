@@ -7,9 +7,11 @@
     appId: "1:430491577223:web:92be899aa6eae7c0950122"
 };
 
-// Khởi tạo Firebase
-firebase.initializeApp(firebaseConfig);
+// Chống khởi tạo nhiều lần
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 
-// Export global
+// Khởi tạo services
 const auth = firebase.auth();
 const db = firebase.firestore();
