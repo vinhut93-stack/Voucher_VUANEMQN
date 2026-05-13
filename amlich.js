@@ -172,9 +172,8 @@ function getSunLongitude(jdn, timeZone) {
 
     L -= Math.PI * 2 * Math.floor(L / (Math.PI * 2));
 
-    return Math.floor((L / Math.PI) * 6);
+    return Math.floor((L / Math.PI) * 12);
 }
-
 /* =========================
    LUNAR MONTH 11
 ========================= */
@@ -435,10 +434,8 @@ function getTietKhi(d, m, y) {
 
     let jd = getjd(d, m, y);
 
-    let sunLongitude =
+    let index =
         getSunLongitude(jd, 7.0);
-
-    let index = sunLongitude * 2;
 
     return tietKhiList[index] || "Tiết khí";
 }
