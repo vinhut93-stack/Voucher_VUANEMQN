@@ -362,7 +362,7 @@ body.auth-ready { display: block; }
     <script>
 
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxiyZxaApzeJ5GNBtiDwgbln_BZonALfICWaMqVVfE-SAgO87knZ4cedZRvHTska-jk/exec";
-    
+    let scriptsData = [];
     // KIỂM TRA BẢO MẬT (Giống hệt kichban.html)
     auth.onAuthStateChanged(async (user) => {
     if (user) {
