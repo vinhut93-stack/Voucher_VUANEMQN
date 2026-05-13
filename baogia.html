@@ -7,6 +7,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
 .floating-controls { 
@@ -211,15 +212,7 @@
 
 <script>
     // NHỰT NHỚ THAY API KEY VÀO ĐÂY NHÉ
-    const firebaseConfig = { 
-    apiKey: "AIzaSyCFPWPMIHdZUJwpNJ75o1FK9AamecKSRCI", 
-    authDomain: "vuanem-d66e5.firebaseapp.com",
-    projectId: "vuanem-d66e5"
-};
-
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+   
 
 // Cấu hình phiên làm việc (2 giờ)
 const SESSION_TIMEOUT = 2 * 60 * 60 * 1000;
