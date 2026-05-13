@@ -234,8 +234,6 @@
     function handleData(data) {
         localStorage.setItem("scriptsData", JSON.stringify(data));
     }
-
-    firebase.initializeApp(firebaseConfig);
 function logoutSystem() {
     if(confirm("Bạn muốn đăng xuất và khóa hệ thống?")) {
         firebase.auth().signOut().then(() => {
