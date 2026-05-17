@@ -536,19 +536,18 @@
             </div>
             <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
 
-    <button
-        style="background: #334155; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;">
-        <i class="fas fa-users"></i> Nhân sự
-    </button>
+                <button
+                    style="background: #334155; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                    <i class="fas fa-users"></i> Nhân sự
+                </button>
 
-    <button
-        style="background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;">
-        <i class="fas fa-chart-pie"></i> Báo cáo
-    </button>
+                <button
+                    style="background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                    <i class="fas fa-chart-pie"></i> Báo cáo
+                </button>
 
-    <!-- NÚT PHÂN QUYỀN -->
-    <a href="phanquyen.html"
-        style="
+                <!-- NÚT PHÂN QUYỀN -->
+                <a href="phanquyen.html" style="
             background: #dc2626;
             color: white;
             text-decoration: none;
@@ -560,15 +559,13 @@
             align-items: center;
             gap: 6px;
             transition: 0.3s;
-        "
-        onmouseover="this.style.opacity='0.9'"
-        onmouseout="this.style.opacity='1'">
+        " onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
 
-        <i class="fas fa-user-shield"></i>
-        Phân quyền
-    </a>
+                    <i class="fas fa-user-shield"></i>
+                    Phân quyền
+                </a>
 
-</div>
+            </div>
         </div>
         </center>
         <!-- NHÓM 1: BÁN HÀNG -->
@@ -665,7 +662,14 @@
                         <p>Phiếu kiểm tra PCCC định kì.</p>
                     </div>
                 </a>
-
+                <!-- CÔNG CỤ MỚI: CHỨNG TỪ -->
+                <a href="chungtu.html" class="card" id="module-chungtu">
+                    <div class="icon-box theme-other"><i class="fas fa-id-badge"></i></div>
+                    <div class="card-info">
+                        <h2>CHỨNG TỪ</h2>
+                        <p>Làm chứng từ rác, nước sinh hoạt.</p>
+                    </div>
+                </a>
                 <!-- CÔNG CỤ MỚI: IN BẢN TÊN -->
                 <a href="inbanten.html" class="card" id="module-inbanten">
                     <div class="icon-box theme-other"><i class="fas fa-id-badge"></i></div>
@@ -757,53 +761,53 @@
         // --- 5. QUẢN LÝ ĐĂNG NHẬP & KHỞI CHẠY ---
         auth.onAuthStateChanged(user => {
 
-    if (user) {
+            if (user) {
 
-        db.collection("users")
-            .doc(user.email.toLowerCase())
-            .get()
-            .then(doc => {
+                db.collection("users")
+                    .doc(user.email.toLowerCase())
+                    .get()
+                    .then(doc => {
 
-                if (!doc.exists) {
-                    alert("Không tìm thấy dữ liệu user!");
-                    return;
-                }
+                        if (!doc.exists) {
+                            alert("Không tìm thấy dữ liệu user!");
+                            return;
+                        }
 
-                const userData = doc.data();
+                        const userData = doc.data();
 
-                // Cache lại
-                sessionStorage.setItem(
-                    'userName',
-                    userData.name || user.email
-                );
+                        // Cache lại
+                        sessionStorage.setItem(
+                            'userName',
+                            userData.name || user.email
+                        );
 
-                sessionStorage.setItem(
-                    'userRole',
-                    userData.role
-                );
+                        sessionStorage.setItem(
+                            'userRole',
+                            userData.role
+                        );
 
-                // Hiện giao diện
-                showMainSystem(
-                    userData.name || user.email,
-                    userData.role
-                );
+                        // Hiện giao diện
+                        showMainSystem(
+                            userData.name || user.email,
+                            userData.role
+                        );
 
-                // ÁP DỤNG PHÂN QUYỀN
-                applyPermissions(userData);
+                        // ÁP DỤNG PHÂN QUYỀN
+                        applyPermissions(userData);
 
-            });
+                    });
 
-        updateInfo();
-        getWeather();
-        setInterval(updateInfo, 1000);
+                updateInfo();
+                getWeather();
+                setInterval(updateInfo, 1000);
 
-    } else {
+            } else {
 
-        showLoginSection();
+                showLoginSection();
 
-    }
+            }
 
-});
+        });
 
         function login() {
             const email = document.getElementById('email').value.trim();
@@ -818,28 +822,28 @@
 
         function showMainSystem(name, role) {
 
-    document.getElementById('login-section').style.display = 'none';
-    document.getElementById('main-tool').style.display = 'block';
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('main-tool').style.display = 'block';
 
-    document.getElementById('user-display').innerText = name;
+            document.getElementById('user-display').innerText = name;
 
-    // RESET toàn bộ module hiện lại
-    document.querySelectorAll('.card').forEach(card => {
-        card.style.display = '';
-    });
+            // RESET toàn bộ module hiện lại
+            document.querySelectorAll('.card').forEach(card => {
+                card.style.display = '';
+            });
 
-    // RESET category hiện lại
-    document.querySelectorAll('.category-section').forEach(section => {
-        section.style.display = '';
-    });
+            // RESET category hiện lại
+            document.querySelectorAll('.category-section').forEach(section => {
+                section.style.display = '';
+            });
 
-    // Hiện admin panel nếu là admin
-    if (role === 'admin') {
-        document.getElementById('admin-panel').style.display = 'block';
-    } else {
-        document.getElementById('admin-panel').style.display = 'none';
-    }
-}
+            // Hiện admin panel nếu là admin
+            if (role === 'admin') {
+                document.getElementById('admin-panel').style.display = 'block';
+            } else {
+                document.getElementById('admin-panel').style.display = 'none';
+            }
+        }
 
         function showLoginSection() {
             document.getElementById('login-section').style.display = 'block';
@@ -917,52 +921,53 @@
 
             }
         };
-function applyPermissions(userData) {
+        function applyPermissions(userData) {
 
-    // Admin thấy toàn bộ
-    if (userData.role === "admin") return;
+            // Admin thấy toàn bộ
+            if (userData.role === "admin") return;
 
-    const permissions = userData.permissions || {};
+            const permissions = userData.permissions || {};
 
-    const moduleMap = {
-        baogia: "module-baogia",
-        baogiadoanhnghiep: "module-baogiadoanhnghiep",
-        hanghoa: "module-hanghoa",
-        tag_nem: "module-tag-nem",
-        khongnguthu: "module-khongnguthu",
-        tag_cgpk: "module-tag-cgpk",
-        voucher: "module-voucher",
-        kichban: "module-kichban",
-        binhchuachay: "module-binhchuachay",
-        inbanten: "module-inbanten"
-    };
+            const moduleMap = {
+                baogia: "module-baogia",
+                baogiadoanhnghiep: "module-baogiadoanhnghiep",
+                hanghoa: "module-hanghoa",
+                tag_nem: "module-tag-nem",
+                khongnguthu: "module-khongnguthu",
+                tag_cgpk: "module-tag-cgpk",
+                voucher: "module-voucher",
+                kichban: "module-kichban",
+                binhchuachay: "module-binhchuachay",
+                inbanten: "module-inbanten",
+                chungtu: "module-chungtu"
+            };
 
-    Object.keys(moduleMap).forEach(permissionKey => {
+            Object.keys(moduleMap).forEach(permissionKey => {
 
-        // Nếu KHÔNG có quyền => Ẩn module
-        if (!permissions[permissionKey]) {
+                // Nếu KHÔNG có quyền => Ẩn module
+                if (!permissions[permissionKey]) {
 
-            const element = document.getElementById(moduleMap[permissionKey]);
+                    const element = document.getElementById(moduleMap[permissionKey]);
 
-            if (element) {
-                element.style.display = "none";
-            }
+                    if (element) {
+                        element.style.display = "none";
+                    }
+                }
+            });
+
+            // Ẩn luôn category trống
+            document.querySelectorAll('.category-section').forEach(section => {
+
+                const visibleCards = section.querySelectorAll(
+                    '.card:not([style*="display: none"])'
+                );
+
+                if (visibleCards.length === 0) {
+                    section.style.display = "none";
+                }
+
+            });
         }
-    });
-
-    // Ẩn luôn category trống
-    document.querySelectorAll('.category-section').forEach(section => {
-
-        const visibleCards = section.querySelectorAll(
-            '.card:not([style*="display: none"])'
-        );
-
-        if (visibleCards.length === 0) {
-            section.style.display = "none";
-        }
-
-    });
-}
     </script>
 </body>
 
