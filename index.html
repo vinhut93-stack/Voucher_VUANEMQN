@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <link rel="preconnect" href="https://www.gstatic.com">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
@@ -25,6 +26,7 @@
             --bg-light: #f4f7fa;
             --glass: rgba(255, 255, 255, 0.95);
         }
+
         /* Style mới cho thanh tiêu đề */
         .header-top-bar {
             display: flex;
@@ -35,6 +37,7 @@
             flex-wrap: wrap;
             gap: 10px;
         }
+
         /* Thêm màu xanh lá nhạt cho kho vận để tạo cảm giác an tâm/đầy đủ */
         .theme-warehouse {
             background: #dcfce7;
@@ -753,31 +756,54 @@
 
         // --- 5. QUẢN LÝ ĐĂNG NHẬP & KHỞI CHẠY ---
         auth.onAuthStateChanged(user => {
-            if (user) {
-                const cachedName = sessionStorage.getItem('userName');
-                const cachedRole = sessionStorage.getItem('userRole');
-                if (cachedName) {
-                    showMainSystem(cachedName, cachedRole);
-                } else {
-                    db.collection("users").doc(user.email.toLowerCase()).get().then(doc => {
-                        if (doc.exists) {
-                            const userData = doc.data();
-                            sessionStorage.setItem('userName', userData.name || user.email);
-                            sessionStorage.setItem('userRole', userData.role);
-                            showMainSystem(userData.name || user.email, userData.role);
 
-applyPermissions(userData);
-                        }
-                    });
+    if (user) {
+
+        db.collection("users")
+            .doc(user.email.toLowerCase())
+            .get()
+            .then(doc => {
+
+                if (!doc.exists) {
+                    alert("Không tìm thấy dữ liệu user!");
+                    return;
                 }
-                // Chạy cập nhật thông tin ngay khi đăng nhập
-                updateInfo();
-                getWeather();
-                setInterval(updateInfo, 1000);
-            } else {
-                showLoginSection();
-            }
-        });
+
+                const userData = doc.data();
+
+                // Cache lại
+                sessionStorage.setItem(
+                    'userName',
+                    userData.name || user.email
+                );
+
+                sessionStorage.setItem(
+                    'userRole',
+                    userData.role
+                );
+
+                // Hiện giao diện
+                showMainSystem(
+                    userData.name || user.email,
+                    userData.role
+                );
+
+                // ÁP DỤNG PHÂN QUYỀN
+                applyPermissions(userData);
+
+            });
+
+        updateInfo();
+        getWeather();
+        setInterval(updateInfo, 1000);
+
+    } else {
+
+        showLoginSection();
+
+    }
+
+});
 
         function login() {
             const email = document.getElementById('email').value.trim();
@@ -791,11 +817,29 @@ applyPermissions(userData);
         }
 
         function showMainSystem(name, role) {
-            document.getElementById('login-section').style.display = 'none';
-            document.getElementById('main-tool').style.display = 'block';
-            document.getElementById('user-display').innerText = name;
-            if (role === 'admin') document.getElementById('admin-panel').style.display = 'block';
-        }
+
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('main-tool').style.display = 'block';
+
+    document.getElementById('user-display').innerText = name;
+
+    // RESET toàn bộ module hiện lại
+    document.querySelectorAll('.card').forEach(card => {
+        card.style.display = '';
+    });
+
+    // RESET category hiện lại
+    document.querySelectorAll('.category-section').forEach(section => {
+        section.style.display = '';
+    });
+
+    // Hiện admin panel nếu là admin
+    if (role === 'admin') {
+        document.getElementById('admin-panel').style.display = 'block';
+    } else {
+        document.getElementById('admin-panel').style.display = 'none';
+    }
+}
 
         function showLoginSection() {
             document.getElementById('login-section').style.display = 'block';
