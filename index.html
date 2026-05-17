@@ -534,28 +534,55 @@
                 style="margin-bottom: 12px; font-size: 11px; font-weight: 800; color: var(--vuanem-gold); text-transform: uppercase; letter-spacing: 1px;">
                 <i class="fas fa-crown"></i> QUYỀN HẠN: QUẢN TRỊ VIÊN
             </div>
-            <div style="display: flex; gap: 10px; justify-content: center;">
-                <button
-                    style="background: #334155; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;"><i
-                        class="fas fa-users"></i> Nhân sự</button>
-                <button
-                    style="background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;"><i
-                        class="fas fa-chart-pie"></i> Báo cáo</button>
-            </div>
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+
+    <button
+        style="background: #334155; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;">
+        <i class="fas fa-users"></i> Nhân sự
+    </button>
+
+    <button
+        style="background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;">
+        <i class="fas fa-chart-pie"></i> Báo cáo
+    </button>
+
+    <!-- NÚT PHÂN QUYỀN -->
+    <a href="phanquyen.html"
+        style="
+            background: #dc2626;
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.3s;
+        "
+        onmouseover="this.style.opacity='0.9'"
+        onmouseout="this.style.opacity='1'">
+
+        <i class="fas fa-user-shield"></i>
+        Phân quyền
+    </a>
+
+</div>
         </div>
         </center>
         <!-- NHÓM 1: BÁN HÀNG -->
         <div class="category-section">
             <div class="category-title"><i class="fas fa-shopping-cart"></i> BÁN HÀNG</div>
             <div class="grid-container">
-                <a href="baogia.html" class="card">
+                <a href="baogia.html" class="card" id="module-baogia">
                     <div class="icon-box theme-sale"><i class="fas fa-file-invoice-dollar"></i></div>
                     <div class="card-info">
                         <h2>BÁO GIÁ KHÁCH LẺ</h2>
                         <p>Tạo bảng báo giá nhanh cho khách tại cửa hàng.</p>
                     </div>
                 </a>
-                <a href="baogiadoanhnghiep.html" class="card">
+                <a href="baogiadoanhnghiep.html" class="card" id="module-baogiadoanhnghiep">
                     <div class="icon-box theme-sale"><i class="fas fa-building"></i></div>
                     <div class="card-info">
                         <h2>BÁO GIÁ DOANH NGHIỆP</h2>
@@ -568,7 +595,7 @@
         <div class="category-section">
             <div class="category-title"><i class="fas fa-boxes-stacked"></i> KHO VẬN</div>
             <div class="grid-container">
-                <a href="hanghoa.html" class="card">
+                <a href="hanghoa.html" class="card" id="module-hanghoa">
                     <div class="icon-box theme-warehouse"><i class="fas fa-truck-ramp-box"></i></div>
                     <div class="card-info">
                         <h2>HÀNG HÓA</h2>
@@ -581,21 +608,21 @@
         <div class="category-section">
             <div class="category-title"><i class="fas fa-print"></i> CÔNG CỤ IN GIÁ</div>
             <div class="grid-container">
-                <a href="tag-nem.html" class="card">
+                <a href="tag-nem.html" class="card" id="module-tag-nem">
                     <div class="icon-box theme-print"><i class="fas fa-bed"></i></div>
                     <div class="card-info">
                         <h2>TAG ĐỆM (NGỦ THỬ)</h2>
                         <p>In tag cho đệm có chính sách đến 120 đêm.</p>
                     </div>
                 </a>
-                <a href="Khongnguthu.html" class="card">
+                <a href="Khongnguthu.html" class="card" id="module-khongnguthu">
                     <div class="icon-box theme-print"><i class="fas fa-exclamation-circle"></i></div>
                     <div class="card-info">
                         <h2>TAG ĐỆM (KHÔNG ĐỔI TRẢ)</h2>
                         <p>Dành cho đệm/topper không áp dụng ngủ thử.</p>
                     </div>
                 </a>
-                <a href="tag-cgpk.html" class="card">
+                <a href="tag-cgpk.html" class="card" id="module-tag-cgpk">
                     <div class="icon-box theme-print"><i class="fas fa-tags"></i></div>
                     <div class="card-info">
                         <h2>TAG PHỤ KIỆN CGPK</h2>
@@ -609,14 +636,14 @@
         <div class="category-section">
             <div class="category-title"><i class="fas fa-heart"></i> CHĂM SÓC KHÁCH HÀNG</div>
             <div class="grid-container">
-                <a href="voucher.html" class="card">
+                <a href="voucher.html" class="card" id="module-voucher">
                     <div class="icon-box theme-care"><i class="fas fa-ticket-alt"></i></div>
                     <div class="card-info">
                         <h2>KHO VOUCHER</h2>
                         <p>Tạo voucher chuyên nghiệp gửi khách hàng.</p>
                     </div>
                 </a>
-                <a href="kichban.html" class="card">
+                <a href="kichban.html" class="card" id="module-kichban">
                     <div class="icon-box theme-care"><i class="fas fa-comments"></i></div>
                     <div class="card-info">
                         <h2>KỊCH BẢN BÁN HÀNG</h2>
@@ -631,7 +658,7 @@
             <div class="category-title"><i class="fas fa-toolbox"></i> KHÁC</div>
             <div class="grid-container">
                 <!-- Công cụ PCCC hiện có -->
-                <a href="binhchuachay.html" class="card">
+                <a href="binhchuachay.html" class="card" id="module-binhchuachay">
                     <div class="icon-box theme-other"><i class="fas fa-fire-extinguisher"></i></div>
                     <div class="card-info">
                         <h2>KIỂM TRA PCCC</h2>
@@ -640,7 +667,7 @@
                 </a>
 
                 <!-- CÔNG CỤ MỚI: IN BẢN TÊN -->
-                <a href="inbanten.html" class="card">
+                <a href="inbanten.html" class="card" id="module-inbanten">
                     <div class="icon-box theme-other"><i class="fas fa-id-badge"></i></div>
                     <div class="card-info">
                         <h2>IN BẢN TÊN</h2>
@@ -741,6 +768,8 @@
                             sessionStorage.setItem('userName', userData.name || user.email);
                             sessionStorage.setItem('userRole', userData.role);
                             showMainSystem(userData.name || user.email, userData.role);
+
+applyPermissions(userData);
                         }
                     });
                 }
@@ -847,6 +876,52 @@
 
             }
         };
+function applyPermissions(userData) {
+
+    // Admin thấy toàn bộ
+    if (userData.role === "admin") return;
+
+    const permissions = userData.permissions || {};
+
+    const moduleMap = {
+        baogia: "module-baogia",
+        baogiadoanhnghiep: "module-baogiadoanhnghiep",
+        hanghoa: "module-hanghoa",
+        tag_nem: "module-tag-nem",
+        khongnguthu: "module-khongnguthu",
+        tag_cgpk: "module-tag-cgpk",
+        voucher: "module-voucher",
+        kichban: "module-kichban",
+        binhchuachay: "module-binhchuachay",
+        inbanten: "module-inbanten"
+    };
+
+    Object.keys(moduleMap).forEach(permissionKey => {
+
+        // Nếu KHÔNG có quyền => Ẩn module
+        if (!permissions[permissionKey]) {
+
+            const element = document.getElementById(moduleMap[permissionKey]);
+
+            if (element) {
+                element.style.display = "none";
+            }
+        }
+    });
+
+    // Ẩn luôn category trống
+    document.querySelectorAll('.category-section').forEach(section => {
+
+        const visibleCards = section.querySelectorAll(
+            '.card:not([style*="display: none"])'
+        );
+
+        if (visibleCards.length === 0) {
+            section.style.display = "none";
+        }
+
+    });
+}
     </script>
 </body>
 
