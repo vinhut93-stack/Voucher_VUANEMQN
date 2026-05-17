@@ -1,24 +1,84 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>In Bảng Tên - Tùy Chỉnh Kích Thước</title>
-    
+
     <!-- FIREBASE SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
+    <script>
+
+        firebase.auth().onAuthStateChanged(function (user) {
+
+            if (!user) {
+
+                alert("Vui lòng đăng nhập!");
+                window.location.href = "index.html";
+                return;
+            }
+
+            firebase.firestore()
+                .collection("users")
+                .doc(user.email.toLowerCase())
+                .get()
+                .then(function (doc) {
+
+                    if (!doc.exists) {
+
+                        alert("Không tìm thấy dữ liệu user!");
+                        window.location.href = "index.html";
+                        return;
+                    }
+
+                    const userData = doc.data();
+
+                    // ADMIN được vào toàn bộ
+                    if (userData.role === "admin") {
+                        return;
+                    }
+
+                    // CHECK QUYỀN MODULE
+                    const permissions = userData.permissions || {};
+
+                    if (!permissions.inbanten) {
+
+                        alert("Bạn không có quyền truy cập module này!");
+
+                        window.location.href = "index.html";
+                    }
+
+                });
+
+        });
+
+    </script>
     <style>
         /* PHẦN XÁC THỰC */
         #auth-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; z-index: 10000; display: flex;
-            align-items: center; justify-content: center; font-family: Arial, sans-serif;
-            font-size: 18px; font-weight: bold; color: #003580;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            font-weight: bold;
+            color: #003580;
         }
-        body:not(.auth-ready) .container { display: none !important; }
+
+        body:not(.auth-ready) .container {
+            display: none !important;
+        }
 
         :root {
             --primary-color: #003580;
@@ -38,12 +98,16 @@
             background: white;
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 500px;
         }
 
-        h2 { color: var(--primary-color); text-align: center; margin-top: 0; }
+        h2 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-top: 0;
+        }
 
         .control-panel {
             display: grid;
@@ -55,11 +119,20 @@
             border-radius: 8px;
         }
 
-        .full-width { grid-column: span 2; }
+        .full-width {
+            grid-column: span 2;
+        }
 
-        label { font-size: 13px; font-weight: bold; color: #444; display: block; margin-bottom: 5px; }
+        label {
+            font-size: 13px;
+            font-weight: bold;
+            color: #444;
+            display: block;
+            margin-bottom: 5px;
+        }
 
-        input, select {
+        input,
+        select {
             width: 100%;
             padding: 8px;
             border: 1px solid #cbd5e1;
@@ -67,7 +140,11 @@
             box-sizing: border-box;
         }
 
-        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
 
         button {
             flex: 1;
@@ -80,7 +157,9 @@
             font-weight: bold;
         }
 
-        button.secondary { background: #64748b; }
+        button.secondary {
+            background: #64748b;
+        }
 
         /* VÙNG PREVIEW BẢNG TÊN */
         .preview-wrapper {
@@ -96,7 +175,8 @@
         #print-area {
             width: 7cm;
             height: 1cm;
-            border: 1px solid #000; /* Viền để cắt */
+            border: 1px solid #000;
+            /* Viền để cắt */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -112,14 +192,39 @@
         }
 
         @media print {
-            .no-print { display: none !important; }
-            body { background: white; height: auto; min-height: 0; display: block; }
-            .container { box-shadow: none; max-width: 100%; padding: 0; }
-            .preview-wrapper { border: none; padding: 0; margin: 0; }
-            #print-area { border: 1px solid #ccc; margin: 0; } /* Viền mờ để dễ cắt */
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: white;
+                height: auto;
+                min-height: 0;
+                display: block;
+            }
+
+            .container {
+                box-shadow: none;
+                max-width: 100%;
+                padding: 0;
+            }
+
+            .preview-wrapper {
+                border: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            #print-area {
+                border: 1px solid #ccc;
+                margin: 0;
+            }
+
+            /* Viền mờ để dễ cắt */
         }
     </style>
 </head>
+
 <body>
 
     <div id="auth-overlay">Đang kiểm tra quyền truy cập...</div>
@@ -127,7 +232,7 @@
     <div class="container">
         <div class="no-print">
             <h2>IN BẢNG TÊN NHÂN VIÊN</h2>
-            
+
             <div class="control-panel">
                 <div class="full-width">
                     <label>Họ và Tên:</label>
@@ -152,7 +257,7 @@
                     </select>
                 </div>
             </div>
-            
+
             <div class="btn-group">
                 <button onclick="window.print()">IN BẢNG TÊN</button>
                 <button class="secondary" onclick="window.location.href='index.html'">QUAY LẠI</button>
@@ -192,10 +297,10 @@
             const family = document.getElementById('font-family').value;
 
             const display = document.getElementById('display-tag');
-            
+
             // Cập nhật nội dung
             display.innerText = name.trim() !== "" ? name.toUpperCase() : "TÊN NHÂN VIÊN";
-            
+
             // Cập nhật định dạng
             display.style.fontSize = size + "px";
             display.style.color = color;
@@ -204,4 +309,5 @@
         }
     </script>
 </body>
+
 </html>
