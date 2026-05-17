@@ -1,506 +1,834 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <title>Vua Nệm - IMS Pro v3.0 (Smart Cascading Filter)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-	<script src="firebase-config.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+
+        firebase.auth().onAuthStateChanged(function (user) {
+
+            if (!user) {
+
+                alert("Vui lòng đăng nhập!");
+                window.location.href = "index.html";
+                return;
+            }
+
+            firebase.firestore()
+                .collection("users")
+                .doc(user.email.toLowerCase())
+                .get()
+                .then(function (doc) {
+
+                    if (!doc.exists) {
+
+                        alert("Không tìm thấy dữ liệu user!");
+                        window.location.href = "index.html";
+                        return;
+                    }
+
+                    const userData = doc.data();
+
+                    // ADMIN được vào toàn bộ
+                    if (userData.role === "admin") {
+                        return;
+                    }
+
+                    // CHECK QUYỀN MODULE
+                    const permissions = userData.permissions || {};
+
+                    if (!permissions.hanghoa) {
+
+                        alert("Bạn không có quyền truy cập module này!");
+
+                        window.location.href = "index.html";
+                    }
+
+                });
+
+        });
+
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <style>
-#auth-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; z-index: 10000; display: flex;
-            align-items: center; justify-content: center; font-family: Arial, sans-serif;
-            font-size: 18px; font-weight: bold; color: #00205B;
-        }
-        body{
-    overflow-x:hidden;
-}
-.container,
-.header,
-.floating-controls,
-#resultArea,
-#filterArea,
-#dashboard{
-    opacity:0;
-    pointer-events:none;
-    transition:0.3s;
-}
-
-/* Khi auth thành công */
-body.auth-ready .container,
-body.auth-ready .header,
-body.auth-ready .floating-controls,
-body.auth-ready #resultArea,
-body.auth-ready #filterArea,
-body.auth-ready #dashboard{
-    opacity:1;
-    pointer-events:auto;
-}
-.floating-controls {
-    position: fixed !important;
-
-    bottom: 25px !important;
-    right: 25px !important;
-    left: auto !important;
-
-    display: flex !important;
-    flex-direction: column !important;
-
-    gap: 12px;
-
-    z-index: 999999 !important;
-
-    opacity: 1 !important;
-    visibility: visible !important;
-
-    pointer-events: auto !important;
-}
-#auth-overlay{
-    position:fixed;
-    inset:0;
-    background:#ffffff;
-    z-index:10000;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    transition:0.4s ease;
-}
-
-.loading-wrapper{
-    text-align:center;
-    width:100%;
-}
-
-.truck-road{
-    position:relative;
-    width:320px;
-    margin:0 auto 30px;
-    overflow:hidden;
-}
-
-.truck-loading{
-    width:120px;
-
-    animation:truckRun 2s ease-in-out infinite;
-}
-
-.road-line{
-    height:4px;
-    background:linear-gradient(
-        to right,
-        #002d72 0%,
-        #0ea5e9 50%,
-        #002d72 100%
-    );
-
-    border-radius:999px;
-    margin-top:10px;
-
-    animation:roadMove 1s linear infinite;
-}
-
-.loading-title{
-    font-size:34px;
-    font-weight:800;
-    color:#002d72;
-
-    font-family:'Lexend',sans-serif;
-
-    margin-bottom:12px;
-}
-
-.loading-sub{
-    font-size:18px;
-    color:#64748b;
-
-    font-family:'Lexend',sans-serif;
-
-    margin-bottom:30px;
-}
-
-.apple-loader{
-    display:flex;
-    justify-content:center;
-    gap:10px;
-}
-
-.apple-loader span{
-    width:12px;
-    height:12px;
-
-    border-radius:50%;
-
-    background:#002d72;
-
-    animation:bounce 0.6s infinite alternate;
-}
-
-.apple-loader span:nth-child(2){
-    animation-delay:0.2s;
-}
-
-.apple-loader span:nth-child(3){
-    animation-delay:0.4s;
-}
-
-@keyframes truckRun{
-
-    0%{
-        transform:translateX(-20px);
-    }
-
-    50%{
-        transform:translateX(20px);
-    }
-
-    100%{
-        transform:translateX(-20px);
-    }
-}
-
-@keyframes roadMove{
-
-    from{
-        opacity:0.4;
-        transform:scaleX(0.9);
-    }
-
-    to{
-        opacity:1;
-        transform:scaleX(1);
-    }
-}
-/* Container chia cột tự động */
-.vol-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
-    padding: 10px;
-}
-
-/* Thẻ Card */
-.vol-card {
-    background: #fff;
-    border-radius: 8px;
-    padding: 15px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s;
-}
-.vol-card:hover { transform: translateY(-3px); }
-
-.vol-card-header {
-    display: flex;
-    justify-content: space-between;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-.vol-sub-name { font-size: 14px; color: #334155; }
-
-/* Thanh tiến độ */
-.vol-progress-bg {
-    height: 8px;
-    background: #e2e8f0;
-    border-radius: 4px;
-    overflow: hidden;
-    margin-bottom: 12px;
-}
-
-.vol-progress-bar { height: 100%; transition: width 0.4s ease-out; }
-
-.vol-details {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    color: #64748b;
-    margin-bottom: 10px;
-}
-
-.vol-status {
-    padding: 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    line-height: 1.4;
-}
-@keyframes bounce{
-
-    from{
-        transform:translateY(0);
-        opacity:0.4;
-    }
-
-    to{
-        transform:translateY(-10px);
-        opacity:1;
-    }
-}
-.fab-btn {
-    width: 55px;
-    height: 55px;
-    border-radius: 50%;
-    border: 2px solid white; /* Thêm viền trắng cho nổi bật */
-    background: #0d47a1;    /* Màu xanh đậm giống Header của Nhựt */
-    color: white;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: 0.3s;
-}
-
-.fab-btn:hover {
-    transform: scale(1.1);
-    background: #d32f2f;    /* Chuyển sang màu đỏ khi rà chuột vào */
-}
-
-.fab-btn svg {
-    width: 28px;
-    height: 28px;
-    fill: none;
-    stroke: white;          /* Đảm bảo icon có màu trắng */
-    stroke-width: 2.5;
-}
-
-        :root { 
-            --vn-blue: #002d72; 
-            --vn-red: #ed1c24; 
-            --bg: #f4f7fa; 
-            --card-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
-        
-        body { 
-            font-family: 'Lexend', sans-serif; 
-            margin: 0; 
-            background: var(--bg); 
-            font-size: 13px; 
-            color: #334155; 
-        }
-        
-        .header { 
-            background: linear-gradient(135deg, var(--vn-blue) 0%, #0046b3 100%); 
-            color: white; padding: 15px 40px; 
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        #auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            font-weight: bold;
+            color: #00205B;
         }
 
-        .container { max-width: 1600px; margin: 25px auto; padding: 0 25px; }
-
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
-        .stat-item { 
-            background: white; padding: 20px; border-radius: 12px; 
-            border-left: 6px solid var(--vn-blue); box-shadow: var(--card-shadow);
+        body {
+            overflow-x: hidden;
         }
-        .stat-label { font-weight: 500; color: #64748b; text-transform: uppercase; font-size: 11px; margin-bottom: 8px; }
-        .stat-value { font-size: 24px; font-weight: 700; color: var(--vn-blue); }
 
-        .config-card { 
-            background: white; padding: 25px; border-radius: 15px; margin-bottom: 25px; 
-            display: flex; gap: 20px; align-items: flex-end; box-shadow: var(--card-shadow);
+        .container,
+        .header,
+        .floating-controls,
+        #resultArea,
+        #filterArea,
+        #dashboard {
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.3s;
         }
-        .input-field { flex: 1; }
-        .input-field label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--vn-blue); font-size: 12px; }
 
-        .filter-box { background: #fff; padding: 25px; border-radius: 15px; margin-bottom: 25px; box-shadow: var(--card-shadow); border: 1px solid #e2e8f0; }
-        .filter-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 20px; }
-        .filter-row-small { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
-        .filter-group label { display: block; font-weight: 700; font-size: 11px; margin-bottom: 8px; color: #475569; text-transform: uppercase; }
-        
-        .multiselect-container { 
-            position: relative; background: #ffffff; border: 1.5px solid #cbd5e1; 
-            border-radius: 8px; cursor: pointer; height: 42px; display: flex; 
-            align-items: center; padding: 0 12px; transition: all 0.2s;
+        /* Khi auth thành công */
+        body.auth-ready .container,
+        body.auth-ready .header,
+        body.auth-ready .floating-controls,
+        body.auth-ready #resultArea,
+        body.auth-ready #filterArea,
+        body.auth-ready #dashboard {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .floating-controls {
+            position: fixed !important;
+
+            bottom: 25px !important;
+            right: 25px !important;
+            left: auto !important;
+
+            display: flex !important;
+            flex-direction: column !important;
+
+            gap: 12px;
+
+            z-index: 999999 !important;
+
+            opacity: 1 !important;
+            visibility: visible !important;
+
+            pointer-events: auto !important;
+        }
+
+        #auth-overlay {
+            position: fixed;
+            inset: 0;
+            background: #ffffff;
+            z-index: 10000;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            transition: 0.4s ease;
+        }
+
+        .loading-wrapper {
+            text-align: center;
+            width: 100%;
+        }
+
+        .truck-road {
+            position: relative;
+            width: 320px;
+            margin: 0 auto 30px;
+            overflow: hidden;
+        }
+
+        .truck-loading {
+            width: 120px;
+
+            animation: truckRun 2s ease-in-out infinite;
+        }
+
+        .road-line {
+            height: 4px;
+            background: linear-gradient(to right,
+                    #002d72 0%,
+                    #0ea5e9 50%,
+                    #002d72 100%);
+
+            border-radius: 999px;
+            margin-top: 10px;
+
+            animation: roadMove 1s linear infinite;
+        }
+
+        .loading-title {
+            font-size: 34px;
+            font-weight: 800;
+            color: #002d72;
+
+            font-family: 'Lexend', sans-serif;
+
+            margin-bottom: 12px;
+        }
+
+        .loading-sub {
+            font-size: 18px;
+            color: #64748b;
+
+            font-family: 'Lexend', sans-serif;
+
+            margin-bottom: 30px;
+        }
+
+        .apple-loader {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .apple-loader span {
+            width: 12px;
+            height: 12px;
+
+            border-radius: 50%;
+
+            background: #002d72;
+
+            animation: bounce 0.6s infinite alternate;
+        }
+
+        .apple-loader span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .apple-loader span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes truckRun {
+
+            0% {
+                transform: translateX(-20px);
+            }
+
+            50% {
+                transform: translateX(20px);
+            }
+
+            100% {
+                transform: translateX(-20px);
+            }
+        }
+
+        @keyframes roadMove {
+
+            from {
+                opacity: 0.4;
+                transform: scaleX(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scaleX(1);
+            }
+        }
+
+        /* Container chia cột tự động */
+        .vol-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 10px;
+        }
+
+        /* Thẻ Card */
+        .vol-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .vol-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .vol-card-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .vol-sub-name {
+            font-size: 14px;
+            color: #334155;
+        }
+
+        /* Thanh tiến độ */
+        .vol-progress-bg {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .vol-progress-bar {
+            height: 100%;
+            transition: width 0.4s ease-out;
+        }
+
+        .vol-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        .vol-status {
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        @keyframes bounce {
+
+            from {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+
+            to {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        .fab-btn {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            border: 2px solid white;
+            /* Thêm viền trắng cho nổi bật */
+            background: #0d47a1;
+            /* Màu xanh đậm giống Header của Nhựt */
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+        }
+
+        .fab-btn:hover {
+            transform: scale(1.1);
+            background: #d32f2f;
+            /* Chuyển sang màu đỏ khi rà chuột vào */
+        }
+
+        .fab-btn svg {
+            width: 28px;
+            height: 28px;
+            fill: none;
+            stroke: white;
+            /* Đảm bảo icon có màu trắng */
+            stroke-width: 2.5;
+        }
+
+        :root {
+            --vn-blue: #002d72;
+            --vn-red: #ed1c24;
+            --bg: #f4f7fa;
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: 'Lexend', sans-serif;
+            margin: 0;
+            background: var(--bg);
+            font-size: 13px;
+            color: #334155;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--vn-blue) 0%, #0046b3 100%);
+            color: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 25px auto;
+            padding: 0 25px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 6px solid var(--vn-blue);
+            box-shadow: var(--card-shadow);
+        }
+
+        .stat-label {
+            font-weight: 500;
+            color: #64748b;
+            text-transform: uppercase;
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--vn-blue);
+        }
+
+        .config-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+            box-shadow: var(--card-shadow);
+        }
+
+        .input-field {
+            flex: 1;
+        }
+
+        .input-field label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--vn-blue);
+            font-size: 12px;
+        }
+
+        .filter-box {
+            background: #fff;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid #e2e8f0;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filter-row-small {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-weight: 700;
+            font-size: 11px;
+            margin-bottom: 8px;
+            color: #475569;
+            text-transform: uppercase;
+        }
+
+        .multiselect-container {
+            position: relative;
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            cursor: pointer;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            transition: all 0.2s;
             overflow: visible;
         }
-        .multiselect-container:hover { border-color: var(--vn-blue); }
-        
-        .selected-text { 
-            font-size: 13px; 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
-            width: 100%; 
+
+        .multiselect-container:hover {
+            border-color: var(--vn-blue);
+        }
+
+        .selected-text {
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
             color: #1e293b;
             font-weight: 400;
         }
+
         .multiselect-container::after {
-            content: "\f107"; font-family: "Font Awesome 5 Free"; font-weight: 900;
-            position: absolute; right: 12px; color: #94a3b8;
+            content: "\f107";
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            right: 12px;
+            color: #94a3b8;
         }
-        
-        .dropdown-content { 
-    display: none;
-    position: absolute;
-    top: calc(100% + 5px);
-    left: 0;
-    right: 0;
-    min-width: 100%;
-    background: white;
-    border: 1px solid #e2e8f0;
-    z-index: 1000;
-    border-radius: 10px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    animation: fadeIn 0.2s;
-}
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-        .dropdown-content.show { display: block; }
-        
-        .search-inner { padding: 10px; border-bottom: 1px solid #f1f5f9; position: sticky; top: 0; background: white; z-index: 2; }
-        .search-inner input { 
-            width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; 
-            font-family: 'Lexend', sans-serif; font-size: 12px; outline: none; box-sizing: border-box;
-        }
-        .filter-actions{
-    display:flex;
-    justify-content:space-between;
-    gap:10px;
-    margin-top:8px;
-}
 
-.filter-btn{
-    flex:1;
-    border:none;
-    background:#f1f5f9;
-    color:#334155;
-    padding:7px;
-    border-radius:6px;
-    cursor:pointer;
-    font-size:11px;
-    font-weight:600;
-    transition:0.2s;
-    font-family:'Lexend', sans-serif;
-}
-
-.filter-btn:hover{
-    background:var(--vn-blue);
-    color:white;
-}
-        .checkbox-list { max-height: 250px; overflow-y: auto; padding: 5px; }
-        .checkbox-item { 
-            display: flex; align-items: center; gap: 10px; padding: 10px; 
-            font-size: 13px; cursor: pointer; border-radius: 6px; color: #334155;
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            right: 0;
+            min-width: 100%;
+            background: white;
+            border: 1px solid #e2e8f0;
+            z-index: 1000;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.2s;
         }
-        .checkbox-item:hover { background: #f1f5f9; color: var(--vn-blue); }
-        .checkbox-item input { width: 16px; height: 16px; cursor: pointer; }
 
-        .num-input { 
-            width: 100%; padding: 10px; border: 1.5px solid #cbd5e1; border-radius: 8px; 
-            font-family: 'Lexend', sans-serif; font-size: 13px; box-sizing: border-box;
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        .num-input:focus { border-color: var(--vn-blue); outline: none; }
-        
-        .btn-main { 
-            background: var(--vn-blue); color: white; border: none; padding: 0 25px; 
-            height: 42px; border-radius: 8px; font-weight: 600; cursor: pointer; 
-            transition: 0.2s; display: flex; align-items: center; gap: 8px;
+
+        .dropdown-content.show {
+            display: block;
+        }
+
+        .search-inner {
+            padding: 10px;
+            border-bottom: 1px solid #f1f5f9;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 2;
+        }
+
+        .search-inner input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-family: 'Lexend', sans-serif;
+            font-size: 12px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .filter-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .filter-btn {
+            flex: 1;
+            border: none;
+            background: #f1f5f9;
+            color: #334155;
+            padding: 7px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            transition: 0.2s;
             font-family: 'Lexend', sans-serif;
         }
-        .btn-main:hover { background: #00378a; box-shadow: 0 4px 12px rgba(0,45,114,0.2); }
-        
-        .table-wrap { background: white; border-radius: 15px; overflow: visible; box-shadow: var(--card-shadow); border: 1px solid #e2e8f0; margin-bottom: 50px; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #f8fafc; padding: 15px; text-align: left; color: var(--vn-blue); font-weight: 700; border-bottom: 2px solid #f1f5f9; font-size: 11px; text-transform: uppercase; }
-        td { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
-        
-        .bg-red { background: #fff1f2; } .bg-green { background: #f0fdf4; } .bg-yellow { background: #fffbeb; }
-        
-        .badge { padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 10px; }
-        .badge-short { background: #ffe4e6; color: #be123c; }
-        .badge-excess { background: #fef3c7; color: #b45309; }
-        .badge-ok { background: #dcfce7; color: #15803d; }
 
-        .dropdown-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 998; display: none; }
+        .filter-btn:hover {
+            background: var(--vn-blue);
+            color: white;
+        }
 
-        #loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--vn-blue); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-#dashboard{
-    display:flex;
-    flex-direction:column;
-    gap:25px;
-}
+        .checkbox-list {
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 5px;
+        }
 
-#volumeReport{
-    width:100%;
-}
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            font-size: 13px;
+            cursor: pointer;
+            border-radius: 6px;
+            color: #334155;
+        }
 
-.stats-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-    gap:20px;
-}
-.floating-controls {
-    position: fixed !important;
+        .checkbox-item:hover {
+            background: #f1f5f9;
+            color: var(--vn-blue);
+        }
 
-    bottom: 20px !important;
-    right: 20px !important;
+        .checkbox-item input {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
 
-    display: flex !important;
-    flex-direction: column !important;
+        .num-input {
+            width: 100%;
+            padding: 10px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            font-family: 'Lexend', sans-serif;
+            font-size: 13px;
+            box-sizing: border-box;
+        }
 
-    gap: 12px;
+        .num-input:focus {
+            border-color: var(--vn-blue);
+            outline: none;
+        }
 
-    z-index: 999999 !important;
+        .btn-main {
+            background: var(--vn-blue);
+            color: white;
+            border: none;
+            padding: 0 25px;
+            height: 42px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Lexend', sans-serif;
+        }
 
-    opacity: 1 !important;
-    visibility: visible !important;
+        .btn-main:hover {
+            background: #00378a;
+            box-shadow: 0 4px 12px rgba(0, 45, 114, 0.2);
+        }
 
-    left: auto !important;
-    top: auto !important;
-}
+        .table-wrap {
+            background: white;
+            border-radius: 15px;
+            overflow: visible;
+            box-shadow: var(--card-shadow);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 50px;
+        }
 
-.fab-btn {
-    flex-shrink: 0;
-}
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 15px;
+            text-align: left;
+            color: var(--vn-blue);
+            font-weight: 700;
+            border-bottom: 2px solid #f1f5f9;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+        }
+
+        .bg-red {
+            background: #fff1f2;
+        }
+
+        .bg-green {
+            background: #f0fdf4;
+        }
+
+        .bg-yellow {
+            background: #fffbeb;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 10px;
+        }
+
+        .badge-short {
+            background: #ffe4e6;
+            color: #be123c;
+        }
+
+        .badge-excess {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .badge-ok {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .dropdown-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 998;
+            display: none;
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--vn-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        #dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        #volumeReport {
+            width: 100%;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .floating-controls {
+            position: fixed !important;
+
+            bottom: 20px !important;
+            right: 20px !important;
+
+            display: flex !important;
+            flex-direction: column !important;
+
+            gap: 12px;
+
+            z-index: 999999 !important;
+
+            opacity: 1 !important;
+            visibility: visible !important;
+
+            left: auto !important;
+            top: auto !important;
+        }
+
+        .fab-btn {
+            flex-shrink: 0;
+        }
     </style>
 </head>
+
 <body>
     <div id="auth-overlay">
 
-    <div class="loading-wrapper">
+        <div class="loading-wrapper">
 
-        <div class="truck-road">
+            <div class="truck-road">
 
-            <img src="https://cdn-icons-png.flaticon.com/128/9279/9279555.png"
-                 class="truck-loading">
+                <img src="https://cdn-icons-png.flaticon.com/128/9279/9279555.png" class="truck-loading">
 
-            <div class="road-line"></div>
+                <div class="road-line"></div>
 
-        </div>
+            </div>
 
-        <div class="loading-title">
-            Đang chuẩn bị gợi ý xin hàng.....
-        </div>
+            <div class="loading-title">
+                Đang chuẩn bị gợi ý xin hàng.....
+            </div>
 
-        <div class="loading-sub">
-            IMS đang kiểm tra tồn kho & điều phối hàng ⚡
-        </div>
+            <div class="loading-sub">
+                IMS đang kiểm tra tồn kho & điều phối hàng ⚡
+            </div>
 
-        <div class="apple-loader">
-            <span></span>
-            <span></span>
-            <span></span>
+            <div class="apple-loader">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
         </div>
 
     </div>
 
-</div>
+    <div id="loading">
+        <div class="spinner"></div>
+        <div id="loading-text" style="margin-top:20px; font-weight:600; color:var(--vn-blue)"></div>
+    </div>
 
-<div id="loading"><div class="spinner"></div><div id="loading-text" style="margin-top:20px; font-weight:600; color:var(--vn-blue)"></div></div>
+    <div class="header">
+        <div style="font-size: 20px; font-weight: 800; letter-spacing: -0.5px;"><i class="fas fa-boxes"></i> VUA NỆM -
+            IMS CENTER <span style="font-weight:300; font-size:13px; opacity:0.8; margin-left:10px;">v3.0</span></div>
+        <div style="display:flex; align-items:center; gap:10px;">
 
-<div class="header">
-    <div style="font-size: 20px; font-weight: 800; letter-spacing: -0.5px;"><i class="fas fa-boxes"></i> VUA NỆM - IMS CENTER <span style="font-weight:300; font-size:13px; opacity:0.8; margin-left:10px;">v3.0</span></div>
-    <div style="display:flex; align-items:center; gap:10px;">
-
-    <button onclick="location.href='index.html'"
-        style="
+            <button onclick="location.href='index.html'" style="
             background: rgba(255,255,255,0.15);
             border:none;
             color:white;
@@ -514,666 +842,657 @@ body.auth-ready #dashboard{
             align-items:center;
             gap:6px;
             transition:0.2s;
-        "
-        onmouseover="this.style.background='rgba(255,255,255,0.25)'"
-        onmouseout="this.style.background='rgba(255,255,255,0.15)'"
-    >
-        <i class="fas fa-home"></i>
-        Trang chủ
-    </button>
+        " onmouseover="this.style.background='rgba(255,255,255,0.25)'"
+                onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+                <i class="fas fa-home"></i>
+                Trang chủ
+            </button>
 
-    <div id="clock"
-        style="
+            <div id="clock" style="
             font-weight:400;
             background:rgba(255,255,255,0.15);
             padding:5px 15px;
             border-radius:20px;
             font-size:12px;
         ">
-    </div>
+            </div>
 
-</div>
-</div>
-
-<div class="container">
-    <div class="config-card">
-        <div class="input-field">
-            <label>CHỌN CHI NHÁNH XIN HÀNG</label>
-            <select id="storeSelect" class="num-input">
-                <option value="BDI01">BDI01 - QUY NHƠN</option>
-                <option value="GLA02">GLA02 - GIA LAI</option>
-            </select>
         </div>
-        <div class="input-field"><label>ADD TỒN KHO CỬA HÀNG (POS)</label><input type="file" id="storeFile" class="num-input"></div>
-        <div class="input-field"><label>ADD TỒN KHO HUB (POS)</label><input type="file" id="hubFile" class="num-input"></div>
-        <button class="btn-main" onclick="processAll()"><i class="fas fa-sync-alt"></i> TẢI DỮ LIỆU</button>
     </div>
- <div id="filterArea" class="filter-box" style="display:none;">
-        <div class="filter-row">
-            <div class="filter-group">
-                <label>1. Category</label>
-                <div class="multiselect-container" onclick="toggleDropdown('drop-cat')">
-                    <span id="text-cat" class="selected-text">-- Tất cả --</span>
-                    <div id="drop-cat" class="dropdown-content" onclick="event.stopPropagation()">
-                        <div class="search-inner">
-    <input type="text" placeholder="Tìm nhanh..." onkeyup="filterList('list-cat', this.value)">
 
-    <div class="filter-actions">
-        <button class="filter-btn" type="button"
-            onclick="toggleAll('list-cat', true, 'text-cat', 'onCategoryChange')">
-            ✓ Chọn tất cả
-        </button>
+    <div class="container">
+        <div class="config-card">
+            <div class="input-field">
+                <label>CHỌN CHI NHÁNH XIN HÀNG</label>
+                <select id="storeSelect" class="num-input">
+                    <option value="BDI01">BDI01 - QUY NHƠN</option>
+                    <option value="GLA02">GLA02 - GIA LAI</option>
+                </select>
+            </div>
+            <div class="input-field"><label>ADD TỒN KHO CỬA HÀNG (POS)</label><input type="file" id="storeFile"
+                    class="num-input"></div>
+            <div class="input-field"><label>ADD TỒN KHO HUB (POS)</label><input type="file" id="hubFile"
+                    class="num-input"></div>
+            <button class="btn-main" onclick="processAll()"><i class="fas fa-sync-alt"></i> TẢI DỮ LIỆU</button>
+        </div>
+        <div id="filterArea" class="filter-box" style="display:none;">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>1. Category</label>
+                    <div class="multiselect-container" onclick="toggleDropdown('drop-cat')">
+                        <span id="text-cat" class="selected-text">-- Tất cả --</span>
+                        <div id="drop-cat" class="dropdown-content" onclick="event.stopPropagation()">
+                            <div class="search-inner">
+                                <input type="text" placeholder="Tìm nhanh..."
+                                    onkeyup="filterList('list-cat', this.value)">
 
-        <button class="filter-btn" type="button"
-            onclick="toggleAll('list-cat', false, 'text-cat', 'onCategoryChange')">
-            ✕ Bỏ chọn
-        </button>
-    </div>
-</div>
-                        <div id="list-cat" class="checkbox-list"></div>
+                                <div class="filter-actions">
+                                    <button class="filter-btn" type="button"
+                                        onclick="toggleAll('list-cat', true, 'text-cat', 'onCategoryChange')">
+                                        ✓ Chọn tất cả
+                                    </button>
+
+                                    <button class="filter-btn" type="button"
+                                        onclick="toggleAll('list-cat', false, 'text-cat', 'onCategoryChange')">
+                                        ✕ Bỏ chọn
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="list-cat" class="checkbox-list"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label>2. Sub-Category</label>
+                    <div class="multiselect-container" onclick="toggleDropdown('drop-sub')">
+                        <span id="text-sub" class="selected-text">-- Tất cả --</span>
+                        <div id="drop-sub" class="dropdown-content" onclick="event.stopPropagation()">
+
+                            <div class="search-inner">
+                                <input type="text" placeholder="Tìm nhanh..."
+                                    onkeyup="filterList('list-sub', this.value)">
+
+                                <div class="filter-actions">
+                                    <button class="filter-btn" type="button"
+                                        onclick="toggleAll('list-sub', true, 'text-sub', 'onSubChange')">
+                                        ✓ Chọn tất cả
+                                    </button>
+
+                                    <button class="filter-btn" type="button"
+                                        onclick="toggleAll('list-sub', false, 'text-sub', 'onSubChange')">
+                                        ✕ Bỏ chọn
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="list-sub" class="checkbox-list"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label>3. Size</label>
+                    <div class="multiselect-container" onclick="toggleDropdown('drop-size')">
+                        <span id="text-size" class="selected-text">-- Tất cả --</span>
+                        <div id="drop-size" class="dropdown-content" onclick="event.stopPropagation()">
+
+                            <div class="search-inner">
+                                <input type="text" placeholder="Tìm nhanh..."
+                                    onkeyup="filterList('list-size', this.value)">
+
+                                <div class="filter-actions">
+                                    <button class="filter-btn" type="button"
+                                        onclick="toggleAll('list-size', true, 'text-size')">
+                                        ✓ Chọn tất cả
+                                    </button>
+
+                                    <button class="filter-btn" type="button"
+                                        onclick="toggleAll('list-size', false, 'text-size')">
+                                        ✕ Bỏ chọn
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="list-size" class="checkbox-list"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label>4. Brand</label>
+
+                    <div class="multiselect-container" onclick="toggleDropdown('drop-brand')">
+                        <span id="text-brand" class="selected-text">-- Tất cả --</span>
+
+                        <div id="drop-brand" class="dropdown-content" onclick="event.stopPropagation()">
+
+                            <div class="search-inner">
+                                <input type="text" placeholder="Tìm nhanh..."
+                                    onkeyup="filterList('list-brand', this.value)">
+
+                                <div class="filter-actions">
+                                    <button class="filter-btn" type="button"
+                                        onclick="toggleAll('list-brand', true, 'text-brand')">
+                                        ✓ Chọn tất cả
+                                    </button>
+
+                                    <button class="filter-btn" type="button"
+                                        onclick="toggleAll('list-brand', false, 'text-brand')">
+                                        ✕ Bỏ chọn
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="list-brand" class="checkbox-list"></div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label>5. Class Name</label>
+                    <div class="multiselect-container" onclick="toggleDropdown('drop-class')">
+                        <span id="text-class" class="selected-text">-- Tất cả --</span>
+                        <div id="drop-class" class="dropdown-content" onclick="event.stopPropagation()">
+
+                            <div class="search-inner">
+                                <input type="text" placeholder="Tìm nhanh..."
+                                    onkeyup="filterList('list-class', this.value)">
+
+                                <div class="filter-actions">
+                                    <button class="filter-btn" type="button"
+                                        onclick="toggleAll('list-class', true, 'text-class')">
+                                        ✓ Chọn tất cả
+                                    </button>
+
+                                    <button class="filter-btn" type="button"
+                                        onclick="toggleAll('list-class', false, 'text-class')">
+                                        ✕ Bỏ chọn
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="list-class" class="checkbox-list"></div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="filter-group">
-                <label>2. Sub-Category</label>
-                <div class="multiselect-container" onclick="toggleDropdown('drop-sub')">
-                    <span id="text-sub" class="selected-text">-- Tất cả --</span>
-                    <div id="drop-sub" class="dropdown-content" onclick="event.stopPropagation()">
 
-    <div class="search-inner">
-        <input type="text"
-               placeholder="Tìm nhanh..."
-               onkeyup="filterList('list-sub', this.value)">
+            <div class="filter-row-small">
 
-        <div class="filter-actions">
-            <button class="filter-btn" type="button"
-                onclick="toggleAll('list-sub', true, 'text-sub', 'onSubChange')">
-                ✓ Chọn tất cả
-            </button>
+                <div class="filter-group">
+                    <label>Định mức >=</label>
+                    <input type="number" id="fNorm" class="num-input" oninput="applyFilters()">
+                </div>
 
-            <button class="filter-btn" type="button"
-                onclick="toggleAll('list-sub', false, 'text-sub', 'onSubChange')">
-                ✕ Bỏ chọn
-            </button>
-        </div>
-    </div>
-                        <div id="list-sub" class="checkbox-list"></div>
+                <div class="filter-group"> <!-- ĐÃ THÊM DẤU < -->
+                    <label>Tồn CH bằng (=)</label>
+                    <input type="number" id="fStore" class="num-input" placeholder="VD: 0" oninput="applyFilters()">
+                </div>
+
+                <div class="filter-group">
+                    <label>Tồn HUB >=</label>
+                    <input type="number" id="fHub" class="num-input" oninput="applyFilters()">
+                </div>
+
+                <div class="filter-group">
+                    <label>Giá KM TỪ</label>
+                    <input type="number" id="fPriceMin" class="num-input" placeholder="VD: 1000000"
+                        oninput="applyFilters()">
+                </div>
+
+                <div class="filter-group">
+                    <label>Giá KM ĐẾN</label>
+                    <input type="number" id="fPriceMax" class="num-input" placeholder="VD: 5000000"
+                        oninput="applyFilters()">
+                </div>
+
+            </div>
+
+            <div class="filter-row-small" style="margin-top:15px;">
+
+                <div class="filter-group">
+                    <label>Trạng thái</label>
+                    <select id="fSug" class="num-input" onchange="applyFilters()">
+                        <option value="">-- Tất cả --</option>
+
+                        <option value="ENOUGH_STOCK">
+                            ✅ Shops đủ hàng
+                        </option>
+
+                        <option value="LIGHT_REQUEST">
+                            🟡 Xin bổ sung nhẹ
+                        </option>
+
+                        <option value="URGENT_REQUEST">
+                            🔴 Ưu tiên xin HUB
+                        </option>
+
+                        <option value="REQUEST_HUB">
+                            📦 Thiếu hàng cần xin HUB
+                        </option>
+
+                        <option value="HUB_OUT">
+                            ⚠ HUB hết hàng
+                        </option>
+
+                        <option value="OUT_CATEGORY">
+                            🚫 Ngoài danh mục
+                        </option>
+                    </select>
+                </div>
+
+                <div class="filter-group" style="grid-column: span 4;">
+                    <label>Tìm nhanh SKU/Tên</label>
+                    <input type="text" id="gSearch" class="num-input" placeholder="Gõ để lọc..."
+                        onkeyup="applyFilters()">
+                </div>
+
+            </div>
+            <div id="dashboard" style="display:none;">
+
+                <!-- BÁO CÁO THỂ TÍCH -->
+                <div id="volumeReport" class="table-wrap"
+                    style="display:none; margin-bottom:25px; border-left:6px solid #10b981;">
+
+                    <div
+                        style="padding:15px; background:#f8fafc; font-weight:800; color:var(--vn-blue); border-bottom:1px solid #e2e8f0;">
+                        <i class="fas fa-warehouse"></i>
+                        BÁO CÁO SỨC CHỨA KHO (THEO NHÓM)
                     </div>
+
+                    <div id="volumeContent"></div>
                 </div>
-            </div>
-            <div class="filter-group">
-                <label>3. Size</label>
-                <div class="multiselect-container" onclick="toggleDropdown('drop-size')">
-                    <span id="text-size" class="selected-text">-- Tất cả --</span>
-                    <div id="drop-size" class="dropdown-content" onclick="event.stopPropagation()">
 
-    <div class="search-inner">
-        <input type="text"
-               placeholder="Tìm nhanh..."
-               onkeyup="filterList('list-size', this.value)">
+                <!-- DASHBOARD -->
+                <div class="stats-grid">
 
-        <div class="filter-actions">
-            <button class="filter-btn" type="button"
-                onclick="toggleAll('list-size', true, 'text-size')">
-                ✓ Chọn tất cả
-            </button>
-
-            <button class="filter-btn" type="button"
-                onclick="toggleAll('list-size', false, 'text-size')">
-                ✕ Bỏ chọn
-            </button>
-        </div>
-    </div>
-                        <div id="list-size" class="checkbox-list"></div>
+                    <div class="stat-item">
+                        <div class="stat-label">SKU Hiển thị</div>
+                        <div id="statTotal" class="stat-value">0</div>
                     </div>
-                </div>
-            </div>
-            <div class="filter-group">
-    <label>4. Brand</label>
 
-    <div class="multiselect-container" onclick="toggleDropdown('drop-brand')">
-        <span id="text-brand" class="selected-text">-- Tất cả --</span>
-
-        <div id="drop-brand" class="dropdown-content" onclick="event.stopPropagation()">
-
-            <div class="search-inner">
-                <input type="text"
-                       placeholder="Tìm nhanh..."
-                       onkeyup="filterList('list-brand', this.value)">
-
-                <div class="filter-actions">
-                    <button class="filter-btn" type="button"
-                        onclick="toggleAll('list-brand', true, 'text-brand')">
-                        ✓ Chọn tất cả
-                    </button>
-
-                    <button class="filter-btn" type="button"
-                        onclick="toggleAll('list-brand', false, 'text-brand')">
-                        ✕ Bỏ chọn
-                    </button>
-                </div>
-            </div>
-
-            <div id="list-brand" class="checkbox-list"></div>
-
-        </div>
-    </div>
-</div>
-            <div class="filter-group">
-                <label>5. Class Name</label>
-                <div class="multiselect-container" onclick="toggleDropdown('drop-class')">
-                    <span id="text-class" class="selected-text">-- Tất cả --</span>
-                    <div id="drop-class" class="dropdown-content" onclick="event.stopPropagation()">
-
-    <div class="search-inner">
-        <input type="text"
-               placeholder="Tìm nhanh..."
-               onkeyup="filterList('list-class', this.value)">
-
-        <div class="filter-actions">
-            <button class="filter-btn" type="button"
-                onclick="toggleAll('list-class', true, 'text-class')">
-                ✓ Chọn tất cả
-            </button>
-
-            <button class="filter-btn" type="button"
-                onclick="toggleAll('list-class', false, 'text-class')">
-                ✕ Bỏ chọn
-            </button>
-        </div>
-    </div>
-                        <div id="list-class" class="checkbox-list"></div>
+                    <div class="stat-item" style="border-left-color: var(--vn-red);">
+                        <div class="stat-label">SKU Thiếu hàng</div>
+                        <div id="statShort" class="stat-value">0</div>
                     </div>
+
+                    <div class="stat-item" style="border-left-color: #f59e0b;">
+                        <div class="stat-label">SKU Dư hàng</div>
+                        <div id="statExcess" class="stat-value">0</div>
+                    </div>
+
+                    <div class="stat-item" style="border-left-color: #10b981;">
+                        <div class="stat-label">Tỷ lệ lấp đầy</div>
+                        <div id="statRate" class="stat-value">0%</div>
+                    </div>
+
                 </div>
+
             </div>
-        </div>
-
-<div class="filter-row-small">
-    
-    <div class="filter-group">
-        <label>Định mức >=</label>
-        <input type="number" id="fNorm" class="num-input" oninput="applyFilters()">
-    </div>
-
-    <div class="filter-group"> <!-- ĐÃ THÊM DẤU < -->
-        <label>Tồn CH bằng (=)</label>
-        <input type="number" id="fStore" class="num-input" placeholder="VD: 0" oninput="applyFilters()">
-    </div>
-
-    <div class="filter-group">
-        <label>Tồn HUB >=</label>
-        <input type="number" id="fHub" class="num-input" oninput="applyFilters()">
-    </div>
-
-    <div class="filter-group">
-        <label>Giá KM TỪ</label>
-        <input type="number" id="fPriceMin" class="num-input"
-               placeholder="VD: 1000000"
-               oninput="applyFilters()">
-    </div>
-
-    <div class="filter-group">
-        <label>Giá KM ĐẾN</label>
-        <input type="number" id="fPriceMax" class="num-input"
-               placeholder="VD: 5000000"
-               oninput="applyFilters()">
-    </div>
-
-</div>
-
-<div class="filter-row-small" style="margin-top:15px;">
-
-    <div class="filter-group">
-        <label>Trạng thái</label>
-        <select id="fSug" class="num-input" onchange="applyFilters()">
-            <option value="">-- Tất cả --</option>
-
-<option value="ENOUGH_STOCK">
-    ✅ Shops đủ hàng
-</option>
-
-<option value="LIGHT_REQUEST">
-    🟡 Xin bổ sung nhẹ
-</option>
-
-<option value="URGENT_REQUEST">
-    🔴 Ưu tiên xin HUB
-</option>
-
-<option value="REQUEST_HUB">
-    📦 Thiếu hàng cần xin HUB
-</option>
-
-<option value="HUB_OUT">
-    ⚠ HUB hết hàng
-</option>
-
-<option value="OUT_CATEGORY">
-    🚫 Ngoài danh mục
-</option>
-        </select>
-    </div>
-
-    <div class="filter-group" style="grid-column: span 4;">
-        <label>Tìm nhanh SKU/Tên</label>
-        <input type="text"
-               id="gSearch"
-               class="num-input"
-               placeholder="Gõ để lọc..."
-               onkeyup="applyFilters()">
-    </div>
-
-</div>
-   <div id="dashboard" style="display:none;">
-
-    <!-- BÁO CÁO THỂ TÍCH -->
-    <div id="volumeReport"
-         class="table-wrap"
-         style="display:none; margin-bottom:25px; border-left:6px solid #10b981;">
-
-        <div style="padding:15px; background:#f8fafc; font-weight:800; color:var(--vn-blue); border-bottom:1px solid #e2e8f0;">
-            <i class="fas fa-warehouse"></i>
-            BÁO CÁO SỨC CHỨA KHO (THEO NHÓM)
-        </div>
-
-        <div id="volumeContent"></div>
-    </div>
-
-    <!-- DASHBOARD -->
-    <div class="stats-grid">
-
-        <div class="stat-item">
-            <div class="stat-label">SKU Hiển thị</div>
-            <div id="statTotal" class="stat-value">0</div>
-        </div>
-
-        <div class="stat-item" style="border-left-color: var(--vn-red);">
-            <div class="stat-label">SKU Thiếu hàng</div>
-            <div id="statShort" class="stat-value">0</div>
-        </div>
-
-        <div class="stat-item" style="border-left-color: #f59e0b;">
-            <div class="stat-label">SKU Dư hàng</div>
-            <div id="statExcess" class="stat-value">0</div>
-        </div>
-
-        <div class="stat-item" style="border-left-color: #10b981;">
-            <div class="stat-label">Tỷ lệ lấp đầy</div>
-            <div id="statRate" class="stat-value">0%</div>
-        </div>
-
-    </div>
-
-</div>
-   
-<script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyzrn0yk7e5YZIpuZpBkOJtpMZePCJ3K79i4vmq0Ur6Cdvr_fiFV_uryUblIw1ZK38K/exec";
-    let masterData = [];
-    let storeInv = {};
-    let volumeStats = {};
-
-    setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleString('vi-VN'); }, 1000);
-function cleanNumber(val){
-
-    if(val === null || val === undefined) return 0;
-
-    return Number(
-        String(val)
-            .replace(/,/g,'')
-            .replace(/\s+/g,'')
-            .trim()
-    ) || 0;
-}
-    function showLoading(text) {
-        document.getElementById('loading').style.display = 'flex';
-        document.getElementById('loading-text').innerText = text;
-    }
-    function hideLoading() { document.getElementById('loading').style.display = 'none'; }
-
-    function toggleDropdown(id) {
-        const el = document.getElementById(id);
-        const isShow = el.classList.contains('show');
-        closeAllDropdowns();
-        if (!isShow) {
-            el.classList.add('show');
-            document.getElementById('overlay').style.display = 'block';
-        }
-    }
-
-    function closeAllDropdowns() {
-        document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
-        document.getElementById('overlay').style.display = 'none';
-    }
-
-    function filterList(listId, query) {
-        document.querySelectorAll(`#${listId} .checkbox-item`).forEach(item => {
-            item.style.display = item.innerText.toLowerCase().includes(query.toLowerCase()) ? 'flex' : 'none';
-        });
-    }
-
-    function formatSelectedText(checkedArray) {
-        if (checkedArray.length === 0) return "-- Tất cả --";
-        if (checkedArray.length === 1) return checkedArray[0];
-        return `Đã chọn (${checkedArray.length})`;
-    }
-
-    async function processAll() {
-    const sF = document.getElementById('storeFile').files[0];
-    const hF = document.getElementById('hubFile').files[0];
-    if (!sF || !hF) return alert("Vui lòng chọn đủ 2 file Excel!");
-
-    showLoading("Đang tính toán thể tích kho...");
-    try {
-        const reader = (f) => new Promise(r => {
-            const fr = new FileReader();
-            fr.onload = (e) => {
-                const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
-                r(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
-            };
-            fr.readAsArrayBuffer(f);
-        });
-
-        const [sRaw, hRaw] = await Promise.all([reader(sF), reader(hF)]);
-        
-        // Reset tồn kho
-        // Reset tồn kho
-storeInv = {};
-
-sRaw.forEach(r => {
-
-    const sku = String(r["Item Code"] || "")
-        .trim()
-        .replace(/\s+/g,'')
-        .toUpperCase();
-
-    if(!sku) return;
-
-    const qty =
-        cleanNumber(r["Qty Available"]);
-
-    // CỘNG DỒN nếu SKU trùng
-    storeInv[sku] =
-        (storeInv[sku] || 0) + qty;
-});
-        const storeCode = document.getElementById('storeSelect').value;
-
-        const resp = await fetch(`${SCRIPT_URL}?store=${storeCode}`);
-
-const norms = await resp.json();
-
-const normalizedSkuData = {};
-
-Object.keys(norms.skuData || {}).forEach(key => {
-
-    const cleanKey = String(key)
-        .trim()
-        .replace(/\s+/g,'')
-        .toUpperCase();
-
-    normalizedSkuData[cleanKey] = norms.skuData[key];
-});
-
-norms.skuData = normalizedSkuData;;
-
-        // Object để gom nhóm tính thể tích
-        let groupStats = {}; 
-
-        const hubMap = {};
-const storeMap = {};
-
-// MAP HUB
-hRaw.forEach(r => {
-
-    const sku = String(r["Item Code"] || "")
-        .trim()
-        .replace(/\s+/g,'')
-        .toUpperCase();
-
-    if(!sku) return;
-
-    hubMap[sku] = r;
-});
-
-// MAP STORE
-// MAP STORE
-sRaw.forEach(r => {
-
-    const sku = String(r["Item Code"] || "")
-        .trim()
-        .replace(/\s+/g,'')
-        .toUpperCase();
-
-    if(!sku) return;
-
-    const qty =
-        parseInt(r["Qty Available"]) || 0;
-
-    // Nếu chưa có thì clone row đầu tiên
-    if(!storeMap[sku]){
 
-        storeMap[sku] = {
-            ...r,
-            "Qty Available": qty
-        };
-
-    } else {
+            <script>
+                const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyzrn0yk7e5YZIpuZpBkOJtpMZePCJ3K79i4vmq0Ur6Cdvr_fiFV_uryUblIw1ZK38K/exec";
+                let masterData = [];
+                let storeInv = {};
+                let volumeStats = {};
+
+                setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleString('vi-VN'); }, 1000);
+                function cleanNumber(val) {
+
+                    if (val === null || val === undefined) return 0;
+
+                    return Number(
+                        String(val)
+                            .replace(/,/g, '')
+                            .replace(/\s+/g, '')
+                            .trim()
+                    ) || 0;
+                }
+                function showLoading(text) {
+                    document.getElementById('loading').style.display = 'flex';
+                    document.getElementById('loading-text').innerText = text;
+                }
+                function hideLoading() { document.getElementById('loading').style.display = 'none'; }
+
+                function toggleDropdown(id) {
+                    const el = document.getElementById(id);
+                    const isShow = el.classList.contains('show');
+                    closeAllDropdowns();
+                    if (!isShow) {
+                        el.classList.add('show');
+                        document.getElementById('overlay').style.display = 'block';
+                    }
+                }
+
+                function closeAllDropdowns() {
+                    document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
+                    document.getElementById('overlay').style.display = 'none';
+                }
+
+                function filterList(listId, query) {
+                    document.querySelectorAll(`#${listId} .checkbox-item`).forEach(item => {
+                        item.style.display = item.innerText.toLowerCase().includes(query.toLowerCase()) ? 'flex' : 'none';
+                    });
+                }
+
+                function formatSelectedText(checkedArray) {
+                    if (checkedArray.length === 0) return "-- Tất cả --";
+                    if (checkedArray.length === 1) return checkedArray[0];
+                    return `Đã chọn (${checkedArray.length})`;
+                }
+
+                async function processAll() {
+                    const sF = document.getElementById('storeFile').files[0];
+                    const hF = document.getElementById('hubFile').files[0];
+                    if (!sF || !hF) return alert("Vui lòng chọn đủ 2 file Excel!");
+
+                    showLoading("Đang tính toán thể tích kho...");
+                    try {
+                        const reader = (f) => new Promise(r => {
+                            const fr = new FileReader();
+                            fr.onload = (e) => {
+                                const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                                r(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
+                            };
+                            fr.readAsArrayBuffer(f);
+                        });
+
+                        const [sRaw, hRaw] = await Promise.all([reader(sF), reader(hF)]);
+
+                        // Reset tồn kho
+                        // Reset tồn kho
+                        storeInv = {};
+
+                        sRaw.forEach(r => {
+
+                            const sku = String(r["Item Code"] || "")
+                                .trim()
+                                .replace(/\s+/g, '')
+                                .toUpperCase();
+
+                            if (!sku) return;
+
+                            const qty =
+                                cleanNumber(r["Qty Available"]);
+
+                            // CỘNG DỒN nếu SKU trùng
+                            storeInv[sku] =
+                                (storeInv[sku] || 0) + qty;
+                        });
+                        const storeCode = document.getElementById('storeSelect').value;
+
+                        const resp = await fetch(`${SCRIPT_URL}?store=${storeCode}`);
+
+                        const norms = await resp.json();
+
+                        const normalizedSkuData = {};
+
+                        Object.keys(norms.skuData || {}).forEach(key => {
+
+                            const cleanKey = String(key)
+                                .trim()
+                                .replace(/\s+/g, '')
+                                .toUpperCase();
 
-        // cộng dồn Qty
-        storeMap[sku]["Qty Available"] += qty;
-    }
-});
-// UNION SKU
-const allSku = [
-    ...new Set([
-        ...Object.keys(hubMap),
-        ...Object.keys(storeMap)
-    ])
-];
+                            normalizedSkuData[cleanKey] = norms.skuData[key];
+                        });
 
-masterData = allSku.map(sku => {
+                        norms.skuData = normalizedSkuData;;
 
-    const hRow = hubMap[sku] || {};
-    const sRow = storeMap[sku] || {};
+                        // Object để gom nhóm tính thể tích
+                        let groupStats = {};
 
-    // Ưu tiên lấy thông tin từ HUB
-    // nếu HUB không có thì lấy STORE
-    const row =
-        Object.keys(hRow).length
-            ? hRow
-            : sRow;
+                        const hubMap = {};
+                        const storeMap = {};
 
-    const subCat = String(
-        row["Sub Category"] || "Khác"
-    );
+                        // MAP HUB
+                        hRaw.forEach(r => {
 
-    const normInfo = norms.skuData?.[sku] || {
-        minQty: 0,
-        giaKM: 0,
-        theTich: 0
-    };
+                            const sku = String(r["Item Code"] || "")
+                                .trim()
+                                .replace(/\s+/g, '')
+                                .toUpperCase();
 
-    const cleanNumber = (val) => {
+                            if (!sku) return;
 
-    if(val === null || val === undefined) return 0;
+                            hubMap[sku] = r;
+                        });
 
-    return Number(
-        String(val)
-            .replace(/,/g,'')
-            .replace(/\s+/g,'')
-            .trim()
-    ) || 0;
-};
+                        // MAP STORE
+                        // MAP STORE
+                        sRaw.forEach(r => {
 
-const sQty =
-    cleanNumber(sRow["Qty Available"]);
+                            const sku = String(r["Item Code"] || "")
+                                .trim()
+                                .replace(/\s+/g, '')
+                                .toUpperCase();
 
-const hQty =
-    cleanNumber(hRow["Qty Available"]);
+                            if (!sku) return;
 
-    const unitVol =
-        parseFloat(normInfo.theTich) || 0;
+                            const qty =
+                                parseInt(r["Qty Available"]) || 0;
 
-    // THỐNG KÊ THỂ TÍCH
-    if (!groupStats[subCat]) {
+                            // Nếu chưa có thì clone row đầu tiên
+                            if (!storeMap[sku]) {
 
-    groupStats[subCat] = {
+                                storeMap[sku] = {
+                                    ...r,
+                                    "Qty Available": qty
+                                };
 
-        // TỔNG TỒN KHO THỰC TẾ
-        totalQty: 0,
+                            } else {
 
-        // SỨC CHỨA TỐI ĐA
-        limitVol: parseFloat(
-            norms.groupLimits?.[subCat]
-        ) || 0
-    };
-}
+                                // cộng dồn Qty
+                                storeMap[sku]["Qty Available"] += qty;
+                            }
+                        });
+                        // UNION SKU
+                        const allSku = [
+                            ...new Set([
+                                ...Object.keys(hubMap),
+                                ...Object.keys(storeMap)
+                            ])
+                        ];
 
-// CỘNG DỒN TỒN KHO STORE
-groupStats[subCat].totalQty += sQty;
+                        masterData = allSku.map(sku => {
 
-// ===== PHÂN LOẠI GỢI Ý =====
+                            const hRow = hubMap[sku] || {};
+                            const sRow = storeMap[sku] || {};
 
-const normQty = parseInt(normInfo.minQty) || 0;
+                            // Ưu tiên lấy thông tin từ HUB
+                            // nếu HUB không có thì lấy STORE
+                            const row =
+                                Object.keys(hRow).length
+                                    ? hRow
+                                    : sRow;
 
-let sugType = "REQUEST_HUB";
+                            const subCat = String(
+                                row["Sub Category"] || "Khác"
+                            );
 
-// 1. NGOÀI DANH MỤC
-if(normQty === 0){
+                            const normInfo = norms.skuData?.[sku] || {
+                                minQty: 0,
+                                giaKM: 0,
+                                theTich: 0
+                            };
 
-    sugType = "OUT_CATEGORY";
+                            const cleanNumber = (val) => {
 
-}
+                                if (val === null || val === undefined) return 0;
 
-// 2. ĐỦ HÀNG
-else if(sQty >= normQty){
+                                return Number(
+                                    String(val)
+                                        .replace(/,/g, '')
+                                        .replace(/\s+/g, '')
+                                        .trim()
+                                ) || 0;
+                            };
 
-    sugType = "ENOUGH_STOCK";
+                            const sQty =
+                                cleanNumber(sRow["Qty Available"]);
 
-}
+                            const hQty =
+                                cleanNumber(hRow["Qty Available"]);
 
-// 3. THIẾU NHẸ
-else if(
-    sQty > 0 &&
-    sQty >= Math.ceil(normQty * 0.5)
-){
+                            const unitVol =
+                                parseFloat(normInfo.theTich) || 0;
 
-    sugType = "LIGHT_REQUEST";
+                            // THỐNG KÊ THỂ TÍCH
+                            if (!groupStats[subCat]) {
 
-}
+                                groupStats[subCat] = {
 
-// 4. HẾT TẠI SHOP NHƯNG HUB CÒN
-else if(
-    sQty <= 0 &&
-    hQty > 0
-){
+                                    // TỔNG TỒN KHO THỰC TẾ
+                                    totalQty: 0,
 
-    sugType = "URGENT_REQUEST";
+                                    // SỨC CHỨA TỐI ĐA
+                                    limitVol: parseFloat(
+                                        norms.groupLimits?.[subCat]
+                                    ) || 0
+                                };
+                            }
 
-}
+                            // CỘNG DỒN TỒN KHO STORE
+                            groupStats[subCat].totalQty += sQty;
 
-// 5. HUB HẾT
-else if(
-    sQty <= 0 &&
-    hQty <= 0
-){
+                            // ===== PHÂN LOẠI GỢI Ý =====
 
-    sugType = "HUB_OUT";
+                            const normQty = parseInt(normInfo.minQty) || 0;
 
-}
+                            let sugType = "REQUEST_HUB";
 
-// 6. THIẾU NẶNG
-else{
+                            // 1. NGOÀI DANH MỤC
+                            if (normQty === 0) {
 
-    sugType = "REQUEST_HUB";
+                                sugType = "OUT_CATEGORY";
 
-}
+                            }
 
-return {
+                            // 2. ĐỦ HÀNG
+                            else if (sQty >= normQty) {
 
-    sku,
+                                sugType = "ENOUGH_STOCK";
 
-    name: row["Item Name"] || "",
+                            }
 
-    brand: String(row["Brand"] || "N/A"),
+                            // 3. THIẾU NHẸ
+                            else if (
+                                sQty > 0 &&
+                                sQty >= Math.ceil(normQty * 0.5)
+                            ) {
 
-    cat: String(row["Category"] || "N/A"),
+                                sugType = "LIGHT_REQUEST";
 
-    sub: subCat,
+                            }
 
-    class: String(
-        row["Class Name"] || "N/A"
-    ),
+                            // 4. HẾT TẠI SHOP NHƯNG HUB CÒN
+                            else if (
+                                sQty <= 0 &&
+                                hQty > 0
+                            ) {
 
-    size: `${row["Width"] || 0}x${row["Length"] || 0}x${row["Thickness"] || 0}`,
+                                sugType = "URGENT_REQUEST";
 
-    hubQty: hQty,
+                            }
 
-    storeQty: sQty,
+                            // 5. HUB HẾT
+                            else if (
+                                sQty <= 0 &&
+                                hQty <= 0
+                            ) {
 
-    norm: normQty,
+                                sugType = "HUB_OUT";
 
-    giaKM: parseInt(normInfo.giaKM) || 0,
+                            }
 
-    unitVol,
+                            // 6. THIẾU NẶNG
+                            else {
 
-    sugType
-};
-});
-      volumeStats = groupStats;
-renderVolumeTable(volumeStats);// Hàm mới hiển thị bảng thể tích
-        initMasterFilters();
-        applyFilters();
-        
-        document.getElementById('dashboard').style.display = 'flex';
-        document.getElementById('volumeReport').style.display = 'block';
-        document.getElementById('filterArea').style.display = 'block';
-        hideLoading();
-    } catch (e) { hideLoading(); alert("Lỗi xử lý: " + e.message); }
-}
+                                sugType = "REQUEST_HUB";
 
-function renderVolumeTable(stats) {
-    let html = `<div class="vol-grid">`;
+                            }
 
-    for (let sub in stats) {
-        let limit = parseFloat(stats[sub].limitVol) || 0;
-        let used = parseFloat(stats[sub].totalQty) || 0;
+                            return {
 
-        if (limit <= 0) continue;
+                                sku,
 
-        let percent = (used / limit) * 100;
-        let status = "";
-        let color = "";
-        let action = "";
+                                name: row["Item Name"] || "",
 
-        // Áp dụng bộ quy tắc phần trăm chuyên nghiệp của Nhựt
-        if (percent < 50) {
-            color = "#dc2626"; // Đỏ
-            status = "KHO TRỐNG: Thiếu hàng nghiêm trọng";
-            action = "Cần nhập hàng ngay!";
-        } else if (percent <= 90) {
-            color = "#f59e0b"; // Vàng
-            status = "Thiếu hàng cần xin thêm";
-            action = "Lên kế hoạch nhập thêm.";
-        } else if (percent <= 110) {
-            color = "#15803d"; // Xanh lá
-            status = "Hàng xin ít thôi nhé";
-            action = "Duy trì ổn định.";
-        } else if (percent <= 150) {
-            color = "#ea580c"; // Cam
-            status = "Cảnh báo: Không đủ vị trí lưu trữ";
-            action = "Hạn chế nhập, sắp xếp lại kho.";
-        } else if (percent <= 200) {
-            color = "#dc2626"; // Đỏ
-            status = "Vượt ngưỡng: Nên điều chuyển hàng";
-            action = "Dừng nhập, xem xét chuyển kho.";
-        } else {
-            color = "#7f1d1d"; // Đỏ đậm
-            status = "NGỪNG XIN HÀNG";
-            action = "Xử lý hàng tồn khẩn cấp!";
-        }
+                                brand: String(row["Brand"] || "N/A"),
 
-        // Vẽ giao diện dạng Card
-        html += `
+                                cat: String(row["Category"] || "N/A"),
+
+                                sub: subCat,
+
+                                class: String(
+                                    row["Class Name"] || "N/A"
+                                ),
+
+                                size: `${row["Width"] || 0}x${row["Length"] || 0}x${row["Thickness"] || 0}`,
+
+                                hubQty: hQty,
+
+                                storeQty: sQty,
+
+                                norm: normQty,
+
+                                giaKM: parseInt(normInfo.giaKM) || 0,
+
+                                unitVol,
+
+                                sugType
+                            };
+                        });
+                        volumeStats = groupStats;
+                        renderVolumeTable(volumeStats);// Hàm mới hiển thị bảng thể tích
+                        initMasterFilters();
+                        applyFilters();
+
+                        document.getElementById('dashboard').style.display = 'flex';
+                        document.getElementById('volumeReport').style.display = 'block';
+                        document.getElementById('filterArea').style.display = 'block';
+                        hideLoading();
+                    } catch (e) { hideLoading(); alert("Lỗi xử lý: " + e.message); }
+                }
+
+                function renderVolumeTable(stats) {
+                    let html = `<div class="vol-grid">`;
+
+                    for (let sub in stats) {
+                        let limit = parseFloat(stats[sub].limitVol) || 0;
+                        let used = parseFloat(stats[sub].totalQty) || 0;
+
+                        if (limit <= 0) continue;
+
+                        let percent = (used / limit) * 100;
+                        let status = "";
+                        let color = "";
+                        let action = "";
+
+                        // Áp dụng bộ quy tắc phần trăm chuyên nghiệp của Nhựt
+                        if (percent < 50) {
+                            color = "#dc2626"; // Đỏ
+                            status = "KHO TRỐNG: Thiếu hàng nghiêm trọng";
+                            action = "Cần nhập hàng ngay!";
+                        } else if (percent <= 90) {
+                            color = "#f59e0b"; // Vàng
+                            status = "Thiếu hàng cần xin thêm";
+                            action = "Lên kế hoạch nhập thêm.";
+                        } else if (percent <= 110) {
+                            color = "#15803d"; // Xanh lá
+                            status = "Hàng xin ít thôi nhé";
+                            action = "Duy trì ổn định.";
+                        } else if (percent <= 150) {
+                            color = "#ea580c"; // Cam
+                            status = "Cảnh báo: Không đủ vị trí lưu trữ";
+                            action = "Hạn chế nhập, sắp xếp lại kho.";
+                        } else if (percent <= 200) {
+                            color = "#dc2626"; // Đỏ
+                            status = "Vượt ngưỡng: Nên điều chuyển hàng";
+                            action = "Dừng nhập, xem xét chuyển kho.";
+                        } else {
+                            color = "#7f1d1d"; // Đỏ đậm
+                            status = "NGỪNG XIN HÀNG";
+                            action = "Xử lý hàng tồn khẩn cấp!";
+                        }
+
+                        // Vẽ giao diện dạng Card
+                        html += `
         <div class="vol-card" style="border-left: 5px solid ${color}">
             <div class="vol-card-header">
                 <span class="vol-sub-name">${sub}</span>
@@ -1195,223 +1514,223 @@ function renderVolumeTable(stats) {
             </div>
         </div>
         `;
-    }
+                    }
 
-    html += `</div>`;
-    document.getElementById('volumeContent').innerHTML = html;
-}
+                    html += `</div>`;
+                    document.getElementById('volumeContent').innerHTML = html;
+                }
 
-    // KHỞI TẠO BỘ LỌC CẤP CAO NHẤT (CATEGORY)
-    function initMasterFilters() {
-        const list = document.getElementById('list-cat');
-        const vals = [...new Set(masterData.map(i => i.cat))].filter(v => v !== "undefined").sort();
-        
-        list.innerHTML = vals.map(v => `
+                // KHỞI TẠO BỘ LỌC CẤP CAO NHẤT (CATEGORY)
+                function initMasterFilters() {
+                    const list = document.getElementById('list-cat');
+                    const vals = [...new Set(masterData.map(i => i.cat))].filter(v => v !== "undefined").sort();
+
+                    list.innerHTML = vals.map(v => `
             <label class="checkbox-item">
                 <input type="checkbox" value="${v}" onchange="onCategoryChange()">
                 <span>${v}</span>
             </label>
         `).join('');
-        
-        // Sau khi nạp Cat, kích hoạt sync để nạp các Sub, Brand tương ứng
-        syncFilters();
-    }
 
-    // KHI THAY ĐỔI CATEGORY
-    function onCategoryChange() {
-        const checked = Array.from(document.querySelectorAll('#list-cat input:checked')).map(i => i.value);
-        document.getElementById('text-cat').innerText = formatSelectedText(checked);
-        syncFilters(); // Cập nhật danh sách Sub dựa trên Cat đã chọn
-        applyFilters();
-    }
+                    // Sau khi nạp Cat, kích hoạt sync để nạp các Sub, Brand tương ứng
+                    syncFilters();
+                }
 
-    // HÀM ĐỒNG BỘ CÁC CẤP LỌC (CASCADING LOGIC)
-    function syncFilters() {
-        const checkedCats = Array.from(document.querySelectorAll('#list-cat input:checked')).map(i => i.value);
-        const checkedSubs = Array.from(document.querySelectorAll('#list-sub input:checked')).map(i => i.value);
+                // KHI THAY ĐỔI CATEGORY
+                function onCategoryChange() {
+                    const checked = Array.from(document.querySelectorAll('#list-cat input:checked')).map(i => i.value);
+                    document.getElementById('text-cat').innerText = formatSelectedText(checked);
+                    syncFilters(); // Cập nhật danh sách Sub dựa trên Cat đã chọn
+                    applyFilters();
+                }
 
-        // 1. Lấy dữ liệu khả thi cho Sub-Category dựa trên Category
-        let dataForSub = masterData;
-        if(checkedCats.length > 0) dataForSub = dataForSub.filter(i => checkedCats.includes(i.cat));
-        updateDropdownList('list-sub', 'text-sub', 'sub', dataForSub, true);
+                // HÀM ĐỒNG BỘ CÁC CẤP LỌC (CASCADING LOGIC)
+                function syncFilters() {
+                    const checkedCats = Array.from(document.querySelectorAll('#list-cat input:checked')).map(i => i.value);
+                    const checkedSubs = Array.from(document.querySelectorAll('#list-sub input:checked')).map(i => i.value);
 
-        // 2. Lấy dữ liệu khả thi cho các bộ lọc còn lại dựa trên Cat + Sub
-        let dataForOthers = dataForSub;
-        const freshCheckedSubs = Array.from(document.querySelectorAll('#list-sub input:checked')).map(i => i.value);
-        if(freshCheckedSubs.length > 0) dataForOthers = dataForOthers.filter(i => freshCheckedSubs.includes(i.sub));
+                    // 1. Lấy dữ liệu khả thi cho Sub-Category dựa trên Category
+                    let dataForSub = masterData;
+                    if (checkedCats.length > 0) dataForSub = dataForSub.filter(i => checkedCats.includes(i.cat));
+                    updateDropdownList('list-sub', 'text-sub', 'sub', dataForSub, true);
 
-        updateDropdownList('list-size', 'text-size', 'size', dataForOthers, false);
-        updateDropdownList('list-brand', 'text-brand', 'brand', dataForOthers, false);
-        updateDropdownList('list-class', 'text-class', 'class', dataForOthers, false);
-    }
+                    // 2. Lấy dữ liệu khả thi cho các bộ lọc còn lại dựa trên Cat + Sub
+                    let dataForOthers = dataForSub;
+                    const freshCheckedSubs = Array.from(document.querySelectorAll('#list-sub input:checked')).map(i => i.value);
+                    if (freshCheckedSubs.length > 0) dataForOthers = dataForOthers.filter(i => freshCheckedSubs.includes(i.sub));
 
-    // CẬP NHẬT NỘI DUNG DROP-DOWN
-    function updateDropdownList(listId, textId, key, dataSource, isSubTrigger) {
-        const listEl = document.getElementById(listId);
-        // Lưu lại những cái đang được chọn để không bị mất tick khi re-render
-        const currentChecked = listEl
-    ? Array.from(listEl.querySelectorAll('input:checked')).map(i => i.value)
-    : [];
-        
-        const vals = [...new Set(dataSource.map(i => i[key]))].filter(v => v !== "undefined").sort();
+                    updateDropdownList('list-size', 'text-size', 'size', dataForOthers, false);
+                    updateDropdownList('list-brand', 'text-brand', 'brand', dataForOthers, false);
+                    updateDropdownList('list-class', 'text-class', 'class', dataForOthers, false);
+                }
 
-        listEl.innerHTML = vals.map(v => {
-            const isChecked = currentChecked.includes(String(v)) ? 'checked' : '';
-            // Nếu là Sub, khi thay đổi phải gọi onSubChange để sync tiếp Size/Brand
-            const callback = isSubTrigger ? 'onSubChange()' : `updateTextOnly('${listId}','${textId}')`;
-            return `<label class="checkbox-item"><input type="checkbox" value="${v}" ${isChecked} onchange="${callback}"><span>${v}</span></label>`;
-        }).join('');
+                // CẬP NHẬT NỘI DUNG DROP-DOWN
+                function updateDropdownList(listId, textId, key, dataSource, isSubTrigger) {
+                    const listEl = document.getElementById(listId);
+                    // Lưu lại những cái đang được chọn để không bị mất tick khi re-render
+                    const currentChecked = listEl
+                        ? Array.from(listEl.querySelectorAll('input:checked')).map(i => i.value)
+                        : [];
 
-        // Cập nhật text hiển thị (chỉ lấy những cái còn tồn tại trong list mới)
-        const validChecked = Array.from(listEl.querySelectorAll('input:checked')).map(i => i.value);
-        document.getElementById(textId).innerText = formatSelectedText(validChecked);
-    }
+                    const vals = [...new Set(dataSource.map(i => i[key]))].filter(v => v !== "undefined").sort();
 
-    // KHI THAY ĐỔI SUB-CATEGORY
-    function onSubChange() {
-        const checked = Array.from(document.querySelectorAll('#list-sub input:checked')).map(i => i.value);
-        document.getElementById('text-sub').innerText = formatSelectedText(checked);
-        syncFilters(); // Đồng bộ lại Size, Brand, Class dựa trên Sub mới
-        applyFilters();
-    }
+                    listEl.innerHTML = vals.map(v => {
+                        const isChecked = currentChecked.includes(String(v)) ? 'checked' : '';
+                        // Nếu là Sub, khi thay đổi phải gọi onSubChange để sync tiếp Size/Brand
+                        const callback = isSubTrigger ? 'onSubChange()' : `updateTextOnly('${listId}','${textId}')`;
+                        return `<label class="checkbox-item"><input type="checkbox" value="${v}" ${isChecked} onchange="${callback}"><span>${v}</span></label>`;
+                    }).join('');
 
-    // KHI THAY ĐỔI CÁC BỘ LỌC KHÁC (SIZE, BRAND, CLASS)
-    function updateTextOnly(lid, tid) {
+                    // Cập nhật text hiển thị (chỉ lấy những cái còn tồn tại trong list mới)
+                    const validChecked = Array.from(listEl.querySelectorAll('input:checked')).map(i => i.value);
+                    document.getElementById(textId).innerText = formatSelectedText(validChecked);
+                }
 
-    const checked = Array.from(
-        document.querySelectorAll(`#${lid} input:checked`)
-    ).map(i => i.value);
+                // KHI THAY ĐỔI SUB-CATEGORY
+                function onSubChange() {
+                    const checked = Array.from(document.querySelectorAll('#list-sub input:checked')).map(i => i.value);
+                    document.getElementById('text-sub').innerText = formatSelectedText(checked);
+                    syncFilters(); // Đồng bộ lại Size, Brand, Class dựa trên Sub mới
+                    applyFilters();
+                }
 
-    document.getElementById(tid).innerText =
-        formatSelectedText(checked);
+                // KHI THAY ĐỔI CÁC BỘ LỌC KHÁC (SIZE, BRAND, CLASS)
+                function updateTextOnly(lid, tid) {
 
-    // ép filter chạy lại
-    setTimeout(() => {
-        applyFilters();
-    }, 0);
-}
-function toggleAll(listId, checked, textId, callbackName = null) {
+                    const checked = Array.from(
+                        document.querySelectorAll(`#${lid} input:checked`)
+                    ).map(i => i.value);
 
-    const checkboxes = document.querySelectorAll(`#${listId} input[type="checkbox"]`);
+                    document.getElementById(tid).innerText =
+                        formatSelectedText(checked);
 
-    checkboxes.forEach(cb => {
-        cb.checked = checked;
-    });
+                    // ép filter chạy lại
+                    setTimeout(() => {
+                        applyFilters();
+                    }, 0);
+                }
+                function toggleAll(listId, checked, textId, callbackName = null) {
 
-    const selected = Array.from(
-        document.querySelectorAll(`#${listId} input:checked`)
-    ).map(i => i.value);
+                    const checkboxes = document.querySelectorAll(`#${listId} input[type="checkbox"]`);
 
-    document.getElementById(textId).innerText =
-        formatSelectedText(selected);
+                    checkboxes.forEach(cb => {
+                        cb.checked = checked;
+                    });
 
-    // Nếu có callback đặc biệt
-    if(callbackName && typeof window[callbackName] === 'function'){
-        window[callbackName]();
-    } else {
-        applyFilters();
-    }
-}
-    function applyFilters() {
+                    const selected = Array.from(
+                        document.querySelectorAll(`#${listId} input:checked`)
+                    ).map(i => i.value);
 
-    if (!masterData.length) return;
+                    document.getElementById(textId).innerText =
+                        formatSelectedText(selected);
 
-    const getCheck = (id) =>
-        Array.from(
-            document.querySelectorAll(`#${id} input:checked`)
-        ).map(i => i.value);
+                    // Nếu có callback đặc biệt
+                    if (callbackName && typeof window[callbackName] === 'function') {
+                        window[callbackName]();
+                    } else {
+                        applyFilters();
+                    }
+                }
+                function applyFilters() {
 
-    const f = {
-        cats: getCheck('list-cat'),
-        subs: getCheck('list-sub'),
-        brands: getCheck('list-brand'),
-        classes: getCheck('list-class'),
-        sizes: getCheck('list-size'),
+                    if (!masterData.length) return;
 
-        norm: parseInt(document.getElementById('fNorm').value) || 0,
-        store: parseInt(document.getElementById('fStore').value) || 0,
-        hub: parseInt(document.getElementById('fHub').value) || 0,
+                    const getCheck = (id) =>
+                        Array.from(
+                            document.querySelectorAll(`#${id} input:checked`)
+                        ).map(i => i.value);
 
-        priceMin: parseInt(document.getElementById('fPriceMin').value) || 0,
-        priceMax: parseInt(document.getElementById('fPriceMax').value) || 999999999,
+                    const f = {
+                        cats: getCheck('list-cat'),
+                        subs: getCheck('list-sub'),
+                        brands: getCheck('list-brand'),
+                        classes: getCheck('list-class'),
+                        sizes: getCheck('list-size'),
 
-        sug: document.getElementById('fSug').value,
-        gs: document.getElementById('gSearch').value.toLowerCase()
-    };
+                        norm: parseInt(document.getElementById('fNorm').value) || 0,
+                        store: parseInt(document.getElementById('fStore').value) || 0,
+                        hub: parseInt(document.getElementById('fHub').value) || 0,
 
-    // =========================
-    // FILTER CHO BẢNG SKU
-    // =========================
+                        priceMin: parseInt(document.getElementById('fPriceMin').value) || 0,
+                        priceMax: parseInt(document.getElementById('fPriceMax').value) || 999999999,
 
-    const res = masterData.filter(i => {
+                        sug: document.getElementById('fSug').value,
+                        gs: document.getElementById('gSearch').value.toLowerCase()
+                    };
 
-        return (f.cats.length === 0 || f.cats.includes(i.cat)) &&
-               (f.subs.length === 0 || f.subs.includes(i.sub)) &&
-               (f.brands.length === 0 || f.brands.includes(i.brand)) &&
-               (f.classes.length === 0 || f.classes.includes(i.class)) &&
-               (f.sizes.length === 0 || f.sizes.includes(i.size)) &&
-               (i.norm >= f.norm) &&
-               (document.getElementById('fStore').value === "" || i.storeQty == f.store) &&
-               (i.hubQty >= f.hub) &&
-               (i.giaKM >= f.priceMin) &&
-               (i.giaKM <= f.priceMax) &&
-               (!f.sug || i.sugType === f.sug) &&
-               (!f.gs ||
-                    i.sku.toLowerCase().includes(f.gs) ||
-                    (i.name || "").toLowerCase().includes(f.gs));
-    });
+                    // =========================
+                    // FILTER CHO BẢNG SKU
+                    // =========================
 
-    renderTable(res);
-    updateDash(res);
+                    const res = masterData.filter(i => {
 
-    // =========================
-    // FILTER CHO BÁO CÁO SỨC CHỨA
-    // CHỈ THEO CATEGORY + SUB
-    // =========================
+                        return (f.cats.length === 0 || f.cats.includes(i.cat)) &&
+                            (f.subs.length === 0 || f.subs.includes(i.sub)) &&
+                            (f.brands.length === 0 || f.brands.includes(i.brand)) &&
+                            (f.classes.length === 0 || f.classes.includes(i.class)) &&
+                            (f.sizes.length === 0 || f.sizes.includes(i.size)) &&
+                            (i.norm >= f.norm) &&
+                            (document.getElementById('fStore').value === "" || i.storeQty == f.store) &&
+                            (i.hubQty >= f.hub) &&
+                            (i.giaKM >= f.priceMin) &&
+                            (i.giaKM <= f.priceMax) &&
+                            (!f.sug || i.sugType === f.sug) &&
+                            (!f.gs ||
+                                i.sku.toLowerCase().includes(f.gs) ||
+                                (i.name || "").toLowerCase().includes(f.gs));
+                    });
 
-    let filteredVolumeStats = {};
+                    renderTable(res);
+                    updateDash(res);
 
-    Object.keys(volumeStats).forEach(sub => {
+                    // =========================
+                    // FILTER CHO BÁO CÁO SỨC CHỨA
+                    // CHỈ THEO CATEGORY + SUB
+                    // =========================
 
-        // tìm tất cả item thuộc sub này
-        const itemsInSub = masterData.filter(i => i.sub === sub);
+                    let filteredVolumeStats = {};
 
-        // kiểm tra category
-        let matchCat = true;
+                    Object.keys(volumeStats).forEach(sub => {
 
-        if (f.cats.length > 0) {
-            matchCat = itemsInSub.some(i =>
-                f.cats.includes(i.cat)
-            );
-        }
+                        // tìm tất cả item thuộc sub này
+                        const itemsInSub = masterData.filter(i => i.sub === sub);
 
-        // kiểm tra sub
-        let matchSub = true;
+                        // kiểm tra category
+                        let matchCat = true;
 
-        if (f.subs.length > 0) {
-            matchSub = f.subs.includes(sub);
-        }
+                        if (f.cats.length > 0) {
+                            matchCat = itemsInSub.some(i =>
+                                f.cats.includes(i.cat)
+                            );
+                        }
 
-        // nếu đạt điều kiện thì hiển thị
-        if (matchCat && matchSub) {
-            filteredVolumeStats[sub] = volumeStats[sub];
-        }
-    });
+                        // kiểm tra sub
+                        let matchSub = true;
 
-    renderVolumeTable(filteredVolumeStats);
-}
+                        if (f.subs.length > 0) {
+                            matchSub = f.subs.includes(sub);
+                        }
 
-    function updateDash(data) {
-        const s = data.filter(i => i.sugType === 'REQUEST_HUB').length;
-	const e = data.filter(i => i.sugType === 'OUT_CATEGORY').length;
-        document.getElementById('statTotal').innerText = data.length.toLocaleString();
-        document.getElementById('statShort').innerText = s.toLocaleString();
-        document.getElementById('statExcess').innerText = e.toLocaleString();
-        document.getElementById('statRate').innerText = data.length ? Math.round(((data.length-s)/data.length)*100) + "%" : "0%";
-    }
+                        // nếu đạt điều kiện thì hiển thị
+                        if (matchCat && matchSub) {
+                            filteredVolumeStats[sub] = volumeStats[sub];
+                        }
+                    });
 
-  function renderTable(data) {
-    let h = `<table><thead><tr>
+                    renderVolumeTable(filteredVolumeStats);
+                }
+
+                function updateDash(data) {
+                    const s = data.filter(i => i.sugType === 'REQUEST_HUB').length;
+                    const e = data.filter(i => i.sugType === 'OUT_CATEGORY').length;
+                    document.getElementById('statTotal').innerText = data.length.toLocaleString();
+                    document.getElementById('statShort').innerText = s.toLocaleString();
+                    document.getElementById('statExcess').innerText = e.toLocaleString();
+                    document.getElementById('statRate').innerText = data.length ? Math.round(((data.length - s) / data.length) * 100) + "%" : "0%";
+                }
+
+                function renderTable(data) {
+                    let h = `<table><thead><tr>
         <th>Thông tin sản phẩm</th>
         <th>Phân loại</th>
         <th style="text-align:center">Định mức</th>
@@ -1421,27 +1740,27 @@ function toggleAll(listId, checked, textId, callbackName = null) {
         <th>Gợi ý xử lý</th>
     </tr></thead><tbody>`;
 
-    data.forEach(i => {
-        let cls = "bg-green";
-let badge = "";
-let sugTxt = "";
-// ===== KIỂM TRA QUÁ TẢI KHO =====
+                    data.forEach(i => {
+                        let cls = "bg-green";
+                        let badge = "";
+                        let sugTxt = "";
+                        // ===== KIỂM TRA QUÁ TẢI KHO =====
 
-const groupData = volumeStats[i.sub];
+                        const groupData = volumeStats[i.sub];
 
-if(groupData){
+                        if (groupData) {
 
-    const limit = parseFloat(groupData.limitVol) || 0;
+                            const limit = parseFloat(groupData.limitVol) || 0;
 
-    const used = parseFloat(groupData.totalQty) || 0;
+                            const used = parseFloat(groupData.totalQty) || 0;
 
-    const percent = limit > 0
-        ? (used / limit) * 100
-        : 0;
+                            const percent = limit > 0
+                                ? (used / limit) * 100
+                                : 0;
 
-    if(percent > 120){
+                            if (percent > 120) {
 
-        sugTxt += `
+                                sugTxt += `
             <div style="
                 margin-bottom:6px;
                 color:#7f1d1d;
@@ -1452,11 +1771,11 @@ if(groupData){
                 Ngưng xin hàng nhóm này
             </div>
         `;
-    }
+                            }
 
-if(i.giaKM >= 15000000){
+                            if (i.giaKM >= 15000000) {
 
-    sugTxt += `
+                                sugTxt += `
         <div style="
             margin-bottom:6px;
             color:#7c3aed;
@@ -1467,93 +1786,93 @@ if(i.giaKM >= 15000000){
             Cần xác nhận quản lý
         </div>
     `;
-	}
-}
-if(i.sugType === "ENOUGH_STOCK"){
+                            }
+                        }
+                        if (i.sugType === "ENOUGH_STOCK") {
 
-    cls = "bg-green";
+                            cls = "bg-green";
 
-    badge = `<span class="badge badge-ok">ĐỦ HÀNG</span>`;
+                            badge = `<span class="badge badge-ok">ĐỦ HÀNG</span>`;
 
-    sugTxt = `
+                            sugTxt = `
         <b style="color:#15803d">
             ✅ Shops đủ hàng
         </b>
         <br>
         Không cần xin thêm
     `;
-}
+                        }
 
-else if(i.sugType === "LIGHT_REQUEST"){
+                        else if (i.sugType === "LIGHT_REQUEST") {
 
-    cls = "bg-yellow";
+                            cls = "bg-yellow";
 
-    badge = `<span class="badge badge-excess">XIN ÍT</span>`;
+                            badge = `<span class="badge badge-excess">XIN ÍT</span>`;
 
-    sugTxt = `
+                            sugTxt = `
         <b style="color:#ca8a04">
             🟡 Xin bổ sung nhẹ từ HUB
         </b>
     `;
-}
+                        }
 
-else if(i.sugType === "URGENT_REQUEST"){
+                        else if (i.sugType === "URGENT_REQUEST") {
 
-    cls = "bg-red";
+                            cls = "bg-red";
 
-    badge = `<span class="badge badge-short">ƯU TIÊN</span>`;
+                            badge = `<span class="badge badge-short">ƯU TIÊN</span>`;
 
-    sugTxt = `
+                            sugTxt = `
         <b style="color:#dc2626">
             🔴 Ưu tiên xin HUB ngay
         </b>
     `;
-}
+                        }
 
-else if(i.sugType === "HUB_OUT"){
+                        else if (i.sugType === "HUB_OUT") {
 
-    cls = "bg-red";
+                            cls = "bg-red";
 
-    badge = `<span class="badge badge-short">HUB HẾT</span>`;
+                            badge = `<span class="badge badge-short">HUB HẾT</span>`;
 
-    sugTxt = `
+                            sugTxt = `
         <b style="color:#991b1b">
             ⚠ HUB đang hết hàng
         </b>
     `;
-}
+                        }
 
-else if(i.sugType === "OUT_CATEGORY"){
+                        else if (i.sugType === "OUT_CATEGORY") {
 
-    cls = "bg-yellow";
+                            cls = "bg-yellow";
 
-    badge = `<span class="badge badge-excess">NGOÀI DM</span>`;
+                            badge = `<span class="badge badge-excess">NGOÀI DM</span>`;
 
-    sugTxt = `
+                            sugTxt = `
         <b style="color:#b45309">
             🚫 SKU ngoài danh mục đề xuất
         </b>
     `;
-}
+                        }
 
-else{
+                        else {
 
-    cls = "bg-red";
+                            cls = "bg-red";
 
-    badge = `<span class="badge badge-short">THIẾU</span>`;
+                            badge = `<span class="badge badge-short">THIẾU</span>`;
 
-    sugTxt = `
+                            sugTxt = `
         <b style="color:#dc2626">
             🔴 Thiếu hàng cần xin HUB
         </b>
     `;
-}
+                        }
 
-        let displayPrice = i.giaKM > 0
-            ? `<b style="color:var(--vn-red); font-size:14px">${Number(i.giaKM).toLocaleString('vi-VN')}đ</b>`
-            : `<span style="color:#94a3b8">---</span>`;
+                        let displayPrice = i.giaKM > 0
+                            ? `<b style="color:var(--vn-red); font-size:14px">${Number(i.giaKM).toLocaleString('vi-VN')}đ</b>`
+                            : `<span style="color:#94a3b8">---</span>`;
 
-        h += `<tr class="${cls}">
+                        h += `<tr class="${cls}">
             <td>
                 <div style="font-weight:700; color:var(--vn-blue); font-size:14px">${i.sku}</div>
                 <div style="font-size:12px; margin:4px 0; color:#475569">${i.name}</div>
@@ -1596,107 +1915,110 @@ else{
                 </div>
             </td>
         </tr>`;
-    });
+                    });
 
-    document.getElementById('resultArea').innerHTML =
-        h +
-        (data.length === 0
-            ? '<tr><td colspan="7" align="center" style="padding:40px; color:#94a3b8">Không tìm thấy dữ liệu phù hợp</td></tr>'
-            : '') +
-        '</tbody></table>';
-}
-</script>
-<script>
-auth.onAuthStateChanged(user => {
+                    document.getElementById('resultArea').innerHTML =
+                        h +
+                        (data.length === 0
+                            ? '<tr><td colspan="7" align="center" style="padding:40px; color:#94a3b8">Không tìm thấy dữ liệu phù hợp</td></tr>'
+                            : '') +
+                        '</tbody></table>';
+                }
+            </script>
+            <script>
+                auth.onAuthStateChanged(user => {
 
-    if (user) {
+                    if (user) {
 
-        db.collection("users")
-        .doc(user.email.toLowerCase())
-        .get()
-        .then(doc => {
+                        db.collection("users")
+                            .doc(user.email.toLowerCase())
+                            .get()
+                            .then(doc => {
 
-            if (doc.exists) {
+                                if (doc.exists) {
 
-                document.body.classList.add("auth-ready");
+                                    document.body.classList.add("auth-ready");
 
-setTimeout(() => {
+                                    setTimeout(() => {
 
-    document.getElementById('auth-overlay').style.opacity = '0';
+                                        document.getElementById('auth-overlay').style.opacity = '0';
 
-    setTimeout(() => {
-        document.getElementById('auth-overlay').style.display = 'none';
-    },300);
+                                        setTimeout(() => {
+                                            document.getElementById('auth-overlay').style.display = 'none';
+                                        }, 300);
 
-},500);
+                                    }, 500);
 
 
 
-            } else {
+                                } else {
 
-                alert("Tài khoản chưa được phân quyền!");
-                window.location.href = 'index.html';
+                                    alert("Tài khoản chưa được phân quyền!");
+                                    window.location.href = 'index.html';
 
-            }
+                                }
 
-        })
-        .catch(err => {
+                            })
+                            .catch(err => {
 
-            console.error(err);
+                                console.error(err);
 
-            alert("Lỗi Firestore: " + err.message);
+                                alert("Lỗi Firestore: " + err.message);
 
-        });
+                            });
 
-    } else {
+                    } else {
 
-        window.location.href = 'index.html';
+                        window.location.href = 'index.html';
 
-    }
+                    }
 
-});
-</script>
-<div id="resultArea" class="table-wrap"></div>
+                });
+            </script>
+            <div id="resultArea" class="table-wrap"></div>
 
-<div id="overlay" class="dropdown-overlay" onclick="closeAllDropdowns()"></div>
+            <div id="overlay" class="dropdown-overlay" onclick="closeAllDropdowns()"></div>
 
-<div class="floating-controls no-print"
-     style="display:flex !important;">
-    <button class="fab-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Lên đầu trang">
-        <svg viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/></svg>
-    </button>
-    
-    <button class="fab-btn" onclick="location.href='index.html'" title="Về trang chủ index" style="background: #1a237e;">
-        <svg viewBox="0 0 24 24" style="stroke: white;">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-        </svg>
-    </button>
+            <div class="floating-controls no-print" style="display:flex !important;">
+                <button class="fab-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Lên đầu trang">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M18 15l-6-6-6 6" />
+                    </svg>
+                </button>
 
-    <button class="fab-btn" onclick="logoutSystem()" title="Đăng xuất & Khóa" style="background: #b71c1c;">
-        <svg viewBox="0 0 24 24" style="stroke: white;">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-            <polyline points="16 17 21 12 16 7"></polyline>
-            <line x1="21" y1="12" x2="9" y2="12"></line>
-        </svg>
-    </button>
-</div>
-<script>
-function logoutSystem(){
+                <button class="fab-btn" onclick="location.href='index.html'" title="Về trang chủ index"
+                    style="background: #1a237e;">
+                    <svg viewBox="0 0 24 24" style="stroke: white;">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                </button>
 
-    firebase.auth().signOut()
-    .then(() => {
+                <button class="fab-btn" onclick="logoutSystem()" title="Đăng xuất & Khóa" style="background: #b71c1c;">
+                    <svg viewBox="0 0 24 24" style="stroke: white;">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </button>
+            </div>
+            <script>
+                function logoutSystem() {
 
-        window.location.href = 'index.html';
+                    firebase.auth().signOut()
+                        .then(() => {
 
-    })
-    .catch(err => {
+                            window.location.href = 'index.html';
 
-        alert("Lỗi đăng xuất: " + err.message);
+                        })
+                        .catch(err => {
 
-    });
+                            alert("Lỗi đăng xuất: " + err.message);
 
-}
-</script>
+                        });
+
+                }
+            </script>
 </body>
+
 </html>
