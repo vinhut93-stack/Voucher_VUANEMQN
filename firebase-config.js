@@ -1,5 +1,7 @@
- const firebaseConfig = { 
-    apiKey: "AIzaSyCSccrNwgBiVGfK5BWXelAdzHC5DZNm7lw", 
+// firebase-config.js
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCSccrNwgBiVGfK5BWXelAdzHC5DZNm7lw",
     authDomain: "vuanem-d66e5.firebaseapp.com",
     projectId: "vuanem-d66e5",
     storageBucket: "vuanem-d66e5.firebasestorage.app",
@@ -7,11 +9,27 @@
     appId: "1:430491577223:web:92be899aa6eae7c0950122"
 };
 
-// Chống khởi tạo nhiều lần
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
+// ===============================
+// KHỞI TẠO FIREBASE
+// ===============================
+firebase.initializeApp(firebaseConfig);
 
-// Khởi tạo services
-const auth = firebase.auth();
-const db = firebase.firestore();
+// ===============================
+// EXPORT GLOBAL
+// ===============================
+window.auth =
+    firebase.auth();
+
+window.db =
+    firebase.firestore();
+
+// ===============================
+// DEBUG
+// ===============================
+console.log(
+    "Firebase Ready"
+);
+
+console.log(window.auth);
+
+console.log(window.db);
