@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công cụ Điền thông tin & Xuất file Word (.docx)</title>
+
+    <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.43.0/docxtemplater.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://unpkg.com/docx-preview@0.3.6/dist/docx-preview.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+
+        firebase.auth().onAuthStateChanged(function (user) {
+
+            if (!user) {
+
+                alert("Vui lòng đăng nhập!");
+                window.location.href = "index.html";
+                return;
+            }
+
+            firebase.firestore()
+                .collection("users")
+                .doc(user.email.toLowerCase())
+                .get()
+                .then(function (doc) {
+
+                    if (!doc.exists) {
+
+                        alert("Không tìm thấy dữ liệu user!");
+                        window.location.href = "index.html";
+                        return;
+                    }
+
+                    const userData = doc.data();
+
+                    // ADMIN được vào toàn bộ
+                    if (userData.role === "admin") {
+                        return;
+                    }
+
+                    // CHECK QUYỀN MODULE
+                    const permissions = userData.permissions || {};
+
+                    if (!permissions.chungtu) {
+
+                        alert("Bạn không có quyền truy cập module này!");
+
+                        window.location.href = "index.html";
+                    }
+
+                });
+
+        });
+
+    </script>
+    <style>
+        /* Floating Action Buttons Styling */
+        .fixed-actions {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 9999;
+        }
+
+        .action-fab {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .btn-top {
+            background-color: #3498db;
+            /* Màu xanh cho nút lên đầu */
+        }
+
+        .btn-home {
+            background-color: var(--vuanem-red);
+            /* Màu đỏ thương hiệu cho nút Home */
+        }
+
+        .action-fab:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            filter: brightness(1.1);
+        }
+
+        .action-fab svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Ẩn nút khi ở ngay đầu trang (Tùy chọn) */
+        @media print {
+            .fixed-actions {
+                display: none !important;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            padding: 40px 20px;
+
+            background:
+                linear-gradient(135deg, #0f172a, #1e3a8a, #0ea5e9);
+
+            color: #fff;
+        }
+
+        /* CARD CHÍNH */
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+
+            background: rgba(255, 255, 255, 0.12);
+
+            border: 1px solid rgba(255, 255, 255, 0.18);
+
+            border-radius: 28px;
+
+            padding: 35px;
+
+            box-shadow:
+                0 10px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        /* TITLE */
+
+        h1 {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 800;
+
+            margin-bottom: 35px;
+
+            background: linear-gradient(to right,
+                    #ffffff,
+                    #cbd5e1);
+
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* UPLOAD */
+
+        .upload-section {
+
+            background: rgba(255, 255, 255, 0.08);
+
+            border: 2px dashed rgba(255, 255, 255, 0.25);
+
+            border-radius: 22px;
+
+            padding: 45px 25px;
+
+            text-align: center;
+
+            cursor: pointer;
+
+            transition: 0.3s ease;
+
+            margin-bottom: 30px;
+        }
+
+        .upload-section:hover {
+            transform: translateY(-3px);
+
+            background: rgba(255, 255, 255, 0.13);
+        }
+
+        .upload-section p {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 18px;
+        }
+
+        /* BUTTON */
+
+        .custom-file-upload,
+        .btn-submit {
+
+            border: none;
+
+            background: linear-gradient(135deg,
+                    #2563eb,
+                    #0ea5e9);
+
+            color: white;
+
+            padding: 14px 22px;
+
+            border-radius: 14px;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+            transition: 0.25s ease;
+
+            box-shadow:
+                0 8px 18px rgba(0, 0, 0, 0.18);
+        }
+
+        .custom-file-upload:hover,
+        .btn-submit:hover {
+
+            transform: translateY(-2px) scale(1.02);
+
+            opacity: 0.95;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* FILE NAME */
+
+        .file-name-display {
+            margin-top: 18px;
+
+            color: #d1fae5;
+
+            font-weight: 600;
+
+            font-size: 15px;
+        }
+
+        /* FORM PANEL */
+
+        .form-section {
+
+            display: none;
+
+            margin-top: 20px;
+
+            background: rgba(255, 255, 255, 0.08);
+
+            border-radius: 24px;
+
+            padding: 30px;
+
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .form-section h3 {
+
+            margin-bottom: 25px;
+
+            font-size: 24px;
+
+            color: #fff;
+        }
+
+        /* GRID */
+
+        .form-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(auto-fit, minmax(280px, 1fr));
+
+            gap: 22px;
+
+            margin-bottom: 28px;
+        }
+
+        /* CARD INPUT */
+
+        .form-group {
+
+            background: rgba(255, 255, 255, 0.10);
+
+            border: 1px solid rgba(255, 255, 255, 0.14);
+
+            border-radius: 20px;
+
+            padding: 18px;
+
+            transition: 0.25s ease;
+
+            backdrop-filter: blur(8px);
+        }
+
+        .form-group:hover {
+
+            transform: translateY(-2px);
+
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        /* LABEL */
+
+        .form-group label {
+
+            display: block;
+
+            margin-bottom: 10px;
+
+            font-size: 14px;
+
+            font-weight: 700;
+
+            color: #e2e8f0;
+        }
+
+        /* INPUT */
+
+        .form-group input {
+
+            width: 100%;
+
+            background: rgba(255, 255, 255, 0.15);
+
+            border: 1px solid rgba(255, 255, 255, 0.15);
+
+            border-radius: 12px;
+
+            padding: 14px;
+
+            color: white;
+
+            font-size: 15px;
+
+            outline: none;
+
+            transition: 0.25s ease;
+        }
+
+        .form-group input::placeholder {
+            color: #cbd5e1;
+        }
+
+        .form-group input:focus {
+
+            border-color: #38bdf8;
+
+            background: rgba(255, 255, 255, 0.22);
+
+            box-shadow:
+                0 0 0 4px rgba(56, 189, 248, 0.18);
+        }
+
+        /* BUTTON ROW */
+
+        .action-buttons {
+
+            display: flex;
+
+            gap: 15px;
+
+            margin-top: 15px;
+        }
+
+        .action-buttons .btn-submit {
+            flex: 1;
+        }
+
+        /* PREVIEW */
+
+        #preview-container {
+
+            margin-top: 35px;
+        }
+
+        #preview-container h3 {
+
+            margin-bottom: 15px;
+        }
+
+        #preview-frame {
+
+            background: white;
+
+            border-radius: 22px;
+
+            overflow: auto;
+
+            min-height: 700px;
+
+            padding: 25px;
+
+            border: 1px solid rgba(255, 255, 255, 0.15);
+
+            box-shadow:
+                0 10px 30px rgba(0, 0, 0, 0.18);
+        }
+
+        /* ERROR */
+
+        .error-log {
+
+            display: none;
+
+            margin-top: 18px;
+
+            padding: 16px;
+
+            border-radius: 14px;
+
+            background: rgba(239, 68, 68, 0.18);
+
+            border: 1px solid rgba(239, 68, 68, 0.25);
+
+            color: #fecaca;
+
+            white-space: pre-wrap;
+        }
+
+        /* MOBILE */
+
+        @media(max-width:768px) {
+
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                padding: 22px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Công cụ Điền thông tin & Xuất file Word (.docx)</h1>
+
+        <div class="upload-section" onclick="document.getElementById('file-input').click()">
+            <p>Bấm vào đây để tải file biểu mẫu Word (.docx) chứa các thẻ {vị_trí} lên</p>
+            <label class="custom-file-upload">Chọn file mẫu từ máy</label>
+            <input type="file" id="file-input" accept=".docx" onchange="handleFileSelect(event)">
+            <div id="file-name" class="file-name-display"></div>
+        </div>
+
+        <div class="form-section" id="form-panel">
+            <h3>Nhập thông tin cần điền vào mẫu biểu {*}</h3>
+            <div class="form-grid" id="dynamic-inputs"></div>
+            <div class="action-buttons">
+
+                <button class="btn-submit" style="background:#1565c0;" onclick="previewDocument()">
+                    👁 XEM TRƯỚC
+                </button>
+
+                <button class="btn-submit" onclick="generateDocument()">
+                    ⬇ XUẤT FILE WORD
+                </button>
+
+            </div>
+            <div id="error-box" class="error-log"></div>
+            <div id="preview-container" style="display:none; margin-top:20px;">
+
+                <h3>Xem trước tài liệu</h3>
+
+                <div id="preview-frame" style="
+            width:100%;
+            min-height:700px;
+            background:white;
+            border:1px solid #ccc;
+            border-radius:8px;
+            overflow:auto;
+            padding:20px;
+         ">
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let fileContentBuffer = null;
+
+        // Danh sách các trường dữ liệu tự động sinh form dựa trên file Mẫu số 02-TNDN của bạn
+        const defaultTags = ["day", "month", "year", "name", "address", "Sohoadon", "ngayhoadon", "donvi", "tieuthu", "thanhtien", "ngaythanhtoan"];
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            document.getElementById('file-name').textContent = "Đã nhận file biểu mẫu: " + file.name;
+            document.getElementById('error-box').style.display = 'none';
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                fileContentBuffer = e.target.result;
+                renderFormInputs();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function renderFormInputs() {
+            const container = document.getElementById('dynamic-inputs');
+            container.innerHTML = "";
+
+            defaultTags.forEach(tag => {
+                const group = document.createElement('div');
+                group.className = 'form-group';
+
+                const label = document.createElement('label');
+                label.textContent = `Nhập {${tag}}:`;
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = `tag_${tag}`;
+                input.placeholder = `Nhập giá trị cho {${tag}}`;
+
+                group.appendChild(label);
+                group.appendChild(input);
+                container.appendChild(group);
+            });
+
+            document.getElementById('form-panel').style.display = 'block';
+        }
+
+        function generateDocument() {
+            if (!fileContentBuffer) return;
+
+            const errorBox = document.getElementById('error-box');
+            errorBox.style.display = 'none';
+
+            // Thu thập dữ liệu từ form ô nhập
+            const formData = {};
+            defaultTags.forEach(tag => {
+                const val = document.getElementById(`tag_${tag}`).value;
+                formData[tag] = val !== "" ? val : `{${tag}}`;
+            });
+
+            try {
+                // Nạp dữ liệu nhị phân vào PizZip ngầm
+                const PizZipConstructor = window.PizZip;
+
+                if (!PizZipConstructor) {
+                    throw new Error("Không tải được thư viện PizZip");
+                }
+
+                const zip = new PizZipConstructor(fileContentBuffer);
+
+                // GIẢI QUYẾT TRIỆT ĐỂ: Tự động bắt lỗi chữ Hoa/Thường của Constructor Docxtemplater trên mọi trình duyệt
+                const DocxtemplaterConstructor = window.Docxtemplater || window.docxtemplater;
+
+                if (!DocxtemplaterConstructor) {
+                    throw new Error("Không thể tải thư viện xử lý Word. Vui lòng kiểm tra kết nối mạng.");
+                }
+
+                // Khởi tạo và nạp zip cấu trúc Word
+                const doc = new DocxtemplaterConstructor(zip, {
+                    paragraphLoop: true,
+                    linebreaks: true,
+                });
+
+                // Đổ dữ liệu vào các thẻ tag {day}, {name},...
+                doc.render(formData);
+
+                // Xuất dữ liệu ra dạng file mã hóa Blob
+                const out = doc.getZip().generate({
+                    type: "blob",
+                    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                });
+
+                // Tải file xuống máy tính thành công, giữ 100% định dạng bảng ban đầu
+                saveAs(out, "Bang_ke_thanh_toan_hoan_thanh.docx");
+
+            } catch (error) {
+                console.error(error);
+                errorBox.style.display = 'block';
+                errorBox.textContent = "Có lỗi xuất hiện trong quá trình xử lý văn bản: " + error.message;
+            }
+        }
+
+        async function previewDocument() {
+
+            if (!fileContentBuffer) return;
+
+            const errorBox =
+                document.getElementById('error-box');
+
+            errorBox.style.display = 'none';
+
+            try {
+
+                // Lấy dữ liệu form
+                const formData = {};
+
+                defaultTags.forEach(tag => {
+
+                    const val =
+                        document.getElementById(`tag_${tag}`).value;
+
+                    formData[tag] =
+                        val !== "" ? val : `{${tag}}`;
+
+                });
+
+                // Tạo ZIP
+                const zip =
+                    new PizZip(fileContentBuffer);
+
+                // Tạo DOC
+                const doc =
+                    new window.docxtemplater(zip, {
+                        paragraphLoop: true,
+                        linebreaks: true,
+                    });
+
+                // Render dữ liệu
+                doc.render(formData);
+
+                // Xuất arraybuffer để preview
+                const out =
+                    doc.getZip().generate({
+                        type: "arraybuffer"
+                    });
+
+                // Container preview
+                const previewContainer =
+                    document.getElementById("preview-frame");
+
+                previewContainer.innerHTML = "";
+
+                // Render preview DOCX
+                await docx.renderAsync(
+                    out,
+                    previewContainer
+                );
+
+                // Hiện preview
+                document.getElementById(
+                    "preview-container"
+                ).style.display = "block";
+
+            } catch (error) {
+
+                console.error(error);
+
+                errorBox.style.display = 'block';
+
+                errorBox.textContent =
+                    "Lỗi xem trước: " + error.message;
+            }
+        }
+    </script>
+    <div class="fixed-actions no-print">
+
+        <!-- TOP -->
+        <button class="action-fab btn-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
+            title="Lên đầu trang">
+
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+
+                <path d="M18 15l-6-6-6 6" />
+
+            </svg>
+        </button>
+
+        <!-- HOME -->
+        <button class="action-fab btn-home" onclick="location.href='index.html'" title="Trang chủ">
+
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+
+            </svg>
+        </button>
+
+        <!-- LOGOUT -->
+        <button class="action-fab" onclick="logoutSystem()" title="Đăng xuất" style="background:#b71c1c;">
+
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+
+                <polyline points="16 17 21 12 16 7"></polyline>
+
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+
+            </svg>
+        </button>
+
+    </div>
+
+    <script>
+        function logoutSystem() {
+
+            firebase.auth().signOut()
+                .then(() => {
+
+                    window.location.href = "index.html";
+
+                })
+                .catch((error) => {
+
+                    alert("Lỗi đăng xuất: " + error.message);
+
+                });
+        }
+    </script>
+</body>
+
+</html>
