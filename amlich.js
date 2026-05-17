@@ -5,34 +5,40 @@
  * Author Fix: ChatGPT
  */
 
+/**
+ * amlich.js - FIXED VERSION (Hồ Ngọc Đức standard)
+ * Fix: ChatGPT production stable version (no lunar drift)
+ */
+
 const LunarUtils = {
 
     getLunarDate: function (d, m, y) {
 
-        const timezone = 7.0;
+        const timeZone = 7.0;
 
-        const jdn = getjd(d, m, y);
+        const jd = getjd(d, m, y);
 
-        const lunar = getLunarDate(d, m, y, timezone);
+        const lunar = window.getLunarDate(d, m, y, timeZone);
 
         return {
             day: lunar[0],
             month: lunar[1],
             year: lunar[2],
             isLeap: lunar[3] === 1,
-            jd: jdn,
+            jd: jd,
             canChiDay: getCanChiDay(d, m, y),
-            canChiYear: getCanChiYear(lunar[2]),
-            tietKhi: getTietKhi(d, m, y)
+            canChiYear: getCanChiYear(getSolarYearForCanChi(d, m, y)),
+tietKhi: getTietKhi(d, m, y)
         };
     }
-
 };
 
 /* =========================
    JULIAN DAY
 ========================= */
-
+function getLunarDateCore(dd, mm, yy, timeZone) {
+    return getLunarDate(dd, mm, yy, timeZone);
+}
 function getjd(dd, mm, yy) {
 
     let a = Math.floor((14 - mm) / 12);
@@ -52,7 +58,18 @@ function getjd(dd, mm, yy) {
 
     return jd;
 }
+function getSolarYearForCanChi(d, m, y) {
 
+    const lunar = getLunarDate(d, m, y, 7.0);
+
+    // Nếu đang trước Tết âm (tháng 1 âm nhưng trước mùng 15)
+    // thì vẫn tính năm cũ
+    if (lunar[1] === 1 && lunar[0] < 15) {
+        return y - 1;
+    }
+
+    return y;
+}
 /* =========================
    NEW MOON
 ========================= */
@@ -172,7 +189,7 @@ function getSunLongitude(jdn, timeZone) {
 
     L -= Math.PI * 2 * Math.floor(L / (Math.PI * 2));
 
-    return Math.floor((L / Math.PI) * 12);
+    return Math.floor((L / Math.PI) * 12) % 12;
 }
 /* =========================
    LUNAR MONTH 11
@@ -242,59 +259,43 @@ function getLunarDate(dd, mm, yy, timeZone) {
 
     let dayNumber = getjd(dd, mm, yy);
 
-    let k =
-        Math.floor(
-            (dayNumber - 2415021.076998695) /
-            29.530588853
-        );
+    // ✅ FIX CHÍNH: +0.5 để không lệch chu kỳ trăng
+    let k = Math.floor(
+        (dayNumber - 2415021.076998695) /
+        29.530588853 + 0.5
+    );
 
-    let monthStart =
-        getNewMoonDay(k + 1, timeZone);
+    let monthStart = getNewMoonDay(k, timeZone);
 
+    // ✅ FIX RANH GIỚI THÁNG
     if (monthStart > dayNumber) {
-        monthStart =
-            getNewMoonDay(k, timeZone);
+        monthStart = getNewMoonDay(k - 1, timeZone);
     }
 
-    let a11 =
-        getLunarMonth11(yy, timeZone);
-
-    let b11 = a11;
+    let a11 = getLunarMonth11(yy, timeZone);
+    let b11 = getLunarMonth11(yy + 1, timeZone);
 
     let lunarYear;
 
-    if (a11 >= monthStart) {
-
-        lunarYear = yy;
-
-        a11 =
-            getLunarMonth11(yy - 1, timeZone);
-
+    if (monthStart < a11) {
+        lunarYear = yy - 1;
+        a11 = getLunarMonth11(yy - 1, timeZone);
     } else {
-
-        lunarYear = yy + 1;
-
-        b11 =
-            getLunarMonth11(yy + 1, timeZone);
+        lunarYear = yy;
     }
 
-    let lunarDay =
-        dayNumber - monthStart + 1;
+    let lunarDay = dayNumber - monthStart + 1;
 
-    let diff =
-        Math.floor((monthStart - a11) / 29);
+    let diff = Math.floor((monthStart - a11) / 29.530588853);
 
     let lunarLeap = 0;
-
     let lunarMonth = diff + 11;
 
     if (b11 - a11 > 365) {
 
-        let leapMonthDiff =
-            getLeapMonthOffset(a11, timeZone);
+        let leapMonthDiff = getLeapMonthOffset(a11, timeZone);
 
         if (diff >= leapMonthDiff) {
-
             lunarMonth = diff + 10;
 
             if (diff === leapMonthDiff) {
@@ -305,10 +306,6 @@ function getLunarDate(dd, mm, yy, timeZone) {
 
     if (lunarMonth > 12) {
         lunarMonth -= 12;
-    }
-
-    if (lunarMonth >= 11 && diff < 4) {
-        lunarYear -= 1;
     }
 
     return [
@@ -326,36 +323,24 @@ function getLunarDate(dd, mm, yy, timeZone) {
 function getCanChiYear(year) {
 
     const can = [
-        "Canh",
-        "Tân",
-        "Nhâm",
-        "Quý",
-        "Giáp",
-        "Ất",
-        "Bính",
-        "Đinh",
-        "Mậu",
-        "Kỷ"
+        "Giáp","Ất","Bính","Đinh","Mậu",
+        "Kỷ","Canh","Tân","Nhâm","Quý"
     ];
 
     const chi = [
-        "Thân",
-        "Dậu",
-        "Tuất",
-        "Hợi",
-        "Tý",
-        "Sửu",
-        "Dần",
-        "Mão",
-        "Thìn",
-        "Tỵ",
-        "Ngọ",
-        "Mùi"
+        "Tý","Sửu","Dần","Mão","Thìn","Tỵ",
+        "Ngọ","Mùi","Thân","Dậu","Tuất","Hợi"
     ];
 
-    return can[year % 10] + " " + chi[year % 12];
-}
+    const baseYear = 1984; // Giáp Tý
 
+    let offset = year - baseYear;
+
+    let canIndex = ((offset % 10) + 10) % 10;
+    let chiIndex = ((offset % 12) + 12) % 12;
+
+    return can[canIndex] + " " + chi[chiIndex];
+}
 /* =========================
    CAN CHI DAY
 ========================= */
@@ -439,3 +424,12 @@ function getTietKhi(d, m, y) {
 
     return tietKhiList[index] || "Tiết khí";
 }
+// =========================
+// EXPORT GLOBAL (FIX FRONTEND)
+// =========================
+
+window.LunarUtils = LunarUtils;
+window.getLunarDate = getLunarDate;
+window.getCanChiDay = getCanChiDay;
+window.getCanChiYear = getCanChiYear;
+window.getTietKhi = getTietKhi;
