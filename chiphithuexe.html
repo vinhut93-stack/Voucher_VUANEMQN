@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công cụ làm chi phí thuê ngoài (.docx)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.43.0/docxtemplater.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://unpkg.com/docx-preview@0.3.6/dist/docx-preview.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+        firebase.auth().onAuthStateChanged(function (user) {
+            if (!user) {
+                alert("Vui lòng đăng nhập!");
+                window.location.href = "index.html";
+                return;
+            }
+
+            firebase.firestore()
+                .collection("users")
+                .doc(user.email.toLowerCase())
+                .get()
+                .then(function (doc) {
+                    if (!doc.exists) {
+                        alert("Không tìm thấy dữ liệu user!");
+                        window.location.href = "index.html";
+                        return;
+                    }
+
+                    const userData = doc.data();
+
+                    // ADMIN được vào toàn bộ
+                    if (userData.role === "admin") {
+                        return;
+                    }
+
+                    // CHECK QUYỀN MODULE
+                    const permissions = userData.permissions || {};
+                    if (!permissions.chungtu) {
+                        alert("Bạn không có quyền truy cập module này!");
+                        window.location.href = "index.html";
+                    }
+                });
+        });
+    </script>
+    <style>
+        /* Floating Action Buttons Styling */
+        .fixed-actions {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 9999;
+        }
+
+        .action-fab {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .btn-top {
+            background-color: #3498db;
+        }
+
+        .btn-home {
+            background-color: #e01b22; /* Màu đỏ thương hiệu */
+        }
+
+        .action-fab:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            filter: brightness(1.1);
+        }
+
+        .action-fab svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        @media print {
+            .fixed-actions {
+                display: none !important;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px;
+
+    background:
+        linear-gradient(to bottom right,
+            #f8fafc,
+            #eff6ff);
+
+    color: #0f172a;
+}
+
+        /* CARD CHÍNH */
+        .container {
+    max-width: 1250px;
+    margin: auto;
+
+    background: #ffffff;
+
+    border-radius: 28px;
+
+    padding: 35px;
+
+    border: 1px solid #e2e8f0;
+
+    box-shadow:
+        0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+        /* TITLE */
+        h1 {
+    text-align: center;
+
+    font-size: 34px;
+
+    font-weight: 800;
+
+    color: #0f172a;
+
+    margin-bottom: 35px;
+
+    letter-spacing: -0.5px;
+}
+
+        /* UPLOAD */
+        .upload-section {
+
+    background: #f8fafc;
+
+    border: 2px dashed #bfdbfe;
+
+    border-radius: 24px;
+
+    padding: 55px 25px;
+
+    text-align: center;
+
+    cursor: pointer;
+
+    transition: all 0.25s ease;
+
+    margin-bottom: 30px;
+}
+
+        .upload-section:hover {
+
+    background: #eff6ff;
+
+    border-color: #60a5fa;
+
+    transform: translateY(-2px);
+}
+
+        .upload-section p {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 18px;
+        }
+
+        /* BUTTON */
+        .custom-file-upload,
+.btn-submit {
+
+    border: none;
+
+    background:
+        linear-gradient(135deg,
+            #1d4ed8,
+            #2563eb);
+
+    color: white;
+
+    padding: 14px 24px;
+
+    border-radius: 14px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition: all 0.25s ease;
+
+    box-shadow:
+        0 8px 18px rgba(37, 99, 235, 0.18);
+}
+.custom-file-upload:hover,
+.btn-submit:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 12px 22px rgba(37, 99, 235, 0.25);
+}
+        input[type="file"] {
+            display: none;
+        }
+
+        /* FILE NAME */
+        .file-name-display {
+            margin-top: 18px;
+            color: #d1fae5;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        /* FORM PANEL */
+        .form-section {
+
+    display: none;
+
+    margin-top: 20px;
+
+    background: #f8fafc;
+
+    border-radius: 24px;
+
+    padding: 30px;
+
+    border: 1px solid #e2e8f0;
+}
+
+        .form-section h3 {
+            margin-bottom: 25px;
+            font-size: 24px;
+            color: #fff;
+        }
+
+        /* GRID */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 22px;
+            margin-bottom: 28px;
+        }
+
+        /* CARD INPUT */
+        .form-group {
+
+    background: #ffffff;
+
+    border: 1px solid #e2e8f0;
+
+    border-radius: 20px;
+
+    padding: 18px;
+
+    transition: all 0.25s ease;
+}
+
+        .form-group:hover {
+
+    border-color: #93c5fd;
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 10px 20px rgba(59, 130, 246, 0.08);
+}
+
+        /* LABEL */
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+      .form-group input {
+
+    width: 100%;
+
+    background: #f8fafc;
+
+    border: 1px solid #dbeafe;
+
+    border-radius: 14px;
+
+    padding: 14px;
+
+    color: #0f172a;
+
+    font-size: 15px;
+
+    outline: none;
+
+    transition: all 0.25s ease;
+}
+
+        .form-group input::placeholder {
+            color: #cbd5e1;
+        }
+
+        .form-group input:focus {
+
+    border-color: #2563eb;
+
+    background: white;
+
+    box-shadow:
+        0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+        /* BUTTON ROW */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .action-buttons .btn-submit {
+            flex: 1;
+        }
+
+        /* PREVIEW */
+        #preview-container {
+            margin-top: 35px;
+        }
+
+        #preview-container h3 {
+            margin-bottom: 15px;
+        }
+
+        #preview-frame {
+
+    background: #f1f5f9;
+
+    border-radius: 24px;
+
+    overflow: auto;
+
+    min-height: 750px;
+
+    padding: 40px;
+
+    border: 1px solid #e2e8f0;
+
+    box-shadow:
+        inset 0 0 0 1px #ffffff,
+        0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+        /* ERROR */
+        .error-log {
+            display: none;
+            margin-top: 18px;
+            padding: 16px;
+            border-radius: 14px;
+            background: rgba(239, 68, 68, 0.18);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #fecaca;
+            white-space: pre-wrap;
+        }
+
+        /* MOBILE */
+        @media(max-width:768px) {
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                padding: 22px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Công cụ làm chi phí thuê ngoài (.docx)</h1>
+
+        <div class="upload-section" onclick="document.getElementById('file-input').click()">
+            <p>Bấm vào đây để tải file biểu mẫu Word (.docx) chứa các thẻ {vị_trí} lên</p>
+            <label class="custom-file-upload">Chọn file mẫu từ máy</label>
+            <input type="file" id="file-input" accept=".docx" onchange="handleFileSelect(event)">
+            <div id="file-name" class="file-name-display"></div>
+        </div>
+
+        <div class="form-section" id="form-panel">
+            <h3>Nhập thông tin cần điền vào mẫu biểu {*}</h3>
+            <div class="form-grid" id="dynamic-inputs"></div>
+            <div class="action-buttons">
+                <button class="btn-submit" style="background:#1565c0;" onclick="previewDocument()">
+                    👁 XEM TRƯỚC
+                </button>
+                <button class="btn-submit" onclick="generateDocument()">
+                    ⬇ XUẤT FILE WORD
+                </button>
+            </div>
+            <div id="error-box" class="error-log"></div>
+            
+            <div id="preview-container" style="display:none; margin-top:20px;">
+                <h3>Xem trước tài liệu</h3>
+                <div id="preview-frame"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let fileContentBuffer = null;
+
+        // Định nghĩa danh sách các thẻ nhập liệu từ form mẫu của bạn
+        // Bỏ qua các thẻ công thức và thẻ chữ (a, b, c) để hệ thống tự xử lý ngầm
+        const defaultTags = ["oneday", "lastday", "thismonth", "thisyear", "sotienketoan"];
+
+        // Hàm chuyển số thành chữ Tiếng Việt chuẩn 
+        function docSoTien(so) {
+            if (so == 0) return "Không đồng";
+            const chuSo = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
+            const mTieng = ["", "nghìn", "triệu", "tỷ", "nghìn tỷ", "triệu tỷ"];
+            
+            function docGroup3(n, showZero) {
+                let lan = Math.floor(n / 100);
+                let chuc = Math.floor((n % 100) / 10);
+                let donVi = n % 10;
+                let s = "";
+                if (lan > 0 || showZero) s += chuSo[lan] + " trăm ";
+                if (chuc > 1) {
+                    s += chuSo[chuc] + " mươi ";
+                    if (donVi == 1) s += "mốt ";
+                    else if (donVi == 5) s += "lăm ";
+                    else if (donVi > 0) s += chuSo[donVi] + " ";
+                } else if (chuc == 1) {
+                    s += "mười ";
+                    if (donVi == 1) s += "một ";
+                    else if (donVi == 5) s += "lăm ";
+                    else if (donVi > 0) s += chuSo[donVi] + " ";
+                } else {
+                    if (donVi > 0) {
+                        if (lan > 0 || showZero) s += "lẻ " + chuSo[donVi] + " ";
+                        else s += chuSo[donVi] + " ";
+                    }
+                }
+                return s;
+            }
+
+            let str = "";
+            let groups = [];
+            let temp = Math.round(so);
+            while (temp > 0) {
+                groups.push(temp % 1000);
+                temp = Math.floor(temp / 1000);
+            }
+            for (let i = groups.length - 1; i >= 0; i--) {
+                let g = groups[i];
+                if (g > 0) {
+                    str += docGroup3(g, i < groups.length - 1) + mTieng[i] + " ";
+                }
+            }
+            str = str.trim();
+            return str.charAt(0).toUpperCase() + str.slice(1) + " đồng";
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            document.getElementById('file-name').textContent = "Đã nhận file biểu mẫu: " + file.name;
+            document.getElementById('error-box').style.display = 'none';
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                fileContentBuffer = e.target.result;
+                renderFormInputs();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function renderFormInputs() {
+            const container = document.getElementById('dynamic-inputs');
+            container.innerHTML = "";
+
+            defaultTags.forEach(tag => {
+                const group = document.createElement('div');
+                group.className = 'form-group';
+
+                const label = document.createElement('label');
+                // Hiển thị tên nhãn tiếng Việt trực quan cho người dùng
+                if (tag === 'sotienketoan') label.textContent = "Số tiền kế toán thực tế thanh toán {sotienketoan}:";
+                else if (tag === 'oneday') label.textContent = "Từ ngày bàn giao {oneday}:";
+                else if (tag === 'lastday') label.textContent = "Đến ngày nghiệm thu {lastday}:";
+                else if (tag === 'thismonth') label.textContent = "Tháng thực hiện {thismonth}:";
+                else if (tag === 'thisyear') label.textContent = "Năm thực hiện {thisyear}:";
+                else label.textContent = `Nhập {${tag}}:`;
+
+                const input = document.createElement('input');
+                input.type = 'text';
+// FORMAT TIỀN KHI NHẬP
+
+if (tag === 'sotienketoan') {
+
+    input.addEventListener('input', function(e) {
+
+        let value =
+            e.target.value.replace(/\D/g, '');
+
+        if (!value) {
+            e.target.value = '';
+            return;
+        }
+
+        e.target.value =
+            Number(value).toLocaleString('vi-VN');
+    });
+}
+                input.id = `tag_${tag}`;
+                input.placeholder = `Nhập giá trị cho {${tag}}`;
+                
+                // Set giá trị mặc định mẫu cho dễ test
+                if (tag === 'sotienketoan') {
+    input.value = Number(900000).toLocaleString('vi-VN');
+}
+                const now = new Date();
+
+// lấy tháng trước
+const prevMonthDate =
+    new Date(now.getFullYear(), now.getMonth(), 0);
+
+const currentYear =
+    now.getFullYear();
+
+const prevMonth =
+    String(prevMonthDate.getMonth() + 1)
+    .padStart(2, '0');
+
+const lastDayPrevMonth =
+    String(prevMonthDate.getDate())
+    .padStart(2, '0');
+
+// AUTO VALUE
+
+if (tag === 'thisyear') {
+    input.value = currentYear;
+}
+
+if (tag === 'thismonth') {
+    input.value = prevMonth;
+}
+
+if (tag === 'lastday') {
+    input.value = lastDayPrevMonth;
+}
+
+if (tag === 'oneday') {
+    input.value = "01";
+}
+
+                group.appendChild(label);
+                group.appendChild(input);
+                container.appendChild(group);
+            });
+
+            document.getElementById('form-panel').style.display = 'block';
+        }
+
+        // Hàm xử lý xây dựng cụm Data mapping chuẩn cho Docxtemplater bao gồm cả logic công thức
+        function buildFormData() {
+            const formData = {};
+            
+            // 1. Map các text field thông thường trước
+            defaultTags.forEach(tag => {
+                const val = document.getElementById(`tag_${tag}`).value;
+                formData[tag] = val !== "" ? val : `{${tag}}`;
+            });
+
+            // 2. Trích xuất số tiền để bắt đầu tính toán công thức toán học ngầm
+            const soTienC =
+    Number(
+        document.getElementById('tag_sotienketoan')
+        .value
+        .replace(/\./g, '')
+        .replace(/,/g, '')
+    ) || 0;
+            
+            // TỔNG TRƯỚC THUẾ
+const tongTruocThue = Math.round(soTienC / 0.9);
+
+// TIỀN THUẾ
+const tienThue = Math.round(tongTruocThue - soTienC);
+
+// alias
+const soTienA = tongTruocThue;
+const soTienB = tienThue;
+
+            // FORMAT
+const fmt = (num) => num.toLocaleString('vi-VN');
+
+// GIÁ TRỊ GỐC
+formData["sotienketoan"] = fmt(soTienC);
+
+// TỔNG TRƯỚC THUẾ
+formData["tongtruocthue"] = fmt(tongTruocThue);
+
+// TIỀN THUẾ
+formData["tienthue"] = fmt(tienThue);
+
+// ĐỌC CHỮ
+formData["a"] = docSoTien(tongTruocThue);
+
+formData["b"] = docSoTien(tienThue);
+
+formData["c"] = docSoTien(soTienC);
+
+            return formData;
+        }
+
+        function generateDocument() {
+            if (!fileContentBuffer) return;
+
+            const errorBox = document.getElementById('error-box');
+            errorBox.style.display = 'none';
+
+            const formData = buildFormData();
+
+            try {
+                const PizZipConstructor = window.PizZip;
+                if (!PizZipConstructor) throw new Error("Không tải được thư viện PizZip");
+
+                const zip = new PizZipConstructor(fileContentBuffer);
+                const DocxtemplaterConstructor = window.Docxtemplater || window.docxtemplater;
+                if (!DocxtemplaterConstructor) throw new Error("Không thể tải thư viện xử lý Word.");
+
+                const doc = new DocxtemplaterConstructor(zip, {
+                    paragraphLoop: true,
+                    linebreaks: true,
+                });
+
+                doc.render(formData);
+
+                const out = doc.getZip().generate({
+                    type: "blob",
+                    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                });
+
+                saveAs(out, "Bien_ban_nghiem_thu_hoan_thanh.docx");
+
+            } catch (error) {
+                console.error(error);
+                errorBox.style.display = 'block';
+                errorBox.textContent = "Có lỗi xuất hiện trong quá trình xử lý văn bản: " + error.message;
+            }
+        }
+
+        async function previewDocument() {
+            if (!fileContentBuffer) return;
+
+            const errorBox = document.getElementById('error-box');
+            errorBox.style.display = 'none';
+
+            try {
+                const formData = buildFormData();
+                const zip = new PizZip(fileContentBuffer);
+                
+                const doc = new window.docxtemplater(zip, {
+                    paragraphLoop: true,
+                    linebreaks: true,
+                });
+
+                doc.render(formData);
+
+                const out = doc.getZip().generate({
+                    type: "arraybuffer"
+                });
+
+                const previewContainer = document.getElementById("preview-frame");
+                previewContainer.innerHTML = "";
+
+                // Gọi docx-preview kết xuất trực tiếp lên khung div nền trắng
+                await docx.renderAsync(out, previewContainer);
+                document.getElementById("preview-container").style.display = "block";
+
+            } catch (error) {
+                console.error(error);
+                errorBox.style.display = 'block';
+                errorBox.textContent = "Lỗi xem trước: " + error.message;
+            }
+        }
+    </script>
+    <div class="fixed-actions no-print">
+        <button class="action-fab btn-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Lên đầu trang">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 15l-6-6-6 6" />
+            </svg>
+        </button>
+
+        <button class="action-fab btn-home" onclick="location.href='index.html'" title="Trang chủ">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+        </button>
+
+        <button class="action-fab" onclick="logoutSystem()" title="Đăng xuất" style="background:#b71c1c;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        function logoutSystem() {
+            firebase.auth().signOut()
+                .then(() => {
+                    window.location.href = "index.html";
+                })
+                .catch((error) => {
+                    alert("Lỗi đăng xuất: " + error.message);
+                });
+        }
+    </script>
+</body>
+
+</html>
