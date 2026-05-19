@@ -674,14 +674,7 @@
                         <p>Phiếu kiểm tra PCCC định kì.</p>
                     </div>
                 </a>
-                <!-- CÔNG CỤ MỚI: CHỨNG TỪ -->
-                <a href="chungtu.html" class="card" id="module-chungtu">
-                    <div class="icon-box theme-other"><i class="fa-solid fa-money-check-dollar"></i></div>
-                    <div class="card-info">
-                        <h2>CHỨNG TỪ</h2>
-                        <p>Làm chứng từ rác, nước sinh hoạt.</p>
-                    </div>
-                </a>
+		
                 <!-- CÔNG CỤ MỚI: IN BẢN TÊN -->
                 <a href="inbanten.html" class="card" id="module-inbanten">
                     <div class="icon-box theme-other"><i class="fas fa-id-badge"></i></div>
@@ -692,6 +685,26 @@
                 </a>
             </div>
         </div>
+<!-- NHÓM 7: CHI PHÍ -->
+        <div class="category-section">
+            <div class="category-title"><i class="fa-solid fa-money-check-dollar"></i> CHI PHÍ</div>
+            <div class="grid-container">
+<!-- CÔNG CỤ MỚI: THUÊ XE -->
+                <a href="chiphithuexe.html" class="card" id="module-chiphithuexe">
+                    <div class="icon-box theme-other"><i class="fa-solid fa-car-side"></i></div>
+                    <div class="card-info">
+                        <h2>CHI PHÍ THUÊ XE</h2>
+                        <p>Làm chi phí thuê xe.</p>
+                    </div>
+                </a>
+                <!-- CÔNG CỤ MỚI: HÀNH CHÍNH -->
+                <a href="chungtu.html" class="card" id="module-chungtu">
+                    <div class="icon-box theme-other"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                    <div class="card-info">
+                        <h2>HÀNH CHÍNH</h2>
+                        <p>Làm chứng từ rác, nước sinh hoạt.</p>
+                    </div>
+                </a>
     </div>
     <script>
         // --- 1. HÀM CƠ SỞ (LỊCH ÂM & CAN CHI) ---
@@ -952,7 +965,8 @@
                 kichban: "module-kichban",
                 binhchuachay: "module-binhchuachay",
                 inbanten: "module-inbanten",
-                chungtu: "module-chungtu"
+                chungtu: "module-chungtu", 
+		chiphithuexe: "module-chiphithuexe"
             };
 
             Object.keys(moduleMap).forEach(permissionKey => {
