@@ -43,6 +43,7 @@
             background: #dcfce7;
             color: #166534;
         }
+
         .weather-widget {
             background: var(--glass);
             padding: 12px 20px;
@@ -104,6 +105,7 @@
             font-size: 11px;
             transition: 0.3s;
         }
+
         .btn-mini-logout:hover {
             background: #fecaca;
             transform: scale(1.05);
@@ -647,8 +649,20 @@
                 </a>
             </div>
         </div>
-
-        <!-- NHÓM 5: KHÁC -->
+<!-- NHÓM 5: BÁO CÁO -->
+        <div class="category-section">
+            <div class="category-title"><i class="fas fa-chart-bar"></i> BÁO CÁO </div>
+            <div class="grid-container">
+                <a href="baocao.html" class="card" id="module-baocao">
+                    <div class="icon-box theme-care"><i class="fas fa-chart-line"></i></div>
+                    <div class="card-info">
+                        <h2>BÁO CÁO NHÂN VIÊN</h2>
+                        <p>Tạo báo cáo theo từng nhân viên.</p>
+                    </div>
+                </a>
+                            </div>
+        </div>
+        <!-- NHÓM 6: KHÁC -->
         <div class="category-section">
             <div class="category-title"><i class="fas fa-toolbox"></i> KHÁC</div>
             <div class="grid-container">
@@ -928,6 +942,7 @@
 
             const moduleMap = {
                 baogia: "module-baogia",
+                baocao: "module-baocao",
                 baogiadoanhnghiep: "module-baogiadoanhnghiep",
                 hanghoa: "module-hanghoa",
                 tag_nem: "module-tag-nem",
