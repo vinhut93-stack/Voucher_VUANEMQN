@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>BDI01 - Performance Dashboard v3.0</title>
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+
+        firebase.auth().onAuthStateChanged(function (user) {
+
+            if (!user) {
+
+                alert("Vui lòng đăng nhập!");
+                window.location.href = "index.html";
+                return;
+            }
+
+            firebase.firestore()
+                .collection("users")
+                .doc(user.email.toLowerCase())
+                .get()
+                .then(function (doc) {
+
+                    if (!doc.exists) {
+
+                        alert("Không tìm thấy dữ liệu user!");
+                        window.location.href = "index.html";
+                        return;
+                    }
+
+                    const userData = doc.data();
+
+                    // ADMIN được vào toàn bộ
+                    if (userData.role === "admin") {
+                        return;
+                    }
+
+                    // CHECK QUYỀN MODULE
+                    const permissions = userData.permissions || {};
+
+                    if (!permissions.baocao) {
+
+                        alert("Bạn không có quyền truy cập module này!");
+
+                        window.location.href = "index.html";
+                    }
+
+                });
+
+        });
+
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+.floating-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 9999;
+            /* Đảm bảo luôn nằm trên cùng */
+        }
+
+        .fab-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .fab-btn:hover {
+            transform: scale(1.1);
+        }
+
+        :root {
+            --primary: #002c77;
+            --accent: #f6891f;
+            --text: #2c3e50;
+            --light-bg: #f8fafc;
+            --border: #0f1824;
+            --danger: #ef4444;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .table-container { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 12px; overflow: hidden; background: white; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        th{
+    background-color: #0f172a;
+    color: white;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: .03em;
+    padding: 6px 4px;
+    white-space: nowrap;
+}
+        td { padding: 8px 4px; border-bottom: 1px solid #e2e8f0; font-size: 0.8rem; text-align: center; color: #334155; }
+        tr:hover { background-color: #f8fafc; transition: all 0.2s; }
+        .sticky-col {
+    position: sticky;
+    left: 0;
+    z-index: 30;
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-right: 1px solid #cbd5e1;
+    box-shadow: 4px 0 8px rgba(0,0,0,0.04);
+}
+thead th{
+    position: sticky;
+    z-index: 20;
+}
+@keyframes floatLogo{
+    0%{
+        transform: translateY(0px);
+    }
+    50%{
+        transform: translateY(-8px);
+    }
+    100%{
+        transform: translateY(0px);
+    }
+}
+thead tr:first-child th{
+    top: 0;
+    height: 36px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    vertical-align: middle;
+}
+
+thead tr:nth-child(2) th{
+    top: 36px;
+    height: 36px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    vertical-align: middle;
+}
+table {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+tbody tr {
+    contain: layout style paint;
+}
+
+.overflow-x-auto {
+    will-change: scroll-position;
+    transform: translateZ(0);
+    scroll-behavior: smooth;
+}
+        
+::-webkit-scrollbar {
+    height: 10px;
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #e2e8f0;
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}.header-group { border-bottom: 2px solid rgba(255,255,255,0.2); padding: 6px !important; }
+        .summary-card { background: white; border-radius: 12px; padding: 1.2rem; border-top: 4px solid #3b82f6; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .btn-upload { @apply flex items-center justify-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow transition; }
+        .star-highlight { color: #eab308; font-weight: bold; }
+
+.editable-cell{
+    cursor: text;
+    transition: background .15s ease;
+}
+
+.editable-cell:hover{
+    background: #fef9c3 !important;
+}
+.staff-chip{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 12px;
+    border-radius:12px;
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    cursor:pointer;
+    transition:all .15s ease;
+    font-size:.8rem;
+    user-select:none;
+}
+
+.staff-chip:hover{
+    background:#eff6ff;
+    border-color:#93c5fd;
+}
+
+.staff-chip input{
+    accent-color:#2563eb;
+    width:14px;
+    height:14px;
+}
+    </style>
+</head>
+<body class="p-4">
+<!-- LOADING OVERLAY -->
+<div id="loadingScreen"
+    style="
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        color: white;
+        transition: opacity .5s ease;
+    ">
+
+    <!-- LOGO -->
+    <div style="
+        width: 90px;
+        height: 90px;
+        border-radius: 24px;
+        background: rgba(255,255,255,.08);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        backdrop-filter: blur(12px);
+        border:1px solid rgba(255,255,255,.12);
+        box-shadow: 0 10px 30px rgba(0,0,0,.3);
+        animation: floatLogo 2s ease-in-out infinite;
+    ">
+        <i class="fas fa-ranking-star"
+            style="
+                font-size:80px;
+                color:#38bdf8;
+            ">
+        </i>
+    </div>
+
+    <!-- TITLE -->
+    <h2 style="
+        margin-top:25px;
+        font-size:24px;
+        font-weight:800;
+        letter-spacing:.5px;
+    ">
+        Đang tải Performance Dashboard
+    </h2>
+
+    <!-- SUB -->
+    <p id="loadingText"
+        style="
+            margin-top:8px;
+            font-size:14px;
+            color:#cbd5e1;
+        ">
+        Đang phân tích tiến độ PI tháng này...
+    </p>
+
+    <!-- PROGRESS -->
+    <div style="
+        width:280px;
+        height:8px;
+        background:rgba(255,255,255,.08);
+        border-radius:999px;
+        overflow:hidden;
+        margin-top:25px;
+    ">
+        <div id="loadingBar"
+            style="
+                width:0%;
+                height:100%;
+                background: linear-gradient(90deg,#38bdf8,#2563eb);
+                border-radius:999px;
+                transition: width .3s ease;
+            ">
+        </div>
+    </div>
+
+</div>
+    <div class="max-w-[1800px] mx-auto">
+        <div class="flex flex-col gap-4 mb-6">
+
+    <!-- HEADER TOP -->
+    <div class="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4">
+
+        <!-- TITLE -->
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-800 uppercase">
+                Hệ Thống Hiệu Suất & Chất Lượng Phục Vụ Nhân Viên
+            </h1>
+
+            <p class="text-slate-500 text-sm">
+                Cập nhật chỉ số Sao Khen & Sao WOW
+            </p>
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="flex flex-col items-end gap-3 w-full xl:w-auto">
+
+           
+
+            <!-- BUTTONS -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 w-full">
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase">
+                        Shop 1
+                    </label>
+
+                    <input type="file"
+                        id="file1"
+                        class="hidden"
+                        onchange="loadFile(this, 'dthu')">
+
+                    <button
+                        onclick="document.getElementById('file1').click()"
+                        class="btn-upload bg-blue-600 hover:bg-blue-700">
+                        📂 Nạp DT 1
+                    </button>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase">
+                        Shop 2
+                    </label>
+
+                    <input type="file"
+                        id="file2"
+                        class="hidden"
+                        onchange="loadFile(this, 'dthu')">
+
+                    <button
+                        onclick="document.getElementById('file2').click()"
+                        class="btn-upload bg-blue-500 hover:bg-blue-600">
+                        📂 Nạp DT 2
+                    </button>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase">
+                        Chỉ số NV 1
+                    </label>
+
+                    <input type="file"
+                        id="cs1"
+                        class="hidden"
+                        onchange="loadFile(this, 'cso')">
+
+                    <button
+                        onclick="document.getElementById('cs1').click()"
+                        class="btn-upload bg-slate-700 hover:bg-slate-800">
+                        📊 Chỉ số 1
+                    </button>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase">
+                        Chỉ số NV 2
+                    </label>
+
+                    <input type="file"
+                        id="cs2"
+                        class="hidden"
+                        onchange="loadFile(this, 'cso')">
+
+                    <button
+                        onclick="document.getElementById('cs2').click()"
+                        class="btn-upload bg-slate-600 hover:bg-slate-700">
+                        📊 Chỉ số 2
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- STATUS FILE -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+
+        <div id="status-file1"
+            class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-500 text-[11px] truncate">
+            Chưa có file DT1
+        </div>
+
+        <div id="status-file2"
+            class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-500 text-[11px] truncate">
+            Chưa có file DT2
+        </div>
+
+        <div id="status-cs1"
+            class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-500 text-[11px] truncate">
+            Chưa có file CS1
+        </div>
+
+        <div id="status-cs2"
+            class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-500 text-[11px] truncate">
+            Chưa có file CS2
+        </div>
+
+    </div>
+
+</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-8 gap-4 mb-6">
+            <div class="summary-card border-blue-500">
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Tổng Doanh Thu</p>
+                <h2 id="totalSales" class="text-xl font-black text-blue-600">0đ</h2>
+            </div>
+            <div class="summary-card border-yellow-500">
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Tổng Sao WOW</p>
+                <h2 id="totalWow" class="text-xl font-black text-yellow-500">0</h2>
+            </div>
+            <div class="summary-card border-orange-500">
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Tổng SL Đệm</p>
+                <h2 id="totalMattress" class="text-xl font-black text-orange-600">0</h2>
+            </div>
+            <div class="summary-card border-slate-500">
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Tổng Nhân Sự</p>
+                <h2 id="staffCount" class="text-xl font-black text-slate-700">0</h2>
+            </div>
+<div class="summary-card border-amber-500">
+    <p class="text-[10px] font-bold text-slate-400 uppercase">
+        Tổng Sao Khen
+    </p>
+
+    <h2 id="totalKhen"
+        class="text-xl font-black text-amber-500">
+        0
+    </h2>
+</div>
+ <!-- TB AOV -->
+            <div class="summary-card border-cyan-500 min-w-[170px]">
+                <p class="text-[10px] font-bold text-slate-400 uppercase">
+                    TB AOV
+                </p>
+
+                <h2 id="avgAOV"
+                    class="text-xl font-black text-cyan-600">
+                    0đ
+                </h2>
+            </div>
+<div class="summary-card border-indigo-500">
+    <p class="text-[10px] font-bold text-slate-400 uppercase">
+        TB TLBK
+    </p>
+
+    <h2 id="avgTLBK"
+        class="text-xl font-black text-indigo-600">
+        0
+    </h2>
+</div>
+
+<div class="summary-card border-emerald-500">
+    <p class="text-[10px] font-bold text-slate-400 uppercase">
+        Tổng GTBK
+    </p>
+
+    <h2 id="totalGTBK"
+        class="text-xl font-black text-emerald-600">
+        0đ
+    </h2>
+</div>
+        </div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-4">
+
+    <div class="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+
+        <div>
+            <h3 class="text-sm font-bold text-slate-700 uppercase">
+                Bộ lọc nhân viên
+            </h3>
+
+            <p class="text-xs text-slate-400 mt-1">
+                Đang hiển thị:
+                <span id="visibleCount" class="font-bold text-blue-600">0</span>
+                nhân viên
+            </p>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-3 w-full lg:w-auto">
+
+            <input
+                type="text"
+                id="staffSearch"
+                placeholder="🔍 Tìm nhân viên..."
+                class="px-4 py-2 rounded-xl border border-slate-300 text-sm w-full md:w-[240px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+
+            <button
+                onclick="toggleAllStaff(true)"
+                class="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition">
+                ☑ Hiện tất cả
+            </button>
+
+            <button
+                onclick="toggleAllStaff(false)"
+                class="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-300 transition">
+                ☐ Ẩn tất cả
+            </button>
+
+        </div>
+    </div>
+    <div
+        id="staffFilterList"
+        class="flex flex-wrap gap-2 mt-4 max-h-[140px] overflow-y-auto pr-2">
+    </div>
+
+</div>
+        <div class="table-container">
+            <div class="overflow-x-auto overflow-y-auto" style="max-height: 75vh;">
+                <table id="mainTable">
+                    <thead class="sticky top-0 z-20">
+                        <tr>
+                            <th rowspan="2"
+class="sticky-col min-w-[240px] z-50 bg-slate-900 text-white align-middle text-center">
+    NHÂN VIÊN
+</th>
+                            <th colspan="3" class="header-group bg-blue-700">Doanh Số Chính</th>
+                            <th colspan="2" class="header-group bg-yellow-600">Chất Lượng Phục Vụ</th>
+                            <th colspan="4" class="header-group bg-slate-700">Chỉ Số Phụ</th>
+                            <th colspan="3" class="header-group bg-orange-600">Chỉ Số Đệm</th>
+                            <th colspan="4" class="header-group bg-green-700">Phân Khúc (VLOOKUP)</th>
+                            <th colspan="3" class="header-group bg-indigo-700">Bán Kèm</th>
+                        </tr>
+                        <tr>
+                            <th class="bg-blue-600">Target</th>
+                            <th class="bg-blue-600">Thực Đạt</th>
+                            <th class="bg-blue-600">% Đạt</th>
+                            <th class="bg-yellow-500 text-black">Sao Khen</th>
+                            <th class="bg-yellow-500 text-black">Sao WOW</th>
+                            <th class="bg-slate-600">Traffic</th>
+                            <th class="bg-slate-600">AOV SO</th>
+                            <th class="bg-slate-600 italic">TL Bán Kèm</th>
+			    <th class="bg-slate-600 text-[10px]">GT CGPK BK</th>
+                            <th class="bg-orange-500">SL Đệm</th>
+                            <th class="bg-orange-500 text-[9px]">GTTB Đệm</th>
+                            <th class="bg-orange-500 text-[9px]">Đệm Đơn</th>
+                            <th class="bg-green-600">Thấp</th>
+                            <th class="bg-green-600">T.Thấp</th>
+                            <th class="bg-green-600">T.Cao</th>
+                            <th class="bg-green-600">Cao</th>
+                            <th class="bg-indigo-600">CG</th>
+                            <th class="bg-indigo-600">BVĐ</th>
+                            <th class="bg-indigo-600">Gối</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr><td colspan="20" class="py-20 text-slate-400 italic text-center">Đang chờ dữ liệu...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+<script>
+let allDoanhThu = [];
+let allChiSo = [];
+
+let loadedFiles = {
+    dthu1: null,
+    dthu2: null,
+    cs1: null,
+    cs2: null
+};
+
+let hiddenStaff = JSON.parse(
+    localStorage.getItem('hiddenStaff') || '[]'
+);
+function safeNumber(val){
+
+    if(val === undefined || val === null)
+        return 0;
+
+    if(typeof val === 'number')
+        return val;
+
+    let str = val.toString().trim();
+
+    // kiểu VN: 1.234.567,89
+    if(str.includes(',')){
+
+        str = str
+            .replace(/\./g,'')
+            .replace(',', '.');
+
+    }else{
+
+        // kiểu thường: 1234567
+        str = str.replace(/[^\d.-]/g,'');
+    }
+
+    return Number(str) || 0;
+}function formatMoney(num) {
+    if(!num || isNaN(num)) return '0';
+    return Math.round(num).toLocaleString('vi-VN');
+}
+
+function loadFile(input, type) {
+
+    const file = input.files[0];
+
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+
+        const workbook = XLSX.read(
+            e.target.result,
+            { type: 'binary' }
+        );
+
+        const data = XLSX.utils.sheet_to_json(
+            workbook.Sheets[
+                workbook.SheetNames[0]
+            ]
+        );
+
+        if(type === 'dthu'){
+
+            const cleanData = data.filter(r => {
+
+                const name = (
+                    r['NVBH'] ||
+                    r['FULL_NAME'] ||
+                    ''
+                ).toString();
+
+                return name &&
+                    !name.toLowerCase().includes('total') &&
+                    !name.toLowerCase().includes('applied filters');
+            });
+
+            if(input.id === 'file1'){
+
+                loadedFiles.dthu1 = file.name;
+
+                document.getElementById(
+                    'status-file1'
+                ).innerHTML =
+                    '✅ ' + file.name;
+
+            }else{
+
+                loadedFiles.dthu2 = file.name;
+
+                document.getElementById(
+                    'status-file2'
+                ).innerHTML =
+                    '✅ ' + file.name;
+            }
+
+            allDoanhThu =
+                allDoanhThu.filter(
+                    r => r.__source !== input.id
+                );
+
+            cleanData.forEach(r => {
+                r.__source = input.id;
+            });
+
+            allDoanhThu.push(...cleanData);
+
+        }else{
+
+            if(input.id === 'cs1'){
+
+                loadedFiles.cs1 = file.name;
+
+                document.getElementById(
+                    'status-cs1'
+                ).innerHTML =
+                    '✅ ' + file.name;
+
+            }else{
+
+                loadedFiles.cs2 = file.name;
+
+                document.getElementById(
+                    'status-cs2'
+                ).innerHTML =
+                    '✅ ' + file.name;
+            }
+
+            allChiSo =
+                allChiSo.filter(
+                    r => r.__source !== input.id
+                );
+
+            data.forEach(r => {
+                r.__source = input.id;
+            });
+
+            allChiSo.push(...data);
+        }
+
+        renderTable();
+    };
+
+    reader.readAsBinaryString(file);
+}
+
+function renderTable() {
+    if (allDoanhThu.length === 0) return;
+
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '';
+    const filterList = document.getElementById('staffFilterList');
+filterList.innerHTML = '';
+    let stats = {
+    sales: 0,
+    mattress: 0,
+    aov: 0,
+    count: 0,
+    wow: 0,
+    khen: 0,
+    tlbk: 0,
+    gtbk: 0
+};
+
+    allDoanhThu.forEach(row => {
+        const rawName = row['NVBH'] || row['FULL_NAME'];
+
+const isHidden = hiddenStaff.includes(rawName);
+        const cleanName = rawName.toString().trim().toLowerCase();
+
+        const vlookupRow = allChiSo.find(item => {
+            const matchName = (item['NVBH'] || '').toString().trim().toLowerCase();
+            return matchName !== "" && (matchName === cleanName || matchName.includes(cleanName));
+        }) || {};
+
+        const target = safeNumber(row['Target Sales NVBH']);
+const sales = safeNumber(row['Sales']);
+
+const ptc =
+    target > 0
+    ? (sales / target * 100)
+    : 0;
+
+const saoKhen = safeNumber(
+    row['Sao khen thực đạt']
+);
+
+const saoWow = safeNumber(
+    row['Sao WOW thực đạt']
+);
+
+const tlbk = safeNumber(
+    row['Tỷ lệ bán kèm']
+);
+
+const gtbk = safeNumber(
+    row['Giá trị CGPK bán kèm']
+);
+        if(!isHidden){
+
+    stats.sales += sales;
+
+    stats.mattress += Number(row['SL đệm (SO)'] || 0);
+
+    stats.aov += Number(row['AOV SO'] || 0);
+
+    stats.wow += saoWow;
+
+    stats.khen += saoKhen;
+
+    stats.tlbk += tlbk;
+
+    stats.gtbk += gtbk;
+
+    stats.count++;
+}
+const chip = document.createElement('label');
+
+chip.className = 'staff-chip';
+
+chip.innerHTML = `
+    <input type="checkbox"
+        ${isHidden ? '' : 'checked'}
+        onchange="toggleStaff('${rawName.replace(/'/g,"\\'")}')">
+
+    <span>${rawName}</span>
+`;
+
+filterList.appendChild(chip);
+        const tr = document.createElement('tr');
+if(isHidden){
+    tr.style.display = 'none';
+}else{
+    tbody.appendChild(tr);
+}
+        tr.innerHTML = `
+            <td class="sticky-col font-bold text-slate-800 text-left border-r px-3">
+    ${rawName}
+</td>
+            <td class="text-slate-400">${formatMoney(target)}</td>
+            <td class="font-bold text-blue-700">${formatMoney(sales)}</td>
+            <td class="font-bold ${ptc < 80 ? 'text-red-500' : 'text-green-600'}">${ptc.toFixed(1)}%</td>
+            
+            <td class="bg-yellow-50 star-highlight">${saoKhen}</td>
+            <td class="bg-yellow-50 star-highlight">${saoWow}</td>
+            
+            <td class="editable-cell"
+    contenteditable="true"
+    oninput="updateTraffic(this)">
+    ${row['Tổng lượt khách CH điền (1)'] || 0}
+</td>
+<td>${formatMoney(row['AOV SO'])}</td>
+
+<td class="font-black text-indigo-700 bg-indigo-50">
+    ${Number(row['Tỷ lệ bán kèm'] || 0).toFixed(2)}
+</td>
+
+<td class="bg-slate-50 font-bold text-emerald-700">
+    ${formatMoney(row['Giá trị CGPK bán kèm'] || 0)}
+</td>
+            
+            <td class="bg-orange-50 font-black text-orange-700">${row['SL đệm (SO)'] || 0}</td>
+            <td class="bg-orange-50 text-[10px]">${formatMoney(row['GTTB đệm (SO)'])}</td>
+            <td class="bg-orange-50 text-[10px]">${formatMoney(row['GTTB đơn có đệm thực đạt'])}</td>
+            
+            <td class="bg-green-50 font-bold">${vlookupRow['SL đệm phân khúc thấp (SO)'] || '-'}</td>
+            <td class="bg-green-50 font-bold">${vlookupRow['SL đệm phân khúc trung thấp (SO)'] || '-'}</td>
+            <td class="bg-green-50 font-bold">${vlookupRow['SL đệm phân khúc trung cao(SO)'] || '-'}</td>
+            <td class="bg-green-50 font-bold">${vlookupRow['SL đệm phân khúc cao (SO)'] || '-'}</td>
+            
+            <td class="font-semibold">${vlookupRow['Slg CG bán kèm'] || '-'}</td>
+            <td class="font-semibold">${vlookupRow['Slg BVĐ bán kèm'] || '-'}</td>
+            <td class="font-semibold">${vlookupRow['Slg gối bán kèm'] || '-'}</td>
+        `;
+ 
+    });
+
+    document.getElementById('totalSales').innerText = formatMoney(stats.sales) + 'đ';
+    document.getElementById('totalWow').innerText = stats.wow;
+    document.getElementById('totalMattress').innerText = stats.mattress;
+    document.getElementById('avgAOV').innerText = formatMoney(stats.aov / stats.count) + 'đ';
+document.getElementById('visibleCount').innerText =
+    stats.count;
+    document.getElementById('staffCount').innerText =
+    document.querySelectorAll(
+        '#staffFilterList input:checked'
+    ).length;document.getElementById('totalKhen').innerText =
+    stats.khen;
+
+document.getElementById('avgTLBK').innerText =
+    stats.count > 0
+    ? (
+        stats.tlbk / Math.max(stats.count,1)
+      ).toFixed(2)
+    : '0';
+
+document.getElementById('totalGTBK').innerText =
+    Math.round(stats.gtbk)
+    .toLocaleString('vi-VN') + 'đ';
+}
+
+function updateTraffic(cell){
+    let value = cell.innerText.replace(/[^\d]/g,'');
+
+    if(value === '') value = 0;
+
+    cell.innerText = Number(value).toLocaleString('vi-VN');
+}
+function toggleStaff(name){
+
+    if(hiddenStaff.includes(name)){
+        hiddenStaff = hiddenStaff.filter(n => n !== name);
+    }else{
+        hiddenStaff.push(name);
+    }
+
+    localStorage.setItem(
+        'hiddenStaff',
+        JSON.stringify(hiddenStaff)
+    );
+
+    renderTable();
+}
+
+function toggleAllStaff(show){
+
+    if(show){
+        hiddenStaff = [];
+    }else{
+        hiddenStaff = allDoanhThu.map(
+            r => r['NVBH'] || r['FULL_NAME']
+        );
+    }
+
+    localStorage.setItem(
+        'hiddenStaff',
+        JSON.stringify(hiddenStaff)
+    );
+
+    renderTable();
+}
+
+document.addEventListener('input', e => {
+
+    if(e.target.id !== 'staffSearch') return;
+
+    const keyword = e.target.value.toLowerCase();
+
+    document.querySelectorAll('.staff-chip').forEach(chip => {
+
+        const text = chip.innerText.toLowerCase();
+
+        chip.style.display =
+            text.includes(keyword)
+            ? 'flex'
+            : 'none';
+    });
+
+});
+</script>
+<div class="floating-controls no-print">
+            <button class="fab-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Lên đầu trang">
+                <svg viewBox="0 0 24 24" style="width:24px; height:24px; fill:none; stroke:#333; stroke-width:2;">
+                    <path d="M18 15l-6-6-6 6" />
+                </svg>
+            </button>
+
+            <button class="fab-btn" onclick="window.location.href='index.html'" title="Về trang chủ"
+                style="background: #1e293b;">
+                <svg viewBox="0 0 24 24" style="width:24px; height:24px; fill:none; stroke:white; stroke-width:2;">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </button>
+
+            <button class="fab-btn" onclick="logoutSystem()" title="Đăng xuất" style="background: #ef4444;">
+                <svg viewBox="0 0 24 24" style="width:24px; height:24px; fill:none; stroke:white; stroke-width:2;">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </button>
+        </div>
+    </div>
+<script>
+
+const loadingMessages = [
+    "Đang phân tích tiến độ PI tháng này...",
+    "Đang tổng hợp hiệu suất nhân viên...",
+    "Đang tải dữ liệu doanh thu...",
+    "Đang xử lý chỉ số bán kèm...",
+    "Đang đồng bộ Dashboard..."
+];
+
+let progress = 0;
+
+const loadingBar = document.getElementById('loadingBar');
+const loadingText = document.getElementById('loadingText');
+
+const loadingInterval = setInterval(() => {
+
+    progress += Math.random() * 18;
+
+    if(progress > 100){
+        progress = 100;
+    }
+
+    loadingBar.style.width = progress + "%";
+
+    loadingText.innerText =
+        loadingMessages[
+            Math.floor(Math.random() * loadingMessages.length)
+        ];
+
+}, 350);
+
+window.addEventListener('load', () => {
+
+    setTimeout(() => {
+
+        clearInterval(loadingInterval);
+
+        loadingBar.style.width = '100%';
+
+        const loadingScreen =
+            document.getElementById('loadingScreen');
+
+        loadingScreen.style.opacity = '0';
+
+        setTimeout(() => {
+            loadingScreen.remove();
+        }, 500);
+
+    }, 1500);
+
+});
+
+</script>
+</body>
+</html>
