@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công cụ Tạo Biên Bản Kiểm Kê - Vua Nệm (V7-Final-Name)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+        firebase.auth().onAuthStateChanged(function (user) {
+            if (!user) {
+                alert("Vui lòng đăng nhập!");
+                window.location.href = "index.html";
+                return;
+            }
+
+            firebase.firestore()
+                .collection("users")
+                .doc(user.email.toLowerCase())
+                .get()
+                .then(function (doc) {
+                    if (!doc.exists) {
+                        alert("Không tìm thấy dữ liệu user!");
+                        window.location.href = "index.html";
+                        return;
+                    }
+
+                    const userData = doc.data();
+
+                    // ADMIN được vào toàn bộ
+                    if (userData.role === "admin") {
+                        return;
+                    }
+
+                    // CHECK QUYỀN MODULE
+                    const permissions = userData.permissions || {};
+                    if (!permissions.chungtu) {
+                        alert("Bạn không có quyền truy cập module này!");
+                        window.location.href = "index.html";
+                    }
+                });
+        });
+    </script>
+    <style>
+        /* Floating Action Buttons Styling */
+        .fixed-actions {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 9999;
+        }
+
+        .action-fab {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .btn-top {
+            background-color: #3498db;
+        }
+
+        .btn-home {
+            background-color: #e01b22; /* Màu đỏ thương hiệu */
+        }
+
+        .action-fab:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            filter: brightness(1.1);
+        }
+
+        .action-fab svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        @media print {
+            .fixed-actions {
+                display: none !important;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+        h2 {
+            color: #1e3a8a;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        h3 {
+            color: #2563eb;
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #4b5563;
+        }
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        input[type="file"] {
+            background: #f9fafb;
+            cursor: pointer;
+        }
+        .btn-quick-select {
+            display: inline-block;
+            background-color: #e5e7eb;
+            color: #1f2937;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 20px;
+            margin-top: 8px;
+            margin-right: 8px;
+            cursor: pointer;
+            border: 1px solid #cbd5e1;
+            transition: all 0.2s;
+        }
+        .btn-quick-select:hover {
+            background-color: #2563eb;
+            color: white;
+            border-color: #1d4ed8;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+        }
+        .member-row {
+            background: #fdfefe;
+            border: 1px dashed #cbd5e1;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        .btn-submit {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 25px;
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+        }
+        .btn-submit:hover {
+            background-color: #1d4ed8;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            display: none;
+            font-weight: 500;
+            line-height: 1.5;
+            white-space: pre-line;
+        }
+        .info-box {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            font-size: 13.5px;
+            color: #1e40af;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>XUẤT BIÊN BẢN KIỂM KÊ TỰ ĐỘNG (V7-FINAL-NAME)</h2>
+    <div class="info-box">
+        <strong>Cập nhật tên file tải về:</strong><br>
+        - Tên file tự động đổi theo dạng: <b>BBKK_[Mã CH]_Tháng [Tháng Hiện Tại]-Đủ hàng.xlsx</b> dựa theo nút bấm bạn chọn nhanh.<br>
+        - Sheet <b>kiểm hàng</b>: Cột G (Thực tế) và Cột H (Chênh lệch) được để trống hoàn toàn.<br>
+        - Đồng bộ tiêu đề chữ ký tỉnh thành và ngày tháng năm hôm nay chuẩn chỉnh.
+    </div>
+
+    <h3>1. Thông tin trang Bìa</h3>
+    <div class="form-group">
+        <label for="diaDiem">1. Địa điểm kiểm kê:</label>
+        <input type="text" id="diaDiem" value="BDI01 - 235 NGUYỄN THÁI HỌC - QUY NHƠN - BÌNH ĐỊNH">
+        
+        <div style="margin-top: 5px;">
+            <span class="btn-quick-select" onclick="chonDiaDiem('BDI01 - 235 NGUYỄN THÁI HỌC - QUY NHƠN - BÌNH ĐỊNH', 'Bình Định', 'BDI01')">📍 CH Bình Định BDI01</span>
+            <span class="btn-quick-select" onclick="chonDiaDiem('GLA02-KC/Gia Lai - Trần Quý Cáp - L1-K6 An Phú Thịnh Plaza', 'Gia Lai', 'GLA02')">📍 CH Gia Lai GLA02</span>
+        </div>
+        <input type="hidden" id="tinhThanhKyTen" value="Bình Định">
+        <input type="hidden" id="maCHFile" value="BDI01">
+    </div>
+    
+    <div class="form-group">
+        <label for="thoiGian">2. Thời gian kiểm kê:</label>
+        <input type="text" id="thoiGian" value="12h00 ngày 18 tháng 03 năm 2026">
+    </div>
+
+    <label>3. Thành phần tham gia kiểm kê:</label>
+    
+    <div class="member-row">
+        <div class="grid-3">
+            <div>
+                <label style="font-size:12px; color:#6b7280;">Họ và tên (Dòng 1):</label>
+                <input type="text" id="ten1" value="PHAN ĐINH VI NHỰT">
+            </div>
+            <div>
+                <label style="font-size:12px; color:#6b7280;">Chức vụ:</label>
+                <input type="text" id="chucVu1" value="Cửa hàng trưởng">
+            </div>
+        </div>
+    </div>
+
+    <div class="member-row">
+        <div class="grid-3">
+            <div>
+                <label style="font-size:12px; color:#6b7280;">Họ và tên (Dòng 2):</label>
+                <input type="text" id="ten2" value="NGUYỄN XUÂN ĐÌNH">
+            </div>
+            <div>
+                <label style="font-size:12px; color:#6b7280;">Chức vụ:</label>
+                <input type="text" id="chucVu2" value="CVTV">
+            </div>
+        </div>
+    </div>
+
+    <div class="member-row">
+        <div class="grid-3">
+            <div>
+                <label style="font-size:12px; color:#6b7280;">Họ và tên (Dòng 3):</label>
+                <input type="text" id="ten3" value="HỒ THỊ KIỀU QUYÊN">
+            </div>
+            <div>
+                <label style="font-size:12px; color:#6b7280;">Chức vụ:</label>
+                <input type="text" id="chucVu3" value="CVTV">
+            </div>
+        </div>
+    </div>
+
+    <h3>2. Đính kèm File Mẫu và File Tồn</h3>
+    
+    <div class="form-group">
+        <label style="color: #dc2626;">File mẫu Biên Bản Kiểm Kê (.xlsx):</label>
+        <input type="file" id="fileMau" accept=".xlsx">
+    </div>
+
+    <div class="form-group">
+        <label>File dữ liệu tồn kho KC (.xlsx hoặc .csv):</label>
+        <input type="file" id="fileKC" accept=".xlsx, .csv">
+    </div>
+
+    <div class="form-group">
+        <label>File dữ liệu tồn kho KTB (.xlsx hoặc .csv):</label>
+        <input type="file" id="fileKTB" accept=".xlsx, .csv">
+    </div>
+
+    <div class="form-group">
+        <label>File dữ liệu tồn kho KL (.xlsx hoặc .csv):</label>
+        <input type="file" id="fileKL" accept=".xlsx, .csv">
+    </div>
+
+    <button type="button" class="btn-submit" onclick="xuLyChuyenDoi()">Tiến Hành Xử Lý & Xuất Excel</button>
+
+    <div id="statusBox" class="status"></div>
+</div>
+
+<script>
+    // Hàm thực hiện gán nhanh địa điểm, tỉnh thành và mã cửa hàng tương ứng
+    function chonDiaDiem(text, tinhThanh, maCH) {
+        document.getElementById('diaDiem').value = text;
+        document.getElementById('tinhThanhKyTen').value = tinhThanh;
+        document.getElementById('maCHFile').value = maCH;
+    }
+
+    // Hàm tạo tên file động theo cấu trúc yêu cầu
+    function taoTenFileDong(maCH) {
+        const d = new Date();
+        const thang = d.getMonth() + 1; // Lấy tháng hiện tại thực tế
+        return `BBKK_${maCH}_Tháng ${thang}-Đủ hàng.xlsx`;
+    }
+
+    // Hàm tạo chuỗi ngày tháng năm hôm nay dựa vào tỉnh thành đã chọn
+    function layNgayThangNamHienTai(tinhThanh) {
+        const d = new Date();
+        const ngay = String(d.getDate()).padStart(2, '0');
+        const thang = String(d.getMonth() + 1).padStart(2, '0');
+        const nam = d.getFullYear();
+        return `${tinhThanh}, ngày ${ngay} tháng ${thang} năm ${nam}`;
+    }
+
+    function showStatus(text, color) {
+        const box = document.getElementById('statusBox');
+        box.style.display = 'block';
+        box.innerHTML = text;
+        box.style.backgroundColor = color === 'red' ? '#fee2e2' : '#dcfce7';
+        box.style.color = color === 'red' ? '#991b1b' : '#166534';
+    }
+
+    async function docFileDuLieu(fileInput) {
+        if (!fileInput || fileInput.files.length === 0) return [];
+        const file = fileInput.files[0];
+        
+        if (file.name.endsWith('.csv')) {
+            return new Promise((resolve) => {
+                Papa.parse(file, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        resolve(chuanHoaDữLiệu(results.data));
+                    }
+                });
+            });
+        } else {
+            const workbook = new ExcelJS.Workbook();
+            await workbook.xlsx.load(file);
+            const worksheet = workbook.worksheets[0];
+            const data = [];
+            const headers = [];
+            
+            worksheet.eachRow({ includeEmpty: false }, function(row, rowNumber) {
+                if (rowNumber === 1) {
+                    row.eachCell({ includeEmpty: true }, function(cell, colNumber) { 
+                        headers[colNumber] = cell.text ? cell.text.trim() : ''; 
+                    });
+                } else {
+                    let obj = {};
+                    row.eachCell({ includeEmpty: true }, function(cell, colNumber) {
+                        if(headers[colNumber]) {
+                            obj[headers[colNumber]] = cell.value;
+                        }
+                    });
+                    data.push(obj);
+                }
+            });
+            return chuanHoaDữLiệu(data);
+        }
+    }
+
+    function chuanHoaDữLiệu(arr) {
+        return arr.map(item => {
+            let newItem = {};
+            for (let key in item) {
+                if (!key) continue;
+                let lowerKey = key.toLowerCase().trim().replace(/_/g, ' ');
+                if (lowerKey === 'item code' || lowerKey === 'mã hàng' || lowerKey === 'ma hang' || lowerKey === 'item_code') {
+                    newItem.code = item[key] ? item[key].toString().trim() : '';
+                }
+                else if (lowerKey === 'item name' || lowerKey === 'tên hàng' || lowerKey === 'ten hang' || lowerKey === 'item_name') {
+                    newItem.name = item[key] ? item[key].toString().trim() : '';
+                }
+                else if (lowerKey === 'qty on hand' || lowerKey === 'quantity on hand' || lowerKey === 'quantity_on_hand' || lowerKey === 'sl' || lowerKey === 'số lượng' || lowerKey === 'so luong' || lowerKey === 'sl phần mềm') {
+                    newItem.qty = parseFloat(item[key]) || 0;
+                }
+            }
+            return newItem;
+        }).filter(i => i.code);
+    }
+
+    function copyCellStyles(srcCell, destCell) {
+        if (srcCell.font) destCell.font = JSON.parse(JSON.stringify(srcCell.font));
+        if (srcCell.alignment) destCell.alignment = JSON.parse(JSON.stringify(srcCell.alignment));
+        if (srcCell.border) destCell.border = JSON.parse(JSON.stringify(srcCell.border));
+        if (srcCell.fill) destCell.fill = JSON.parse(JSON.stringify(srcCell.fill));
+        if (srcCell.numFmt) destCell.numFmt = srcCell.numFmt;
+    }
+
+    async function xuLyChuyenDoi() {
+        try {
+            const fileMauInput = document.getElementById('fileMau');
+            if (fileMauInput.files.length === 0) {
+                showStatus('Vui lòng chọn File mẫu Biên Bản Kiểm Kê!', 'red');
+                return;
+            }
+
+            const diaDiemValue = document.getElementById('diaDiem').value;
+            const tinhThanhValue = document.getElementById('tinhThanhKyTen').value;
+            const maCHValue = document.getElementById('maCHFile').value;
+
+            showStatus('Đang nạp dữ liệu từ các file tồn kho...', 'green');
+
+            const dataKC = await docFileDuLieu(document.getElementById('fileKC'));
+            const dataKTB = await docFileDuLieu(document.getElementById('fileKTB'));
+            const dataKL = await docFileDuLieu(document.getElementById('fileKL'));
+
+            const workbook = new ExcelJS.Workbook();
+            await workbook.xlsx.load(fileMauInput.files[0]);
+
+            // --- 1. XỬ LÝ SHEET: 1.BÌA ---
+            const sheetBia = workbook.getWorksheet('1.Bìa') || workbook.worksheets[0];
+            if (sheetBia) {
+                sheetBia.getCell('C6').value = diaDiemValue;
+                sheetBia.getCell('C7').value = document.getElementById('thoiGian').value;
+
+                sheetBia.getCell('C9').value = document.getElementById('ten1').value;
+                sheetBia.getCell('G9').value = document.getElementById('chucVu1').value;
+
+                sheetBia.getCell('C10').value = document.getElementById('ten2').value;
+                sheetBia.getCell('G10').value = document.getElementById('chucVu2').value;
+
+                sheetBia.getCell('C11').value = document.getElementById('ten3').value;
+                sheetBia.getCell('G11').value = document.getElementById('chucVu3').value;
+            }
+
+            // --- 2. XỬ LÝ SHEET: 2.BẢNG KÊ HÀNG HÓA ---
+            const sheetBangKe = workbook.getWorksheet('2.Bảng kê hàng hóa');
+            if (!sheetBangKe) {
+                showStatus('Lỗi: Không tìm thấy sheet "2.Bảng kê hàng hóa" trong file mẫu!', 'red');
+                return;
+            }
+
+            const rowTemplate = sheetBangKe.getRow(4);
+            let currentRow = 4;
+            let stt = 1;
+
+            function appendDataToBangKe(dataList, targetColLetter) {
+                dataList.forEach(item => {
+                    const row = sheetBangKe.getRow(currentRow);
+                    row.getCell('A').value = stt++;
+                    row.getCell('B').value = item.code;
+                    row.getCell('C').value = item.name;
+
+                    row.getCell('D').value = null;
+                    row.getCell('E').value = null;
+                    row.getCell('F').value = null;
+
+                    row.getCell(targetColLetter).value = item.qty;
+
+                    row.getCell('G').value = { formula: `SUM(D${currentRow}:F${currentRow})` };
+                    row.getCell('H').value = { formula: `G${currentRow}-D${currentRow}-E${currentRow}-F${currentRow}` };
+
+                    for(let colIdx = 1; colIdx <= 9; colIdx++) {
+                        copyCellStyles(rowTemplate.getCell(colIdx), row.getCell(colIdx));
+                    }
+                    currentRow++;
+                });
+            }
+
+            appendDataToBangKe(dataKC, 'D');
+            appendDataToBangKe(dataKTB, 'E');
+            appendDataToBangKe(dataKL, 'F');
+
+            const finalRowData = currentRow - 1;
+
+            // Dọn sạch dòng thừa cũ ở sheet Bảng Kê
+            let lastRowBK = sheetBangKe.actualRowCount;
+            for (let i = currentRow; i <= lastRowBK + 100; i++) {
+                const rClear = sheetBangKe.getRow(i);
+                rClear.values = [];
+                rClear.eachCell((c) => { c.border = null; });
+            }
+
+            // --- 3. XỬ LÝ SHEET: KIỂM HÀNG (CỘT G, H ĐỂ TRỐNG) ---
+            const sheetKiemHang = workbook.getWorksheet('kiểm hàng');
+            if (sheetKiemHang) {
+                const rTemplateKH = sheetKiemHang.getRow(4);
+                let khRow = 4;
+
+                for (let r = 4; r <= finalRowData; r++) {
+                    const sourceRow = sheetBangKe.getRow(r);
+                    const targetRow = sheetKiemHang.getRow(khRow);
+
+                    targetRow.getCell('A').value = sourceRow.getCell('A').value;
+                    targetRow.getCell('B').value = sourceRow.getCell('B').value;
+                    targetRow.getCell('C').value = sourceRow.getCell('C').value;
+                    targetRow.getCell('D').value = sourceRow.getCell('D').value;
+                    targetRow.getCell('E').value = sourceRow.getCell('E').value;
+                    targetRow.getCell('F').value = sourceRow.getCell('F').value;
+
+                    // Cột G và H để trống hoàn toàn
+                    targetRow.getCell('G').value = null;
+                    targetRow.getCell('H').value = null;
+
+                    for (let cIdx = 1; cIdx <= 9; cIdx++) {
+                        copyCellStyles(rTemplateKH.getCell(cIdx), targetRow.getCell(cIdx));
+                    }
+                    khRow++;
+                }
+
+                // Dọn sạch dòng thừa cũ của mẫu trước khi chèn chữ ký
+                let lastRowKH = sheetKiemHang.actualRowCount;
+                for (let i = khRow; i <= lastRowKH + 150; i++) {
+                    const rClear = sheetKiemHang.getRow(i);
+                    rClear.values = [];
+                    rClear.eachCell((c) => { c.border = null; });
+                }
+
+                // --- CHÈN KHUNG KÝ TÊN TỰ ĐỘNG ---
+                khRow += 2; 
+
+                // Dòng 1: Tỉnh thành + ngày tháng năm hôm nay (Cột F)
+                const cellNgayThang = sheetKiemHang.getCell(`F${khRow}`);
+                cellNgayThang.value = layNgayThangNamHienTai(tinhThanhValue);
+                cellNgayThang.font = { name: 'Arial', size: 10, italic: true };
+                cellNgayThang.alignment = { horizontal: 'center' };
+
+                khRow += 1;
+
+                // Dòng 2: Chức vụ "Cửa hàng trưởng" (Cột F)
+                const cellChucVu = sheetKiemHang.getCell(`F${khRow}`);
+                cellChucVu.value = "Cửa hàng trưởng";
+                cellChucVu.font = { name: 'Arial', size: 10, bold: true };
+                cellChucVu.alignment = { horizontal: 'center' };
+
+                khRow += 1;
+
+                // Dòng 3: "(Ký, ghi rõ họ tên)" (Cột F)
+                const cellGhiChuKy = sheetKiemHang.getCell(`F${khRow}`);
+                cellGhiChuKy.value = "(Ký, ghi rõ họ tên)";
+                cellGhiChuKy.font = { name: 'Arial', size: 10, italic: true };
+                cellGhiChuKy.alignment = { horizontal: 'center' };
+
+            } else {
+                console.warn('Không tìm thấy sheet "kiểm hàng"!');
+            }
+
+            showStatus('Xử lý hoàn tất! Đang kết xuất và tải file...', 'green');
+
+            // --- XUẤT FILE EXCEL ĐỔI TÊN ĐỘNG ---
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            
+            // LẤY TÊN FILE ĐỘNG THEO YÊU CẦU MỚI
+            const tenFileTaiVe = taoTenFileDong(maCHValue);
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = tenFileTaiVe;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showStatus(`Thành công rực rỡ!\n- File được tải về với tên chuẩn: "${tenFileTaiVe}".\n- Khung chữ ký hiển thị đúng: "${layNgayThangNamHienTai(tinhThanhValue)}".`, 'green');
+
+        } catch (error) {
+            console.error(error);
+            showStatus('Gặp lỗi khi xử lý Excel: ' + error.message, 'red');
+        }
+    }
+ </script>
+<div class="fixed-actions no-print">
+        <button class="action-fab btn-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Lên đầu trang">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 15l-6-6-6 6" />
+            </svg>
+        </button>
+
+        <button class="action-fab btn-home" onclick="location.href='index.html'" title="Trang chủ">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+        </button>
+
+        <button class="action-fab" onclick="logoutSystem()" title="Đăng xuất" style="background:#b71c1c;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        function logoutSystem() {
+            firebase.auth().signOut()
+                .then(() => {
+                    window.location.href = "index.html";
+                })
+                .catch((error) => {
+                    alert("Lỗi đăng xuất: " + error.message);
+                });
+        }
+    </script>
+</body>
+
+</html>
