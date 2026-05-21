@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>TEM KIỆN CHUYỂN HÀNG - WMS V4</title>
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+    <!-- FONT -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- BARCODE -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+
+    <!-- QR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+
+        firebase.auth().onAuthStateChanged(function (user) {
+
+            if (!user) {
+
+                alert("Vui lòng đăng nhập!");
+                window.location.href = "index.html";
+                return;
+            }
+
+            firebase.firestore()
+                .collection("users")
+                .doc(user.email.toLowerCase())
+                .get()
+                .then(function (doc) {
+
+                    if (!doc.exists) {
+
+                        alert("Không tìm thấy dữ liệu user!");
+                        window.location.href = "index.html";
+                        return;
+                    }
+
+                    const userData = doc.data();
+
+                    // ADMIN được vào toàn bộ
+                    if (userData.role === "admin") {
+                        return;
+                    }
+
+                    // CHECK QUYỀN MODULE
+                    const permissions = userData.permissions || {};
+
+                    if (!permissions.temkien) {
+
+                        alert("Bạn không có quyền truy cập module này!");
+
+                        window.location.href = "index.html";
+                    }
+
+                });
+
+        });
+
+    </script>
+    <style>
+        /* Floating Action Buttons Styling */
+        .fixed-actions {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 9999;
+        }
+
+        .action-fab {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .btn-top {
+            background-color: #3498db;
+            /* Màu xanh cho nút lên đầu */
+        }
+
+        .btn-home {
+            background-color: #FF0000;
+            /* Màu đỏ thương hiệu cho nút Home */
+        }
+
+        .action-fab:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            filter: brightness(1.1);
+        }
+
+        .action-fab svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Ẩn nút khi ở ngay đầu trang (Tùy chọn) */
+        @media print {
+            .fixed-actions {
+                display: none !important;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+       
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            padding: 40px 20px;
+
+            background:
+                linear-gradient(135deg, #0f172a, #1e3a8a, #0ea5e9);
+
+            color: #fff;
+        }
+
+        :root {
+            --bg: #f3f4f6;
+            --dark: #111827;
+            --gray: #6b7280;
+            --green: #10b981;
+            --danger: #ef4444;
+            --orange: #f59e0b;
+        }
+input::placeholder {
+    color: #9ca3af;
+    opacity: 1;
+    font-style: italic;
+}
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            font-family: 'Inter', sans-serif;
+            color: #111;
+            padding: 20px;
+        }
+
+        /* =========================
+           CONTROL PANEL
+        ========================= */
+
+        .control-panel {
+            max-width: 1200px;
+            margin: auto;
+            background: white;
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 16px;
+        }
+
+        .panel-title h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 800;
+            color: #111827;
+        }
+
+        .panel-title span {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            background: #111827;
+            color: white;
+            padding: 12px;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        tbody td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        input {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 11px 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: .2s;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-add {
+            background: var(--orange);
+            color: white;
+        }
+
+        .btn-generate {
+            background: var(--green);
+            color: white;
+        }
+
+        .btn-print {
+            background: var(--dark);
+            color: white;
+        }
+
+        .btn-clear {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-delete {
+            background: var(--danger);
+            color: white;
+            padding: 8px 10px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        /* =========================
+           PRINT AREA
+           8 TEM / A4
+        ========================= */
+
+        .print-area {
+            width: 210mm;
+            margin: auto;
+        }
+
+        .label {
+    width: 196mm;
+    height: 33mm;
+
+    background: white;
+
+    border: 1px dashed #9ca3af;
+
+    margin: 0 auto 1.2mm auto;
+
+    display: grid;
+    grid-template-columns: 1.75fr 0.75fr;
+
+    overflow: hidden;
+
+    page-break-inside: avoid;
+}
+
+        /* =========================
+           LEFT
+        ========================= */
+
+        .label-left {
+            padding: 6px 8px;
+            border-right: 2px solid #111827;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .warehouse-badge {
+            background: #111827;
+            color: white;
+            padding: 3px 6px;
+            border-radius: 5px;
+            font-size: 7px;
+            font-weight: 700;
+            letter-spacing: .5px;
+        }
+
+        .date-time {
+            font-size: 7px;
+            color: #6b7280;
+            font-weight: 700;
+        }
+
+        .to-label {
+            margin-top: 3px;
+            font-size: 7px;
+            font-weight: 700;
+            color: #6b7280;
+            letter-spacing: .5px;
+        }
+
+        .to-code {
+    font-size: 28px;
+    font-weight: 800;
+    color: #111827;
+
+    line-height: 1;
+
+    margin-top: 4px;
+
+    text-align: center;
+
+    letter-spacing: .5px;
+}
+
+        .route-box {
+            margin-top: 4px;
+
+            border: 1px dashed #cbd5e1;
+            border-radius: 8px;
+
+            padding: 5px;
+        }
+
+        .route-title {
+            font-size: 7px;
+            font-weight: 700;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .route {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 4px;
+        }
+
+        .route-wh {
+            flex: 1;
+            background: #f3f4f6;
+            border-radius: 6px;
+            padding: 5px;
+            text-align: center;
+        }
+
+        .route-wh span {
+            display: block;
+            font-size: 6px;
+            color: #6b7280;
+            margin-bottom: 2px;
+            font-weight: 600;
+        }
+
+        .route-wh strong {
+    font-size: 20px;
+    font-weight: 800;
+    color: #111827;
+
+    letter-spacing: .3px;
+}
+
+        .arrow {
+            font-size: 30px;
+            font-weight: 800;
+            color: #111827;
+        }
+
+        .barcode-wrap {
+            margin-top: 4px;
+            padding-top: 3px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .barcode-text {
+            text-align: center;
+            font-size: 7px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-top: 1px;
+        }
+
+/* =========================
+   RIGHT PANEL
+========================= */
+
+.label-right {
+    background: linear-gradient(135deg, #0f172a 0%, #111827 100%);
+    color: white;
+
+    padding: 5px 6px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* TOP */
+
+.right-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+/* PACKAGE */
+
+.package-title {
+    font-size: 7px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    opacity: .8;
+    margin-bottom: 2px;
+}
+
+/* 1 / 8 */
+
+.package-counter {
+    display: flex;
+    align-items: center;
+
+    height: 100%;
+}
+
+.package-no {
+    font-size: 110px;
+    font-weight: 800;
+    line-height: .8;
+}
+
+.package-total {
+    font-size: 50px;
+    font-weight: 700;
+
+    margin-left: 4px;
+
+    align-self: flex-end;
+    margin-bottom: 14px;
+
+    line-height: 1;
+}
+
+/* QR */
+
+.qr-mini {
+    background: white;
+
+    border-radius: 5px;
+
+    padding: 2px;
+
+    flex-shrink: 0;
+}
+
+.qr-mini img,
+.qr-mini canvas {
+    width: 44px !important;
+    height: 44px !important;
+    display: block;
+}
+
+/* NGÀY CHUYỂN */
+
+.ship-box {
+    background: white;
+
+    border-radius: 6px;
+
+    padding: 4px 6px;
+
+    color: #111827;
+
+    margin-top: 3px;
+}
+
+.ship-title {
+    font-size: 6px;
+    font-weight: 800;
+
+    text-align: center;
+
+    margin-bottom: 4px;
+
+    letter-spacing: .5px;
+}
+
+.ship-line {
+    height: 10px;
+
+    border-bottom: 1px dashed #111827;
+}
+
+        /* =========================
+           PRINT
+        ========================= */
+
+        @page {
+            size: A4 portrait;
+            margin: 4mm;
+        }
+
+        @media print {
+
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .control-panel {
+                display: none;
+            }
+
+            .print-area {
+                width: 100%;
+            }
+
+            .label {
+                margin-bottom: 1.5mm;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="control-panel">
+
+        <div class="panel-header">
+
+            <div class="panel-title">
+                <h2>WMS SHIPPING LABEL SYSTEM V4</h2>
+                <span>8 tem kiện trên 1 tờ A4 dọc</span>
+            </div>
+
+            <button class="btn btn-add" onclick="addNewRow()">
+                + THÊM TO
+            </button>
+
+        </div>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th style="width:30%">MÃ TO</th>
+                    <th style="width:10%">SỐ KIỆN</th>
+                    <th style="width:24%">KHO XUẤT</th>
+                    <th style="width:24%">KHO NHẬN</th>
+                    <th style="width:12%">THAO TÁC</th>
+                </tr>
+            </thead>
+
+            <tbody id="inputRowContainer">
+
+                <tr>
+                    <td>
+                        <input type="text"
+class="in-to"
+placeholder="Điền mã TO vào đây">
+                    </td>
+
+                    <td>
+                        <input type="number" class="in-qty" value="1" min="1">
+                    </td>
+
+                    <td>
+                        <input type="text" class="in-from" value="BDI01 - KC">
+                    </td>
+
+                    <td>
+                        <input type="text" class="in-towh" value="HMIKT - KC">
+                    </td>
+
+                    <td>
+                        <button class="btn btn-delete" onclick="deleteRow(this)">
+                            XÓA
+                        </button>
+                    </td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+        <div class="actions">
+
+            <button class="btn btn-clear" onclick="clearPreview()">
+                XÓA BẢN XEM
+            </button>
+
+            <button class="btn btn-generate" onclick="renderLabels()">
+                XEM TRƯỚC KHI IN
+            </button>
+
+            <button
+    class="btn btn-print"
+    id="printBtn"
+    onclick="window.print()"
+    style="display:none;">
+    IN TEM
+</button>
+
+        </div>
+
+    </div>
+
+    <div class="print-area">
+        <div id="labelsContainer"></div>
+    </div>
+
+    <script>
+
+        function addNewRow() {
+
+            const tbody = document.getElementById('inputRowContainer');
+
+            const tr = document.createElement('tr');
+
+            tr.innerHTML = `
+                <td>
+                    <input type="text" class="in-to" placeholder="Nhập mã TO...">
+                </td>
+
+                <td>
+                    <input type="number" class="in-qty" value="1" min="1">
+                </td>
+
+                <td>
+                    <input type="text" class="in-from" placeholder="Kho xuất...">
+                </td>
+
+                <td>
+                    <input type="text" class="in-towh" placeholder="Kho nhận...">
+                </td>
+
+                <td>
+                    <button class="btn btn-delete" onclick="deleteRow(this)">
+                        XÓA
+                    </button>
+                </td>
+            `;
+
+            tbody.appendChild(tr);
+        }
+
+        function deleteRow(btn) {
+
+            const tbody = document.getElementById('inputRowContainer');
+
+            if (tbody.rows.length <= 1) {
+                alert('Phải còn ít nhất 1 dòng.');
+                return;
+            }
+
+            btn.closest('tr').remove();
+        }
+
+        function clearPreview() {
+            document.getElementById('labelsContainer').innerHTML = '';
+        }
+
+        function renderLabels() {
+
+            const container = document.getElementById('labelsContainer');
+
+            container.innerHTML = '';
+
+            const rows = document.querySelectorAll('#inputRowContainer tr');
+
+            let valid = false;
+
+            rows.forEach((row, rowIndex) => {
+
+                const to = row.querySelector('.in-to').value.trim();
+                const qty = parseInt(row.querySelector('.in-qty').value);
+                const from = row.querySelector('.in-from').value.trim();
+                const towh = row.querySelector('.in-towh').value.trim();
+
+                if (to && qty > 0 && from && towh) {
+
+                    valid = true;
+
+                    for (let i = 1; i <= qty; i++) {
+
+                        const uniqueId = `barcode_${rowIndex}_${i}`;
+                        const qrId = `qr_${rowIndex}_${i}`;
+
+                        const now = new Date();
+
+                        const dateText =
+                            now.toLocaleDateString('vi-VN') + ' ' +
+                            now.toLocaleTimeString('vi-VN');
+
+                        const html = `
+                            <div class="label">
+
+                                <div class="label-left">
+
+                                    <div>
+
+                                        <div class="header-top">
+
+                                            <div class="warehouse-badge">
+                                                WAREHOUSE TRANSFER
+                                            </div>
+
+                                            <div class="date-time">
+                                                ${dateText}
+                                            </div>
+
+                                        </div>
+
+                                        <div class="to-label">
+                                            TRANSFER ORDER
+                                        </div>
+
+                                        <div class="to-code">
+                                            ${to}
+                                        </div>
+
+                                        <div class="route-box">
+
+                                            <div class="route-title">
+                                                ROUTE INFORMATION
+                                            </div>
+
+                                            <div class="route">
+
+                                                <div class="route-wh">
+                                                    <span>KHO XUẤT</span>
+                                                    <strong>${from}</strong>
+                                                </div>
+
+                                                <div class="arrow">
+    <i class="fa-solid fa-truck-fast"></i>
+</div>
+
+                                                <div class="route-wh">
+                                                    <span>KHO NHẬN</span>
+                                                    <strong>${towh}</strong>
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                        <div class="barcode-wrap">
+
+                                            <svg id="${uniqueId}"></svg>
+
+                                            <div class="barcode-text">
+                                                ${to}
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                                <!-- RIGHT -->
+
+<div class="label-right">
+
+    <div class="right-top">
+
+        <!-- TEXT -->
+
+        <div class="right-info">
+
+            <div class="package-title">
+                PACKAGE
+            </div>
+
+            <div class="package-counter">
+
+                <div class="package-no">
+                    ${i}
+                </div>
+
+                <div class="package-total">
+                    / ${qty}
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- QR -->
+
+        <div class="qr-mini">
+            <div id="${qrId}"></div>
+        </div>
+
+    </div>
+
+    <!-- NGÀY CHUYỂN -->
+
+    <div class="ship-box">
+
+        <div class="ship-title">
+            NGÀY CHUYỂN THỰC TẾ
+        </div>
+
+        <div class="ship-line"></div>
+
+    </div>
+
+</div>
+                        `;
+
+                        container.insertAdjacentHTML('beforeend', html);
+
+                        JsBarcode(`#${uniqueId}`, to, {
+    format: "CODE128",
+    width: 1,
+    height: 14,
+    displayValue: false,
+    margin: 0
+});
+
+                        new QRCode(document.getElementById(qrId), {
+    text: `${to}|${i}/${qty}|${from}|${towh}`,
+    width: 44,
+    height: 44
+});
+
+                    }
+
+                }
+
+            });
+
+            if (!valid) {
+
+    alert('Vui lòng nhập đầy đủ thông tin.');
+
+    document.getElementById('printBtn').style.display = 'none';
+
+} else {
+
+    document.getElementById('printBtn').style.display = 'inline-block';
+
+}
+
+} // <-- đóng function renderLabels ở đây
+
+
+
+/* =========================
+   ẨN NÚT IN KHI SỬA DỮ LIỆU
+========================= */
+
+function hidePrintButton() {
+
+    document.getElementById('printBtn').style.display = 'none';
+
+}
+
+document.addEventListener('input', function(e) {
+
+    if (
+        e.target.classList.contains('in-to') ||
+        e.target.classList.contains('in-qty') ||
+        e.target.classList.contains('in-from') ||
+        e.target.classList.contains('in-towh')
+    ) {
+
+        hidePrintButton();
+
+    }
+
+});
+
+
+/* =========================
+   LOAD
+========================= */
+
+window.onload = () => {
+
+    hidePrintButton();
+
+};
+ </script>
+   <div class="fixed-actions no-print">
+
+        <!-- TOP -->
+        <button class="action-fab btn-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
+            title="Lên đầu trang">
+
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+
+                <path d="M18 15l-6-6-6 6" />
+
+            </svg>
+        </button>
+
+        <!-- HOME -->
+        <button class="action-fab btn-home" onclick="location.href='index.html'" title="Trang chủ">
+
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+
+            </svg>
+        </button>
+
+        <!-- LOGOUT -->
+        <button class="action-fab" onclick="logoutSystem()" title="Đăng xuất" style="background:#b71c1c;">
+
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+
+                <polyline points="16 17 21 12 16 7"></polyline>
+
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+
+            </svg>
+        </button>
+
+    </div>
+
+    <script>
+        function logoutSystem() {
+
+            firebase.auth().signOut()
+                .then(() => {
+
+                    window.location.href = "index.html";
+
+                })
+                .catch((error) => {
+
+                    alert("Lỗi đăng xuất: " + error.message);
+
+                });
+        }
+    </script>
+</body>
+
+</html>
