@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>GIẤY NỘP TIỀN - VUA NỆM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+
+        firebase.auth().onAuthStateChanged(function (user) {
+
+            if (!user) {
+
+                alert("Vui lòng đăng nhập!");
+                window.location.href = "index.html";
+                return;
+            }
+
+            firebase.firestore()
+                .collection("users")
+                .doc(user.email.toLowerCase())
+                .get()
+                .then(function (doc) {
+
+                    if (!doc.exists) {
+
+                        alert("Không tìm thấy dữ liệu user!");
+                        window.location.href = "index.html";
+                        return;
+                    }
+
+                    const userData = doc.data();
+
+                    // ADMIN được vào toàn bộ
+                    if (userData.role === "admin") {
+                        return;
+                    }
+
+                    // CHECK QUYỀN MODULE
+                    const permissions = userData.permissions || {};
+
+                    if (!permissions.nopbank) {
+
+                        alert("Bạn không có quyền truy cập module này!");
+
+                        window.location.href = "index.html";
+                    }
+
+                });
+
+        });
+
+    </script>
+    <style>
+        /* Floating Action Buttons Styling */
+        .fixed-actions {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 9999;
+        }
+
+        .action-fab {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .btn-top {
+            background-color: #3498db;
+            /* Màu xanh cho nút lên đầu */
+        }
+
+        .btn-home {
+            background-color: #FF0000;
+            /* Màu đỏ thương hiệu cho nút Home */
+        }
+
+        .action-fab:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            filter: brightness(1.1);
+        }
+
+        .action-fab svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Ẩn nút khi ở ngay đầu trang (Tùy chọn) */
+        @media print {
+            .fixed-actions {
+                display: none !important;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+       
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            padding: 40px 20px;
+
+            background:
+                linear-gradient(135deg, #0f172a, #1e3a8a, #0ea5e9);
+
+            color: #fff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f3f4f6;
+            padding: 20px;
+            color: #111827;
+        }
+
+        /* Thanh công cụ điều khiển (Tự động ẩn đi khi nhấn lệnh in) */
+        .control-panel {
+            max-width: 210mm;
+            margin: 0 auto 20px auto;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .panel-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #374151;
+            text-transform: uppercase;
+        }
+
+        .bank-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .bank-btn {
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            color: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Hiệu ứng mờ đi cho các nút không được chọn */
+        .bank-btn.inactive {
+            opacity: 0.4 !important;
+            filter: grayscale(30%);
+        }
+
+        .bank-btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
+        }
+
+        .vpbank { background: linear-gradient(135deg, #15803d, #16a34a); }
+        .hdbank { background: linear-gradient(135deg, #ea580c, #f97316); }
+        .bidv { background: linear-gradient(135deg, #1d4ed8, #2563eb); }
+
+        /* NÚT PRINT */
+        .btn-print {
+            background: #111827;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn-print:hover {
+            background: #1f2937;
+        }
+
+        /* KHUNG TRANG IN A4 */
+        .print-page {
+            width: 210mm;
+            height: 297mm;
+            margin: 0 auto;
+            background: white;
+            padding: 8mm 10mm;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; 
+            overflow: hidden;
+        }
+
+        /* PHÔI SLIP CỐ ĐỊNH CHIỀU CAO TRANG */
+        .paper-slip {
+            width: 190mm;
+            height: 66mm; 
+            border: 2px solid #111827;
+            border-radius: 10px;
+            padding: 10px 15px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative; /* Giữ vị trí tuyệt đối cho các phần tử con */
+        }
+
+        .slip-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1.5px solid #111827;
+            padding-bottom: 4px;
+        }
+
+        .company-name {
+            font-size: 10px;
+            font-weight: 700;
+            color: #374151;
+            text-transform: uppercase;
+        }
+
+        .slip-title {
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: #111827;
+        }
+
+        .bank-badge {
+            font-size: 13px;
+            font-weight: 800;
+            color: #2563eb;
+            text-transform: uppercase;
+        }
+
+        /* LƯỚI BẢNG THÔNG TIN TÀI KHOẢN VÀ NỘI DUNG */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 35mm 65mm 25mm 1fr;
+            border: 1px solid #111827;
+            margin-top: 5px;
+        }
+
+        .grid-cell {
+            padding: 5px 8px;
+            font-size: 11px;
+            border-bottom: 1px solid #111827;
+            border-right: 1px solid #111827;
+            display: flex;
+            align-items: center;
+        }
+
+        .cell-label {
+            background: #f9fafb;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .cell-value {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        /* Dòng Nội Dung trải dài */
+        .grid-cell-content-label {
+            grid-column: 1 / 2;
+            background: #f9fafb;
+            font-weight: 700;
+            color: #1f2937;
+            border-right: 1px solid #111827;
+            padding: 5px 8px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+        }
+
+        .grid-cell-content-value {
+            grid-column: 2 / 5;
+            font-weight: 600;
+            color: #111827;
+            padding: 5px 8px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            letter-spacing: 0.3px;
+        }
+
+        .no-bottom-border { border-bottom: none; }
+        .no-right-border { border-right: none; }
+
+        /* KHỐI SỐ TIỀN CHUYỂN XUỐNG DƯỚI */
+        .money-container {
+            display: flex;
+            width: 100%;
+            border: 1px solid #111827;
+            border-top: none; 
+            align-items: center;
+        }
+
+        .money-label {
+            width: 35mm;
+            background: #f9fafb;
+            font-weight: 800;
+            color: #111827;
+            font-size: 13px; 
+            padding: 6px 8px;
+            border-right: 1px solid #111827;
+            text-align: left;
+        }
+
+        .money-value-box {
+            flex: 1;
+            padding: 6px 12px;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .money-dash-line {
+            width: 100%;
+            height: 22px;
+            border-bottom: 1.5px dashed #6b7280; 
+        }
+
+        /* PHẦN CHÂN TRANG */
+        .slip-footer {
+            display: flex;
+            justify-content: flex-end; /* Đẩy khối chữ ký về góc bên phải */
+            margin-top: 5px;
+            margin-bottom: auto;
+        }
+
+        /* ĐỊNH VỊ SĐT XUỐNG SÁT ĐÁY CÁCH VIỀN DƯỚI ~2mm */
+        .shop-contact {
+            position: absolute;
+            left: 15px;         /* Căn lề thẳng mép trái với bảng */
+            bottom: 6px;        /* Cách viền dưới đáy đúng ~2mm trên trang in */
+            font-size: 8px;
+            font-weight: 700;
+            color: #1f2937;
+            white-space: nowrap;
+        }
+
+        .sign-block {
+            text-align: center;
+            width: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-right: 10px;
+        }
+
+        .sign-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #111827;
+            letter-spacing: 0.5px;
+        }
+
+        .sign-note {
+            font-size: 9.5px;
+            color: #4b5563;
+            margin-top: 2px;
+            margin-bottom: 22px; /* Tạo khoảng trống trống rộng rãi để ký */
+        }
+
+        /* CẤU TRÚC ĐƯỜNG CẮT CÓ KÉO GIỮA CÁC FORM */
+        .cut-line-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 0;
+            position: relative;
+            margin: 0;
+        }
+
+        .cut-dashed-line {
+            flex: 1;
+            border-bottom: 1.5px dashed #9ca3af;
+        }
+
+        .cut-scissors {
+            font-size: 14px;
+            color: #4b5563;
+            padding: 0 10px;
+            user-select: none;
+            transform: translateY(-1px);
+        }
+
+        /* CẤU HÌNH BIÊN IN */
+        @media print {
+            @page {
+                size: A4;
+                margin: 0;
+            }
+            body {
+                background: none;
+                padding: 0;
+            }
+            .control-panel {
+                display: none;
+            }
+            .print-page {
+                box-shadow: none;
+                margin: 0;
+                padding: 8mm 10mm;
+                page-break-inside: avoid;
+                page-break-after: avoid;
+            }
+            .cut-dashed-line {
+                border-bottom: 1px dashed #6b7280; /* Đậm nét nhẹ khi in */
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="control-panel">
+    <div class="panel-title">GIẤY NỘP TIỀN - VUA NỆM QUY NHƠN</div>
+    <div class="bank-buttons">
+        <button id="btn-vpbank" class="bank-btn vpbank" onclick="changeBank('vpbank')">VPBANK</button>
+        <button id="btn-hdbank" class="bank-btn hdbank inactive" onclick="changeBank('hdbank')">HD BANK</button>
+        <button id="btn-bidv" class="bank-btn bidv inactive" onclick="changeBank('bidv')">BIDV</button>
+    </div>
+    <button class="btn-print" onclick="window.print()">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 5px;">
+            <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm7 5H4v1a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-1z"/>
+        </svg>
+        PRINT (IN A4)
+    </button>
+</div>
+
+<div class="print-page">
+
+    <div class="paper-slip">
+        <div class="slip-header">
+            <span class="company-name">VUA NỆM</span>
+            <span class="slip-title">GIẤY NỘP TIỀN</span>
+            <span class="bank-badge bankTitle">VPBANK</span>
+        </div>
+        
+        <div class="info-grid">
+            <div class="grid-cell cell-label">SỐ TÀI KHOẢN</div>
+            <div class="grid-cell cell-value stk">121950488</div>
+            <div class="grid-cell cell-label">TÊN TÀI KHOẢN</div>
+            <div class="grid-cell cell-value no-right-border ctk">CONG TY CO PHAN VUA NEM</div>
+            
+            <div class="grid-cell cell-label">NGÂN HÀNG</div>
+            <div class="grid-cell cell-value no-right-border nganhang" style="grid-column: 2 / 5;">VP BANK HÀ NỘI</div>
+
+            <div class="grid-cell-content-label no-bottom-border">NỘI DUNG</div>
+            <div class="grid-cell-content-value no-bottom-border no-right-border">
+                CỬA HÀNG.............NỘP BCBH TỪ NGÀY...../....../........ĐẾN NGÀY...../....../........
+            </div>
+        </div>
+
+        <div class="money-container">
+            <div class="money-label">SỐ TIỀN</div>
+            <div class="money-value-box">
+                <div class="money-dash-line"></div>
+            </div>
+        </div>
+
+        <div class="shop-contact">QLCH: 0358.96.97.52 (Vi Nhựt)</div>
+
+        <div class="slip-footer">
+            <div class="sign-block">
+                <div class="sign-title">NGƯỜI NỘP TIỀN</div>
+                <div class="sign-note">(Ký và ghi rõ họ tên)</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cut-line-container">
+        <div class="cut-dashed-line"></div>
+        <div class="cut-scissors">✂---------------------------------</div>
+        <div class="cut-dashed-line"></div>
+    </div>
+
+    <div class="paper-slip">
+        <div class="slip-header">
+            <span class="company-name">VUA NỆM</span>
+            <span class="slip-title">GIẤY NỘP TIỀN</span>
+            <span class="bank-badge bankTitle">VPBANK</span>
+        </div>
+        
+        <div class="info-grid">
+            <div class="grid-cell cell-label">SỐ TÀI KHOẢN</div>
+            <div class="grid-cell cell-value stk">121950488</div>
+            <div class="grid-cell cell-label">TÊN TÀI KHOẢN</div>
+            <div class="grid-cell cell-value no-right-border ctk">CONG TY CO PHAN VUA NEM</div>
+            
+            <div class="grid-cell cell-label">NGÂN HÀNG</div>
+            <div class="grid-cell cell-value no-right-border nganhang" style="grid-column: 2 / 5;">VP BANK HÀ NỘI</div>
+
+            <div class="grid-cell-content-label no-bottom-border">NỘI DUNG</div>
+            <div class="grid-cell-content-value no-bottom-border no-right-border">
+                CỬA HÀNG.........NỘP BCBH TỪ NGÀY..../...../.......ĐẾN NGÀY..../...../.......
+            </div>
+        </div>
+
+        <div class="money-container">
+            <div class="money-label">SỐ TIỀN</div>
+            <div class="money-value-box">
+                <div class="money-dash-line"></div>
+            </div>
+        </div>
+
+        <div class="shop-contact">QLCH: 0358.96.97.52 (Vi Nhựt)</div>
+
+        <div class="slip-footer">
+            <div class="sign-block">
+                <div class="sign-title">NGƯỜI NỘP TIỀN</div>
+                <div class="sign-note">(Ký và ghi rõ họ tên)</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cut-line-container">
+        <div class="cut-dashed-line"></div>
+        <div class="cut-scissors">✂---------------------------------</div>
+        <div class="cut-dashed-line"></div>
+    </div>
+
+    <div class="paper-slip">
+        <div class="slip-header">
+            <span class="company-name">VUA NỆM</span>
+            <span class="slip-title">GIẤY NỘP TIỀN</span>
+            <span class="bank-badge bankTitle">VPBANK</span>
+        </div>
+        
+        <div class="info-grid">
+            <div class="grid-cell cell-label">SỐ TÀI KHOẢN</div>
+            <div class="grid-cell cell-value stk">121950488</div>
+            <div class="grid-cell cell-label">TÊN TÀI KHOẢN</div>
+            <div class="grid-cell cell-value no-right-border ctk">CONG TY CO PHAN VUA NEM</div>
+            
+            <div class="grid-cell cell-label">NGÂN HÀNG</div>
+            <div class="grid-cell cell-value no-right-border nganhang" style="grid-column: 2 / 5;">VP BANK HÀ NỘI</div>
+
+            <div class="grid-cell-content-label no-bottom-border">NỘI DUNG</div>
+            <div class="grid-cell-content-value no-bottom-border no-right-border">
+                CỬA HÀNG.........NỘP BCBH TỪ NGÀY..../...../.......ĐẾN NGÀY..../...../.......
+            </div>
+        </div>
+
+        <div class="money-container">
+            <div class="money-label">SỐ TIỀN</div>
+            <div class="money-value-box">
+                <div class="money-dash-line"></div>
+            </div>
+        </div>
+
+        <div class="shop-contact">QLCH: 0358.96.97.52 (Vi Nhựt)</div>
+
+        <div class="slip-footer">
+            <div class="sign-block">
+                <div class="sign-title">NGƯỜI NỘP TIỀN</div>
+                <div class="sign-note">(Ký và ghi rõ họ tên)</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cut-line-container">
+        <div class="cut-dashed-line"></div>
+        <div class="cut-scissors">✂---------------------------------</div>
+        <div class="cut-dashed-line"></div>
+    </div>
+
+    <div class="paper-slip">
+        <div class="slip-header">
+            <span class="company-name">VUA NỆM</span>
+            <span class="slip-title">GIẤY NỘP TIỀN</span>
+            <span class="bank-badge bankTitle">VPBANK</span>
+        </div>
+        
+        <div class="info-grid">
+            <div class="grid-cell cell-label">SỐ TÀI KHOẢN</div>
+            <div class="grid-cell cell-value stk">121950488</div>
+            <div class="grid-cell cell-label">TÊN TÀI KHOẢN</div>
+            <div class="grid-cell cell-value no-right-border ctk">CONG TY CO PHAN VUA NEM</div>
+            
+            <div class="grid-cell cell-label">NGÂN HÀNG</div>
+            <div class="grid-cell cell-value no-right-border nganhang" style="grid-column: 2 / 5;">VP BANK HÀ NỘI</div>
+
+            <div class="grid-cell-content-label no-bottom-border">NỘI DUNG</div>
+            <div class="grid-cell-content-value no-bottom-border no-right-border">
+                CỬA HÀNG.........NỘP BCBH TỪ NGÀY..../...../.......ĐẾN NGÀY..../...../.......
+            </div>
+        </div>
+
+        <div class="money-container">
+            <div class="money-label">SỐ TIỀN</div>
+            <div class="money-value-box">
+                <div class="money-dash-line"></div>
+            </div>
+        </div>
+
+        <div class="shop-contact">QLCH: 0358.96.97.52 (Vi Nhựt)</div>
+
+        <div class="slip-footer">
+            <div class="sign-block">
+                <div class="sign-title">NGƯỜI NỘP TIỀN</div>
+                <div class="sign-note">(Ký và ghi rõ họ tên)</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+const bankData = {
+    vpbank: {
+        title: "VPBANK",
+        stk: "121950488",
+        ctk: "CONG TY CO PHAN VUA NEM",
+        bank: "VP BANK HÀ NỘI",
+        btnId: "btn-vpbank"
+    },
+    hdbank: {
+        title: "HD BANK",
+        stk: "020704070043083",
+        ctk: "CONG TY CO PHAN VUA NEM",
+        bank: "HD BANK - CN HOÀN KIẾM",
+        btnId: "btn-hdbank"
+    },
+    bidv: {
+        title: "BIDV",
+        stk: "2160601982",
+        ctk: "CTY CO PHAN VUA NEM",
+        bank: "BIDV - CN ĐỐNG ĐA",
+        btnId: "btn-bidv"
+    }
+};
+
+function changeBank(type){
+    const data = bankData[type];
+    
+    // Đổi trạng thái nút bấm mờ / rõ
+    Object.keys(bankData).forEach(key => {
+        const btn = document.getElementById(bankData[key].btnId);
+        if (key === type) {
+            btn.classList.remove('inactive');
+        } else {
+            btn.classList.add('inactive');
+        }
+    });
+
+    // Đồng bộ dữ liệu lên 4 biểu mẫu cùng lúc
+    const titles = document.getElementsByClassName("bankTitle");
+    const stks = document.getElementsByClassName("stk");
+    const ctks = document.getElementsByClassName("ctk");
+    const nganhangs = document.getElementsByClassName("nganhang");
+
+    for(let i = 0; i < 4; i++) {
+        titles[i].innerText = data.title;
+        stks[i].innerText = data.stk;
+        ctks[i].innerText = data.ctk;
+        nganhangs[i].innerText = data.bank;
+    }
+}
+ </script>
+   <div class="fixed-actions no-print">
+
+        <!-- TOP -->
+        <button class="action-fab btn-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
+            title="Lên đầu trang">
+
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+
+                <path d="M18 15l-6-6-6 6" />
+
+            </svg>
+        </button>
+
+        <!-- HOME -->
+        <button class="action-fab btn-home" onclick="location.href='index.html'" title="Trang chủ">
+
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+
+            </svg>
+        </button>
+
+        <!-- LOGOUT -->
+        <button class="action-fab" onclick="logoutSystem()" title="Đăng xuất" style="background:#b71c1c;">
+
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+
+                <polyline points="16 17 21 12 16 7"></polyline>
+
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+
+            </svg>
+        </button>
+
+    </div>
+
+    <script>
+        function logoutSystem() {
+
+            firebase.auth().signOut()
+                .then(() => {
+
+                    window.location.href = "index.html";
+
+                })
+                .catch((error) => {
+
+                    alert("Lỗi đăng xuất: " + error.message);
+
+                });
+        }
+    </script>
+</body>
+
+</html>
