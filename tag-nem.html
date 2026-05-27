@@ -743,14 +743,25 @@
         let selectedProductCounts = {};
 
         function adjustFontSize(element) {
-            if (!element) return;
-            let fontSize = parseInt(window.getComputedStyle(element).fontSize);
-            const maxHeight = parseInt(window.getComputedStyle(element).lineHeight) * 3.1;
-            while (element.scrollHeight > maxHeight && fontSize > 12) {
-                fontSize -= 1;
-                element.style.fontSize = fontSize + "px";
-            }
-        }
+    if (!element) return;
+
+    const originalSize =
+        parseInt(element.dataset.originalSize) ||
+        parseInt(window.getComputedStyle(element).fontSize);
+
+    element.style.fontSize = originalSize + "px";
+
+    let fontSize = originalSize;
+    const lineHeight =
+        parseFloat(window.getComputedStyle(element).lineHeight) || fontSize * 1.2;
+
+    const maxHeight = lineHeight * 3.1;
+
+    while (element.scrollHeight > maxHeight && fontSize > 12) {
+        fontSize--;
+        element.style.fontSize = fontSize + "px";
+    }
+}
 
         document.addEventListener("DOMContentLoaded", function () {
 
@@ -949,7 +960,15 @@
 
                 html += `</div>
             <div class="footer-container">
-                <div class="sale-text-area"><div class="sale-text">${discountText}</div></div>
+                <div class="sale-text-area">
+    <div class="sale-text"
+         contenteditable="true"
+         spellcheck="false"
+         oninput="adjustFontSize(this)"
+         onfocus="this.dataset.originalSize = window.getComputedStyle(this).fontSize">
+        ${discountText}
+    </div>
+</div>
                 <div class="qrcode-block">
                     <div class="qrcode-text">QUÉT MÃ<br>THÔNG TIN<br>SẢN PHẨM</div>
                     <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(f.product_url || 'https://vuanem.com')}" style="width:80px">
