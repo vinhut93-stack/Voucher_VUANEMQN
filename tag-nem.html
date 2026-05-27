@@ -594,34 +594,43 @@
         }
 
         .sale-text-area {
-            text-align: center;
-            grid-column: 1 / 2;
-            padding: 0 10px 0 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            overflow: hidden;
-        }
+    text-align: center;
+    grid-column: 1 / 2;
 
-        .sale-text {
-            font-size: 34px;
-            font-weight: 700;
-            color: var(--primary-color);
-            text-transform: uppercase;
-            line-height: 1.1;
-            word-break: break-word;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            width: 100%;
-            padding-top: 1px;
-            max-height: 3.4em;
-        }
+    padding: 0 10px 0 80px;
 
+    height: 100%;
+    overflow: hidden;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+       .sale-text {
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-transform: uppercase;
+
+    width: 100%;
+    text-align: center;
+
+    line-height: 1.1;
+
+    white-space: pre-line;
+    word-break: break-word;
+    overflow-wrap: break-word;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    min-height: calc(1.1em * 3);
+    max-height: calc(1.1em * 3);
+
+    overflow: hidden;
+}
         .qrcode-block {
             display: flex;
             align-items: center;
@@ -631,7 +640,7 @@
         .qrcode-text {
             font-weight: 700;
             font-size: 14px;
-            line-height: 1.2;
+            line-height: 1.5;
             text-align: right;
         }
 
