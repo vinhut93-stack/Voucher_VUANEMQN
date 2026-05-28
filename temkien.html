@@ -289,7 +289,7 @@ input::placeholder {
 
     background: white;
 
-    border: 1px dashed #9ca3af;
+    border: 2px solid #475569;
 
     margin: 0 auto 1.2mm auto;
 
@@ -306,13 +306,13 @@ input::placeholder {
         ========================= */
 
         .label-left {
-            padding: 6px 8px;
-            border-right: 2px solid #111827;
+    padding: 3px 8px 5px;
+    border-right: 2px solid #111827;
 
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
 
         .header-top {
             display: flex;
@@ -359,13 +359,11 @@ input::placeholder {
 }
 
         .route-box {
-            margin-top: 4px;
-
-            border: 1px dashed #cbd5e1;
-            border-radius: 8px;
-
-            padding: 5px;
-        }
+    margin-top: 2px;
+    border: 2px solid #475569;
+    border-radius: 10px;
+    padding: 6px;
+}
 
         .route-title {
             font-size: 7px;
@@ -382,20 +380,23 @@ input::placeholder {
         }
 
         .route-wh {
-            flex: 1;
-            background: #f3f4f6;
-            border-radius: 6px;
-            padding: 5px;
-            text-align: center;
-        }
+    flex: 1;
+    background: #f8fafc;
+    border: 2px solid #475569;
+    border-radius: 8px;
+    padding: 7px;
+    text-align: center;
+}
 
         .route-wh span {
-            display: block;
-            font-size: 6px;
-            color: #6b7280;
-            margin-bottom: 2px;
-            font-weight: 600;
-        }
+    display: block;
+    font-size: 10px;
+    color: #374151;
+    margin-bottom: 4px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+}
 
         .route-wh strong {
     font-size: 20px;
@@ -493,15 +494,15 @@ input::placeholder {
 
     border-radius: 5px;
 
-    padding: 2px;
+    padding: 4px;
 
     flex-shrink: 0;
 }
 
 .qr-mini img,
 .qr-mini canvas {
-    width: 44px !important;
-    height: 44px !important;
+    width: 65px !important;
+    height: 65px !important;
     display: block;
 }
 
@@ -747,7 +748,7 @@ placeholder="Điền mã TO vào đây">
                                         <div class="header-top">
 
                                             <div class="warehouse-badge">
-                                                WAREHOUSE TRANSFER
+                                                TRANSFER ORDER
                                             </div>
 
                                             <div class="date-time">
@@ -755,20 +756,11 @@ placeholder="Điền mã TO vào đây">
                                             </div>
 
                                         </div>
-
-                                        <div class="to-label">
-                                            TRANSFER ORDER
-                                        </div>
-
                                         <div class="to-code">
                                             ${to}
                                         </div>
 
                                         <div class="route-box">
-
-                                            <div class="route-title">
-                                                ROUTE INFORMATION
-                                            </div>
 
                                             <div class="route">
 
@@ -867,8 +859,8 @@ placeholder="Điền mã TO vào đây">
 
                         new QRCode(document.getElementById(qrId), {
     text: `${to}|${i}/${qty}|${from}|${towh}`,
-    width: 44,
-    height: 44
+    width: 65,
+    height: 65
 });
 
                     }
