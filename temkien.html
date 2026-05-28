@@ -464,27 +464,50 @@ input::placeholder {
 
 .package-counter {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
+    justify-content: center;
 
-    height: 100%;
+    gap: 2px;
+
+    width: 100%;
 }
+
+/* SỐ KIỆN HIỆN TẠI */
 
 .package-no {
     font-size: 110px;
-    font-weight: 800;
+    font-weight: 900;
     line-height: .8;
+
+    min-width: 70px;
+
+    text-align: right;
 }
 
-.package-total {
-    font-size: 50px;
+/* DẤU / */
+
+.package-divider {
+    font-size: 70px;
     font-weight: 700;
 
-    margin-left: 4px;
+    line-height: 1;
 
-    align-self: flex-end;
-    margin-bottom: 14px;
+    margin-bottom: 6px;
+}
+
+/* TỔNG SỐ KIỆN */
+
+.package-total {
+    font-size: 34px;
+    font-weight: 800;
 
     line-height: 1;
+
+    min-width: 58px;
+
+    text-align: left;
+
+    margin-bottom: 8px;
 }
 
 /* QR */
@@ -812,15 +835,17 @@ placeholder="Điền mã TO vào đây">
 
             <div class="package-counter">
 
-                <div class="package-no">
-                    ${i}
-                </div>
+    <div class="package-no">
+        ${i}
+    </div>
 
-                <div class="package-total">
-                    / ${qty}
-                </div>
+    <div class="package-divider">/</div>
 
-            </div>
+    <div class="package-total">
+        ${qty}
+    </div>
+
+</div>
 
         </div>
 
