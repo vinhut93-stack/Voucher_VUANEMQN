@@ -6,8 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BDI01 - Quản Lý Phân Quyền V2</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -300,14 +299,14 @@
             top: 3px;
             left: 3px;
             transition: 0.25s;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
-        .switch input:checked + .slider {
+        .switch input:checked+.slider {
             background: #2563eb;
         }
 
-        .switch input:checked + .slider::before {
+        .switch input:checked+.slider::before {
             transform: translateX(24px);
         }
 
@@ -417,6 +416,7 @@
             { id: "baocao", name: "Báo cáo", icon: "fa-chart-line" },
             { id: "baogiadoanhnghiep", name: "Báo giá DN", icon: "fa-building" },
             { id: "hanghoa", name: "Hàng hóa", icon: "fa-box" },
+            { id: "addton", name: "Update Tồn", icon: "fa-plus-circle" },
             { id: "tag_nem", name: "Tag đệm", icon: "fa-tag" },
             { id: "khongnguthu", name: "Không ngủ thử", icon: "fa-bed" },
             { id: "tag_cgpk", name: "Tag CGPK", icon: "fa-tags" },
@@ -425,8 +425,8 @@
             { id: "binhchuachay", name: "PCCC", icon: "fa-fire-extinguisher" },
             { id: "inbanten", name: "In bản tên", icon: "fa-id-card" },
             { id: "chungtu", name: "Chứng từ", icon: "fa-file-lines" },
-{ id: "nopbank", name: "Nộp bank", icon: "fa-money-bill-transfer" },
-	{ id: "temkien", name: "Tem kiện", icon: "fa-parachute-box" },
+            { id: "nopbank", name: "Nộp bank", icon: "fa-money-bill-transfer" },
+            { id: "temkien", name: "Tem kiện", icon: "fa-parachute-box" },
             { id: "bbkiemke", name: "Kiểm kê", icon: "fa-clipboard-check" },
             { id: "chiphithuexe", name: "Chi phí thuê xe", icon: "fa-truck" }
         ];
@@ -631,8 +631,8 @@
 
                                     <p>
                                         ${isAdmin
-                                            ? 'Admin luôn có toàn quyền'
-                                            : 'Bật / tắt quyền truy cập'}
+                        ? 'Admin luôn có toàn quyền'
+                        : 'Bật / tắt quyền truy cập'}
                                     </p>
                                 </div>
 
