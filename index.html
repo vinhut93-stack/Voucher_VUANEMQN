@@ -599,14 +599,21 @@
                         <p>Gợi ý đặt hàng và quản lý tồn kho cửa hàng.</p>
                     </div>
                 </a>
-<a href="temkien.html" class="card" id="module-temkien">
+                <a href="temkien.html" class="card" id="module-temkien">
                     <div class="icon-box theme-warehouse"><i class="fa-solid fa-parachute-box"></i></div>
                     <div class="card-info">
                         <h2>TEM KIỆN</h2>
                         <p>Tem kiện hỗ trợ chuyển hàng.</p>
                     </div>
                 </a>
-<a href="bbkiemke.html" class="card" id="module-bbkiemke">
+                <a href="addton.html" class="card" id="module-addton">
+                    <div class="icon-box theme-warehouse"><i class="fa-solid fa-warehouse"></i></div>
+                    <div class="card-info">
+                        <h2>CẬP NHẬT TỒN</h2>
+                        <p>Add tồn kho vào app hệ thống.</p>
+                    </div>
+                </a>
+                <a href="bbkiemke.html" class="card" id="module-bbkiemke">
                     <div class="icon-box theme-warehouse"><i class="fas fa-clipboard-check text-emerald-500"></i></div>
                     <div class="card-info">
                         <h2>KIỂM KÊ</h2>
@@ -663,7 +670,7 @@
                 </a>
             </div>
         </div>
-<!-- NHÓM 5: BÁO CÁO -->
+        <!-- NHÓM 5: BÁO CÁO -->
         <div class="category-section">
             <div class="category-title"><i class="fas fa-chart-bar"></i> BÁO CÁO </div>
             <div class="grid-container">
@@ -674,7 +681,7 @@
                         <p>Tạo báo cáo theo từng nhân viên.</p>
                     </div>
                 </a>
-                            </div>
+            </div>
         </div>
         <!-- NHÓM 6: KHÁC -->
         <div class="category-section">
@@ -688,15 +695,14 @@
                         <p>Phiếu kiểm tra PCCC định kì.</p>
                     </div>
                 </a>
-		 <!-- Nộp bank -->
+                <!-- Nộp bank -->
                 <a href="nopbank.html" class="card" id="module-nopbank">
                     <div class="icon-box theme-other"><i class="fas fa-money-bill-transfer"></i></div>
                     <div class="card-info">
                         <h2>NỘP BANK</h2>
                         <p>Phiếu nộp tiền ngân hàng tại Vua Nệm.</p>
                     </div>
-                </a
-                <!-- CÔNG CỤ MỚI: IN BẢN TÊN -->
+                </a <!-- CÔNG CỤ MỚI: IN BẢN TÊN -->
                 <a href="inbanten.html" class="card" id="module-inbanten">
                     <div class="icon-box theme-other"><i class="fas fa-id-badge"></i></div>
                     <div class="card-info">
@@ -706,11 +712,11 @@
                 </a>
             </div>
         </div>
-<!-- NHÓM 7: CHI PHÍ -->
+        <!-- NHÓM 7: CHI PHÍ -->
         <div class="category-section">
             <div class="category-title"><i class="fa-solid fa-money-check-dollar"></i> CHI PHÍ</div>
             <div class="grid-container">
-<!-- CÔNG CỤ MỚI: THUÊ XE -->
+                <!-- CÔNG CỤ MỚI: THUÊ XE -->
                 <a href="chiphithuexe.html" class="card" id="module-chiphithuexe">
                     <div class="icon-box theme-other"><i class="fa-solid fa-car-side"></i></div>
                     <div class="card-info">
@@ -726,300 +732,302 @@
                         <p>Làm chứng từ rác, nước sinh hoạt.</p>
                     </div>
                 </a>
-    </div>
-    <script>
-        // --- 1. HÀM CƠ SỞ (LỊCH ÂM & CAN CHI) ---
-        function getCanChiDay(d, m, y) {
-            const CAN = ["Giáp", "Ất", "Bính", "Đinh", "Mậu", "Kỷ", "Canh", "Tân", "Nhâm", "Quý"];
-            const CHI = ["Tý", "Sửu", "Dần", "Mão", "Thìn", "Tỵ", "Ngọ", "Mùi", "Thân", "Dậu", "Tuất", "Hợi"];
-            const dayIndex = (Math.floor((Date.UTC(y, m - 1, d) / 86400000) + 29) % 60);
-            return CAN[dayIndex % 10] + " " + CHI[dayIndex % 12];
-        }
-
-        // --- 3. LOGIC CẬP NHẬT THỜI GIAN & LỊCH ÂM CHI TIẾT ---
-        function updateInfo() {
-            const now = new Date();
-            const h = now.getHours().toString().padStart(2, '0');
-            const min = now.getMinutes().toString().padStart(2, '0');
-            const s = now.getSeconds().toString().padStart(2, '0');
-            const ngay = now.getDate();
-            const thang = now.getMonth() + 1;
-            const nam = now.getFullYear();
-            const thuArr = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
-
-            const greeting = document.getElementById('greeting-text');
-            if (greeting) {
-                const hour = now.getHours();
-                if (hour < 12) greeting.innerText = "Chào Buổi Sáng";
-                else if (hour < 18) greeting.innerText = "Chào Buổi Chiều";
-                else greeting.innerText = "Chào Buổi Tối";
-            }
-
-            // Cập nhật Top Bar
-            const dateDisplay = document.getElementById('date-time-display');
-            if (dateDisplay) {
-                dateDisplay.innerHTML = `<i class="fas fa-clock"></i> ${h}:${min}:${s} | ${thuArr[now.getDay()]} (Dương: ${ngay}/${thang})`;
-            }
-            // CẬP NHẬT VÀO BẢNG UTILITY (PHẦN BẠN ĐANG THIẾU)
-            if (typeof getLunarDate === 'function') {
-                const lunar = getLunarDate(ngay, thang, nam);
-                const canChi = getCanChiDay(ngay, thang, nam);
-                const lunarVal = document.getElementById('lunar-val');
-                if (lunarVal) {
-                    lunarVal.innerText = `${lunar.day}/${lunar.month} (${canChi})`;
+            </div>
+            <script>
+                // --- 1. HÀM CƠ SỞ (LỊCH ÂM & CAN CHI) ---
+                function getCanChiDay(d, m, y) {
+                    const CAN = ["Giáp", "Ất", "Bính", "Đinh", "Mậu", "Kỷ", "Canh", "Tân", "Nhâm", "Quý"];
+                    const CHI = ["Tý", "Sửu", "Dần", "Mão", "Thìn", "Tỵ", "Ngọ", "Mùi", "Thân", "Dậu", "Tuất", "Hợi"];
+                    const dayIndex = (Math.floor((Date.UTC(y, m - 1, d) / 86400000) + 29) % 60);
+                    return CAN[dayIndex % 10] + " " + CHI[dayIndex % 12];
                 }
-            }
-        }
 
-        // --- 4. HÀM LẤY THỜI TIẾT (GỘP CHUNG 1 HÀM DUY NHẤT) ---
-        async function getWeather() {
-            const apiKey = "b7ea0438346b9a89666014457e5e32be";
-            const weatherDisplay = document.getElementById('weather-display');
-            const tempVal = document.getElementById('temp-val');
-            const descVal = document.getElementById('desc-val');
+                // --- 3. LOGIC CẬP NHẬT THỜI GIAN & LỊCH ÂM CHI TIẾT ---
+                function updateInfo() {
+                    const now = new Date();
+                    const h = now.getHours().toString().padStart(2, '0');
+                    const min = now.getMinutes().toString().padStart(2, '0');
+                    const s = now.getSeconds().toString().padStart(2, '0');
+                    const ngay = now.getDate();
+                    const thang = now.getMonth() + 1;
+                    const nam = now.getFullYear();
+                    const thuArr = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
 
-            try {
-                const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=Quy+Nhon&units=metric&appid=${apiKey}&lang=vi`);
-                const data = await res.json();
+                    const greeting = document.getElementById('greeting-text');
+                    if (greeting) {
+                        const hour = now.getHours();
+                        if (hour < 12) greeting.innerText = "Chào Buổi Sáng";
+                        else if (hour < 18) greeting.innerText = "Chào Buổi Chiều";
+                        else greeting.innerText = "Chào Buổi Tối";
+                    }
 
-                if (data.main) {
-                    const t = Math.round(data.main.temp);
-                    const d = data.weather[0].description;
-                    const iconMain = data.weather[0].main;
-
-                    let iconEmoji = "🌤️";
-                    if (iconMain.includes("Rain")) iconEmoji = "🌧️";
-                    else if (iconMain.includes("Cloud")) iconEmoji = "☁️";
-                    else if (iconMain.includes("Clear")) iconEmoji = "☀️";
-
-                    // Hiển thị top bar
-                    if (weatherDisplay) weatherDisplay.innerHTML = `${iconEmoji} Quy Nhơn: ${t}°C`;
-
-                    // Hiển thị vào bảng Utility
-                    if (tempVal) tempVal.innerText = t;
-                    if (descVal) descVal.innerText = d.charAt(0).toUpperCase() + d.slice(1);
-                }
-            } catch (e) {
-                console.error("Lỗi thời tiết:", e);
-            }
-        }
-
-        // --- 5. QUẢN LÝ ĐĂNG NHẬP & KHỞI CHẠY ---
-        auth.onAuthStateChanged(user => {
-
-            if (user) {
-
-                db.collection("users")
-                    .doc(user.email.toLowerCase())
-                    .get()
-                    .then(doc => {
-
-                        if (!doc.exists) {
-                            alert("Không tìm thấy dữ liệu user!");
-                            return;
+                    // Cập nhật Top Bar
+                    const dateDisplay = document.getElementById('date-time-display');
+                    if (dateDisplay) {
+                        dateDisplay.innerHTML = `<i class="fas fa-clock"></i> ${h}:${min}:${s} | ${thuArr[now.getDay()]} (Dương: ${ngay}/${thang})`;
+                    }
+                    // CẬP NHẬT VÀO BẢNG UTILITY (PHẦN BẠN ĐANG THIẾU)
+                    if (typeof getLunarDate === 'function') {
+                        const lunar = getLunarDate(ngay, thang, nam);
+                        const canChi = getCanChiDay(ngay, thang, nam);
+                        const lunarVal = document.getElementById('lunar-val');
+                        if (lunarVal) {
+                            lunarVal.innerText = `${lunar.day}/${lunar.month} (${canChi})`;
                         }
-
-                        const userData = doc.data();
-
-                        // Cache lại
-                        sessionStorage.setItem(
-                            'userName',
-                            userData.name || user.email
-                        );
-
-                        sessionStorage.setItem(
-                            'userRole',
-                            userData.role
-                        );
-
-                        // Hiện giao diện
-                        showMainSystem(
-                            userData.name || user.email,
-                            userData.role
-                        );
-
-                        // ÁP DỤNG PHÂN QUYỀN
-                        applyPermissions(userData);
-
-                    });
-
-                updateInfo();
-                getWeather();
-                setInterval(updateInfo, 1000);
-
-            } else {
-
-                showLoginSection();
-
-            }
-
-        });
-
-        function login() {
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            if (!email || !password) return alert("Vui lòng nhập đủ!");
-            document.getElementById('loading-text').style.display = 'block';
-            auth.signInWithEmailAndPassword(email, password).catch(err => {
-                alert("Lỗi: " + err.message);
-                document.getElementById('loading-text').style.display = 'none';
-            });
-        }
-
-        function showMainSystem(name, role) {
-
-            document.getElementById('login-section').style.display = 'none';
-            document.getElementById('main-tool').style.display = 'block';
-
-            document.getElementById('user-display').innerText = name;
-
-            // RESET toàn bộ module hiện lại
-            document.querySelectorAll('.card').forEach(card => {
-                card.style.display = '';
-            });
-
-            // RESET category hiện lại
-            document.querySelectorAll('.category-section').forEach(section => {
-                section.style.display = '';
-            });
-
-            // Hiện admin panel nếu là admin
-            if (role === 'admin') {
-                document.getElementById('admin-panel').style.display = 'block';
-            } else {
-                document.getElementById('admin-panel').style.display = 'none';
-            }
-        }
-
-        function showLoginSection() {
-            document.getElementById('login-section').style.display = 'block';
-            document.getElementById('main-tool').style.display = 'none';
-        }
-
-        function logout() {
-            auth.signOut().then(() => {
-                sessionStorage.clear();
-                location.reload();
-            });
-        }
-        // Thêm đoạn này vào chỗ xử lý thời gian của bạn
-        if (typeof getLunarDate === 'function') {
-            const d = new Date();
-            const am = getLunarDate(d.getDate(), d.getMonth() + 1, d.getFullYear());
-            document.getElementById('lunar-val').innerText = am[0] + "/" + am[1] + " (Giáp Thìn)";
-        }
-
-        // Cập nhật lại hàm getWeather() hiện tại của bạn để nó điền thêm vào bảng mới
-        async function getWeather() {
-            const weatherDisplay = document.getElementById('weather-display'); // chỗ cũ trên top
-            const tempVal = document.getElementById('temp-val'); // chỗ mới trong bảng
-            const descVal = document.getElementById('desc-val'); // chỗ mới trong bảng
-            const apiKey = "b7ea0438346b9a89666014457e5e32be";
-
-            try {
-                const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=Quy+Nhon&units=metric&appid=${apiKey}&lang=vi`);
-                const data = await res.json();
-                if (data.main) {
-                    const t = Math.round(data.main.temp);
-                    const d = data.weather[0].description;
-
-                    // Điền vào top bar cũ
-                    weatherDisplay.innerHTML = `<i class="fas fa-sun"></i> Quy Nhơn: ${t}°C`;
-
-                    // Điền vào bảng tiện ích mới thêm
-                    if (tempVal) tempVal.innerText = t;
-                    if (descVal) descVal.innerText = d.charAt(0).toUpperCase() + d.slice(1);
-                }
-            } catch (e) { console.log(e); }
-        }
-    </script>
-    <div class="footer">
-        <p>© 2026 Toàn quyền bởi Vua Nệm - Quy Nhơn</p>
-        <p>Phát triển bởi <span class="dev-name">Vi Nhựt (VN5022) - 0358.96.97.52 </span></p>
-        <br>
-        <div class="copyright-notice">
-            <i class="fas fa-shield-halved copyright-icon"></i>
-            <strong>THÔNG BÁO PHÁP LÝ:</strong><br>
-            Sản phẩm đã được đăng ký bản quyền tại <strong>Cục Sở hữu trí tuệ</strong>.<br>
-            Nghiêm cấm mọi hành vi sao chép, chỉnh sửa hoặc phân phối lại mã nguồn dưới mọi hình thức khi chưa có sự
-            đồng ý bằng văn bản của tác giả.
-        </div>
-    </div>
-    <script>
-        const togglePassword = document.getElementById('togglePassword');
-        const passwordInput = document.getElementById('password');
-
-        togglePassword.onclick = function () {
-
-            if (passwordInput.type === "password") {
-
-                passwordInput.type = "text";
-
-                togglePassword.classList.remove("fa-eye");
-                togglePassword.classList.add("fa-eye-slash");
-
-            } else {
-
-                passwordInput.type = "password";
-
-                togglePassword.classList.remove("fa-eye-slash");
-                togglePassword.classList.add("fa-eye");
-
-            }
-        };
-        function applyPermissions(userData) {
-
-            // Admin thấy toàn bộ
-            if (userData.role === "admin") return;
-
-            const permissions = userData.permissions || {};
-
-            const moduleMap = {
-                baogia: "module-baogia",
-                baocao: "module-baocao",
-                baogiadoanhnghiep: "module-baogiadoanhnghiep",
-                hanghoa: "module-hanghoa",
-                tag_nem: "module-tag-nem",
-                khongnguthu: "module-khongnguthu",
-		bbkiemke: "module-bbkiemke",
-                tag_cgpk: "module-tag-cgpk",
-                voucher: "module-voucher",
-                kichban: "module-kichban",
-                binhchuachay: "module-binhchuachay",
-                inbanten: "module-inbanten",
-                chungtu: "module-chungtu",
-		nopbank: "module-nopbank", 
-		temkien: "module-temkien",
-		chiphithuexe: "module-chiphithuexe"
-            };
-
-            Object.keys(moduleMap).forEach(permissionKey => {
-
-                // Nếu KHÔNG có quyền => Ẩn module
-                if (!permissions[permissionKey]) {
-
-                    const element = document.getElementById(moduleMap[permissionKey]);
-
-                    if (element) {
-                        element.style.display = "none";
                     }
                 }
-            });
 
-            // Ẩn luôn category trống
-            document.querySelectorAll('.category-section').forEach(section => {
+                // --- 4. HÀM LẤY THỜI TIẾT (GỘP CHUNG 1 HÀM DUY NHẤT) ---
+                async function getWeather() {
+                    const apiKey = "b7ea0438346b9a89666014457e5e32be";
+                    const weatherDisplay = document.getElementById('weather-display');
+                    const tempVal = document.getElementById('temp-val');
+                    const descVal = document.getElementById('desc-val');
 
-                const visibleCards = section.querySelectorAll(
-                    '.card:not([style*="display: none"])'
-                );
+                    try {
+                        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=Quy+Nhon&units=metric&appid=${apiKey}&lang=vi`);
+                        const data = await res.json();
 
-                if (visibleCards.length === 0) {
-                    section.style.display = "none";
+                        if (data.main) {
+                            const t = Math.round(data.main.temp);
+                            const d = data.weather[0].description;
+                            const iconMain = data.weather[0].main;
+
+                            let iconEmoji = "🌤️";
+                            if (iconMain.includes("Rain")) iconEmoji = "🌧️";
+                            else if (iconMain.includes("Cloud")) iconEmoji = "☁️";
+                            else if (iconMain.includes("Clear")) iconEmoji = "☀️";
+
+                            // Hiển thị top bar
+                            if (weatherDisplay) weatherDisplay.innerHTML = `${iconEmoji} Quy Nhơn: ${t}°C`;
+
+                            // Hiển thị vào bảng Utility
+                            if (tempVal) tempVal.innerText = t;
+                            if (descVal) descVal.innerText = d.charAt(0).toUpperCase() + d.slice(1);
+                        }
+                    } catch (e) {
+                        console.error("Lỗi thời tiết:", e);
+                    }
                 }
 
-            });
-        }
-    </script>
+                // --- 5. QUẢN LÝ ĐĂNG NHẬP & KHỞI CHẠY ---
+                auth.onAuthStateChanged(user => {
+
+                    if (user) {
+
+                        db.collection("users")
+                            .doc(user.email.toLowerCase())
+                            .get()
+                            .then(doc => {
+
+                                if (!doc.exists) {
+                                    alert("Không tìm thấy dữ liệu user!");
+                                    return;
+                                }
+
+                                const userData = doc.data();
+
+                                // Cache lại
+                                sessionStorage.setItem(
+                                    'userName',
+                                    userData.name || user.email
+                                );
+
+                                sessionStorage.setItem(
+                                    'userRole',
+                                    userData.role
+                                );
+
+                                // Hiện giao diện
+                                showMainSystem(
+                                    userData.name || user.email,
+                                    userData.role
+                                );
+
+                                // ÁP DỤNG PHÂN QUYỀN
+                                applyPermissions(userData);
+
+                            });
+
+                        updateInfo();
+                        getWeather();
+                        setInterval(updateInfo, 1000);
+
+                    } else {
+
+                        showLoginSection();
+
+                    }
+
+                });
+
+                function login() {
+                    const email = document.getElementById('email').value.trim();
+                    const password = document.getElementById('password').value;
+                    if (!email || !password) return alert("Vui lòng nhập đủ!");
+                    document.getElementById('loading-text').style.display = 'block';
+                    auth.signInWithEmailAndPassword(email, password).catch(err => {
+                        alert("Lỗi: " + err.message);
+                        document.getElementById('loading-text').style.display = 'none';
+                    });
+                }
+
+                function showMainSystem(name, role) {
+
+                    document.getElementById('login-section').style.display = 'none';
+                    document.getElementById('main-tool').style.display = 'block';
+
+                    document.getElementById('user-display').innerText = name;
+
+                    // RESET toàn bộ module hiện lại
+                    document.querySelectorAll('.card').forEach(card => {
+                        card.style.display = '';
+                    });
+
+                    // RESET category hiện lại
+                    document.querySelectorAll('.category-section').forEach(section => {
+                        section.style.display = '';
+                    });
+
+                    // Hiện admin panel nếu là admin
+                    if (role === 'admin') {
+                        document.getElementById('admin-panel').style.display = 'block';
+                    } else {
+                        document.getElementById('admin-panel').style.display = 'none';
+                    }
+                }
+
+                function showLoginSection() {
+                    document.getElementById('login-section').style.display = 'block';
+                    document.getElementById('main-tool').style.display = 'none';
+                }
+
+                function logout() {
+                    auth.signOut().then(() => {
+                        sessionStorage.clear();
+                        location.reload();
+                    });
+                }
+                // Thêm đoạn này vào chỗ xử lý thời gian của bạn
+                if (typeof getLunarDate === 'function') {
+                    const d = new Date();
+                    const am = getLunarDate(d.getDate(), d.getMonth() + 1, d.getFullYear());
+                    document.getElementById('lunar-val').innerText = am[0] + "/" + am[1] + " (Giáp Thìn)";
+                }
+
+                // Cập nhật lại hàm getWeather() hiện tại của bạn để nó điền thêm vào bảng mới
+                async function getWeather() {
+                    const weatherDisplay = document.getElementById('weather-display'); // chỗ cũ trên top
+                    const tempVal = document.getElementById('temp-val'); // chỗ mới trong bảng
+                    const descVal = document.getElementById('desc-val'); // chỗ mới trong bảng
+                    const apiKey = "b7ea0438346b9a89666014457e5e32be";
+
+                    try {
+                        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=Quy+Nhon&units=metric&appid=${apiKey}&lang=vi`);
+                        const data = await res.json();
+                        if (data.main) {
+                            const t = Math.round(data.main.temp);
+                            const d = data.weather[0].description;
+
+                            // Điền vào top bar cũ
+                            weatherDisplay.innerHTML = `<i class="fas fa-sun"></i> Quy Nhơn: ${t}°C`;
+
+                            // Điền vào bảng tiện ích mới thêm
+                            if (tempVal) tempVal.innerText = t;
+                            if (descVal) descVal.innerText = d.charAt(0).toUpperCase() + d.slice(1);
+                        }
+                    } catch (e) { console.log(e); }
+                }
+            </script>
+            <div class="footer">
+                <p>© 2026 Toàn quyền bởi Vua Nệm - Quy Nhơn</p>
+                <p>Phát triển bởi <span class="dev-name">Vi Nhựt (VN5022) - 0358.96.97.52 </span></p>
+                <br>
+                <div class="copyright-notice">
+                    <i class="fas fa-shield-halved copyright-icon"></i>
+                    <strong>THÔNG BÁO PHÁP LÝ:</strong><br>
+                    Sản phẩm đã được đăng ký bản quyền tại <strong>Cục Sở hữu trí tuệ</strong>.<br>
+                    Nghiêm cấm mọi hành vi sao chép, chỉnh sửa hoặc phân phối lại mã nguồn dưới mọi hình thức khi chưa
+                    có sự
+                    đồng ý bằng văn bản của tác giả.
+                </div>
+            </div>
+            <script>
+                const togglePassword = document.getElementById('togglePassword');
+                const passwordInput = document.getElementById('password');
+
+                togglePassword.onclick = function () {
+
+                    if (passwordInput.type === "password") {
+
+                        passwordInput.type = "text";
+
+                        togglePassword.classList.remove("fa-eye");
+                        togglePassword.classList.add("fa-eye-slash");
+
+                    } else {
+
+                        passwordInput.type = "password";
+
+                        togglePassword.classList.remove("fa-eye-slash");
+                        togglePassword.classList.add("fa-eye");
+
+                    }
+                };
+                function applyPermissions(userData) {
+
+                    // Admin thấy toàn bộ
+                    if (userData.role === "admin") return;
+
+                    const permissions = userData.permissions || {};
+
+                    const moduleMap = {
+                        baogia: "module-baogia",
+                        baocao: "module-baocao",
+                        baogiadoanhnghiep: "module-baogiadoanhnghiep",
+                        hanghoa: "module-hanghoa",
+                        tag_nem: "module-tag-nem",
+                        khongnguthu: "module-khongnguthu",
+                        bbkiemke: "module-bbkiemke",
+                        tag_cgpk: "module-tag-cgpk",
+                        voucher: "module-voucher",
+                        kichban: "module-kichban",
+                        binhchuachay: "module-binhchuachay",
+                        inbanten: "module-inbanten",
+                        chungtu: "module-chungtu",
+                        nopbank: "module-nopbank",
+                        addton: "module-addton",
+                        temkien: "module-temkien",
+                        chiphithuexe: "module-chiphithuexe"
+                    };
+
+                    Object.keys(moduleMap).forEach(permissionKey => {
+
+                        // Nếu KHÔNG có quyền => Ẩn module
+                        if (!permissions[permissionKey]) {
+
+                            const element = document.getElementById(moduleMap[permissionKey]);
+
+                            if (element) {
+                                element.style.display = "none";
+                            }
+                        }
+                    });
+
+                    // Ẩn luôn category trống
+                    document.querySelectorAll('.category-section').forEach(section => {
+
+                        const visibleCards = section.querySelectorAll(
+                            '.card:not([style*="display: none"])'
+                        );
+
+                        if (visibleCards.length === 0) {
+                            section.style.display = "none";
+                        }
+
+                    });
+                }
+            </script>
 </body>
 
 </html>
